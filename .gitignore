@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+site/node_modules/
+
+# Go
+publisher/publisher.exe
+
+# Database (Local state only)
+publisher/catalog.db
+
+# Environment Secrets
+*.env

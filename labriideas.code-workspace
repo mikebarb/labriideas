@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "publisher"
+		},
+		{
+			"path": "site"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {}
+}

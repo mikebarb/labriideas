@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Astro Frontend",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder:site}",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug Go Publisher",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder:publisher}/main.go",
+      "envFile": "${workspaceFolder:publisher}/.env"
+      // Load these from a .env file or set them here
+      //"env": {
+      //  "R2_ACCESS_KEY_ID": "your_key",
+      //  "R2_SECRET_ACCESS_KEY": "your_secret",
+      //  "R2_ACCOUNT_ID": "your_account_id"
+      //}
+    }
+  ]
+}
