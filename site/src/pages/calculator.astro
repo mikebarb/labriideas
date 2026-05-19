@@ -1,0 +1,14 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Calculator from '../components/calculator.svelte';
+---
+
+<Layout>
+  <div class="flex flex-col items-center py-12">
+    <h1 class="text-4xl font-bold text-cyan-400 mb-8">Interactive Island Demo</h1>
+    <p class="text-slate-300 mb-8">This Svelte component runs in the browser, while the rest of the page is static HTML.</p>
+    
+    <!-- The Svelte Island -->
+    <Calculator client:load />
+  </div>
+</Layout>

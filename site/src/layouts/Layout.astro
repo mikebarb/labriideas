@@ -1,3 +1,11 @@
+---
+// Import Tailwind styles
+import '../styles/global.css';
+
+// Get the current URL path to highlight the active link
+const currentPath = Astro.url.pathname;
+---
+
 <!doctype html>
 <html lang="en">
 	<head>
@@ -6,18 +14,31 @@
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>Labri Ideas</title>
 	</head>
-	<body>
-		<slot />
+	<body class="bg-slate-900 text-white min-h-screen flex flex-col">
+		<!-- Navigation Menu -->
+		<nav class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex gap-6">
+			<a href="/" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/' ? 'text-cyan-400' : 'text-slate-300'}`}>
+				Home
+			</a>
+			<a href="/catalog" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/catalog' ? 'text-cyan-400' : 'text-slate-300'}`}>
+				Catalog
+			</a>
+			<a href="/calculator" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/catalog' ? 'text-cyan-400' : 'text-slate-300'}`}>
+				Calculator
+			</a>
+			<a href="/CsvToJson" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/catalog' ? 'text-cyan-400' : 'text-slate-300'}`}>
+				Tool - CsvToJson
+			</a>
+			<a href="/downloader" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/catalog' ? 'text-cyan-400' : 'text-slate-300'}`}>
+				Downloader
+			</a>
+		</nav>
+
+		<!-- Main Content -->
+		<main class="flex-1 p-8">
+			<slot />
+		</main>
 	</body>
 </html>
-
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
