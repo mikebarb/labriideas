@@ -1,0 +1,16 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Uploader from '../components/Uploader.svelte';
+---
+
+<Layout>
+  <main class="flex flex-col items-center py-12">
+    <h1 class="text-4xl font-bold text-white mb-8 text-center">Upload to R2</h1>
+    
+    <div class="w-full max-w-md px-4">
+      <!-- client:load is required to make the Svelte button actually work in the browser -->
+      <Uploader client:load />
+    </div>
+    
+  </main>
+</Layout>

@@ -36,7 +36,7 @@
         // Clean up the hidden tag
         document.body.removeChild(a);
         
-        status = "Download initiated!";
+        status = "Download initiated! Check youe browser's download bar.";
       } else {
         throw new Error("No URL returned from server.");
       }

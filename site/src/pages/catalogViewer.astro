@@ -1,0 +1,14 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CatalogViewer from '../components/CatalogViewer.svelte'; 
+---
+
+<Layout>
+  <main class="flex flex-col items-center py-12">
+    <h1 class="text-4xl font-bold text-white mb-8 text-center">Catalogue Viewer</h1>
+    <p class="text-slate-300 mb-8 text-center max-w-lg">Fetch a copy of the catalogue and save to cache if not the latest.</p>
+
+    <CatalogViewer client:load />
+
+</main>
+</Layout>
