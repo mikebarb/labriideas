@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
-  
+
+  // Catalog here is a list of tracks, not the json calalog.json content.
   let catalog = []; 
   let status = "Checking for updates...";
   let isLoading = true;
@@ -65,6 +66,7 @@
           const buffer = base64ToArrayBuffer(cachedBase64);
           const data = await inflateCatalog(buffer);
           catalog = data.tracks || [];
+          console.log("CatalogViewer - catalog: ", catalog);
         }
         isLoading = false;
         return;
@@ -127,10 +129,17 @@
     <!-- We loop over 'paginatedCatalog' instead of 'catalog' -->
     <ul class="space-y-2 mb-6">
       {#each paginatedCatalog as track}
-        <li class="bg-slate-900 p-3 rounded border border-slate-600 flex justify-between">
+        <!-- <li class="bg-slate-900 p-3 rounded border border-slate-600 flex justify-between"> -->
+        <div class="flex justify-between p-2 bg-slate-700 rounded">
           <span class="text-white">{track.title}</span>
           <span class="text-slate-400">{track.artist}</span>
-        </li>
+          <button 
+            on:click={() => currentTrack = track} 
+            class="bg-cyan-500 hover:bg-cyan-400 px-3 py-1 rounded text-black font-bold">
+            ▶ Play
+          </button>
+        </div>
+        <!-- </li> -->
       {/each}
     </ul>
 
