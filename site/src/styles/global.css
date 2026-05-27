@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+/* This replaces the old tailwind.config.mjs file */
+@theme {
+  /* Register your Avenir font family */
+  --font-sans: "Avenir LT W01", ui-sans-serif, system-ui, sans-serif;
+   --font-serif: "Times New Roman", Times, serif;
+  
+  /* You can add custom colors here later if needed */
+  /* --color-labri-orange: #f97316; */
+}
