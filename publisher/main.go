@@ -24,6 +24,11 @@ import (
 var storageClient *storage.Client
 var catalogCache *cache.CatalogCache
 
+type MetadataUpdateRequest struct {
+	Filename string            `json:"filename"`
+	Metadata map[string]string `json:"metadata"`
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -55,8 +60,9 @@ func main() {
 	// Setup HTTP Routes
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/download", corsMiddleware(downloadHandler))
-	mux.HandleFunc("/api/upload", corsMiddleware(uploadHandler)) // NEW!
+	mux.HandleFunc("/api/upload", corsMiddleware(uploadHandler))
 	mux.HandleFunc("/api/catalog", corsMiddleware(catalogHandler))
+	mux.HandleFunc("/api/update-metadata", corsMiddleware(updateMetadataHandler))
 
 	// BACKGROUND CACHE WARMUP
 	go func() {
@@ -186,6 +192,49 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	//5. Return success
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success", "file": header.Filename})
+}
+
+// updateMetadataHandler processes a request from the admin UI to overwrite
+// the custom metadata for a specific track in R2.
+// Because R2 does not allow patching metadata directly, this triggers a
+// server-side "Copy-Over-Self" operation via the storage client.
+func updateMetadataHandler(w http.ResponseWriter, r *http.Request) {
+	// 1. Enforce HTTP Method
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 2. Decode the incoming JSON payload
+	var req MetadataUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// 3. Validate required fields
+	if req.Filename == "" {
+		http.Error(w, "Filename is required", http.StatusBadRequest)
+		return
+	}
+
+	// 4. Execute the R2 metadata update
+	ctx := r.Context()
+	err := storageClient.UpdateMetadata(ctx, req.Filename, req.Metadata)
+	if err != nil {
+		log.Printf("Failed to update metadata for %s: %v", req.Filename, err)
+		http.Error(w, "Failed to update R2 metadata", http.StatusInternalServerError)
+		return
+	}
+
+	// 5. Invalidate the RAM cache
+	// The catalog in RAM now contains stale metadata. Clearing the cache ensures
+	// the next user request will fetch a fresh catalog from R2 reflecting the changes.
+	catalogCache.Clear()
+
+	// 6. Return Success to the admin UI
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
 
 // --- MIDDLEWARE ---

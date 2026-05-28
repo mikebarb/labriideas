@@ -2,11 +2,13 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 // Client is our core wrapper around the S3/R2 SDK
@@ -65,4 +67,23 @@ func (c *Client) GetObjectBytes(ctx context.Context, key string) ([]byte, error)
 	defer resp.Body.Close()
 
 	return io.ReadAll(resp.Body)
+}
+
+// UpdateMetadata replaces the custom metadata for an existing object in R2
+// R2 does not allow patching metadata directly; we must copy the object over itself
+func (c *Client) UpdateMetadata(ctx context.Context, filename string, metadata map[string]string) error {
+	// R2 requires the CopySource to be in the format "bucket/key"
+	copySource := fmt.Sprintf("%s/%s", c.bucket, filename)
+
+	_, err := c.s3.CopyObject(ctx, &s3.CopyObjectInput{
+		Bucket:     aws.String(c.bucket),
+		Key:        aws.String(filename),
+		CopySource: aws.String(copySource),
+		Metadata:   metadata,
+		// REQUIRED: This tells R2 to REPLACE the old metadata with the new map.
+		// Without it, R2 would just ignore the new metadata and copy the old ones.
+		MetadataDirective: types.MetadataDirectiveReplace,
+	})
+
+	return err
 }
