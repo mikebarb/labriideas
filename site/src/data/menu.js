@@ -1,5 +1,23 @@
 // src/data/menu.js
 
+// 1. Top Level Navigation (Home, About, Learn, etc.)
+export const navItems = [
+  { id: 'home', label: 'HOME', href: '/' },
+  { 
+    id: 'about', 
+    label: 'ABOUT', 
+    href: '/about', 
+    dropdown: [
+      { label: 'Using the ideas library', href: '/about/using' },
+      { label: 'History of L\'Abri', href: '/about/history' }
+    ]
+  },
+  { id: 'learn', label: 'LEARN', href: '/learn' },
+  { id: 'contact', label: 'CONTACT', href: '/contact' },
+  { id: 'external', label: 'L\'ABRI.ORG', href: 'https://labri.org' }
+];
+
+// 2. Mega Menu Taxonomy (Worldview, Culture, etc.)
 export const menuStructure = {
   WORLDVIEW: {
     // Left & Middle Columns: The navigation taxonomy
