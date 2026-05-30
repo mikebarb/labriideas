@@ -1,9 +1,16 @@
 <script>
+ // --- Security Placeholder ---
+  // Later, Astro will pass true/false here based on the user's JWT cookie.
+  // For now, we can default it to true just so we can see the UI while developing.
+  export let isAdmin = true;
+
   import { onMount } from 'svelte';
+  import MetadataEditor from '../components/MetadataEditor.svelte';
+  let selectedTrack = null;
 
   // Catalog here is a list of tracks, not the json calalog.json content.
   let catalog = []; 
-  let status = "Checking for updates...";
+  let status = "Checking for updates...";  
   let isLoading = true;
 
   let currentPage = 1;
@@ -138,10 +145,19 @@
             class="bg-cyan-500 hover:bg-cyan-400 px-3 py-1 rounded text-black font-bold">
             ▶ Play
           </button>
+          {#if isAdmin}
+            <button on:click={() => selectedTrack = track} class="bg-slate-600 hover:bg-slate-500 px-3 py-1 rounded text-white">
+              edit
+            </button>
+          {/if}
         </div>
         <!-- </li> -->
       {/each}
     </ul>
+  
+    {#if isAdmin}
+      <MetadataEditor track={selectedTrack} />
+    {/if}
 
     <!-- PAGINATION CONTROLS -->
     <div class="flex items-center justify-between bg-slate-900 p-3 rounded border border-slate-600">

@@ -14,7 +14,8 @@ export const navItems = [
   },
   { id: 'learn', label: 'LEARN', href: '/learn' },
   { id: 'contact', label: 'CONTACT', href: '/contact' },
-  { id: 'external', label: 'L\'ABRI.ORG', href: 'https://labri.org' }
+  { id: 'external', label: 'L\'ABRI.ORG', href: 'https://labri.org' },
+  { id: 'dev', label: 'DEV', href: '/' }
 ];
 
 // 2. Mega Menu Taxonomy (Worldview, Culture, etc.)

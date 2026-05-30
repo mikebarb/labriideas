@@ -61,10 +61,12 @@
 
     <!-- Dropdown Panel: Only shows when a root tab is active -->
     {#if activeRoot}
-      <div class="absolute left-0 right-0 z-40 bg-white shadow-xl border-t border-gray-100 flex mt-4 -mx-4 sm:-mx-6 lg:-mx-8" role="menu">
+      <!-- Grid: 2 columns on mobile, 4 columns on desktop -->
+      <div class="absolute left-0 right-0 z-40 bg-white shadow-xl border-t border-gray-100 grid grid-cols-2 md:grid-cols-4 mt-4 -mx-4 sm:-mx-6 lg:-mx-8" role="menu">
         
         <!-- COLUMN 1: Categories (Left) -->
-        <div class="w-1/4 bg-gray-50 p-6 border-r">
+        <!-- col-span-1 takes up 1 unit. border-b on mobile, removed on md+ -->
+        <div class="col-span-1 bg-gray-50 p-6 border-r border-b md:border-b-0">
           {#each Object.keys(menuStructure[activeRoot].categories) as category}
             <button 
               class="py-2 w-full text-left cursor-pointer hover:text-orange-600 text-sm font-semibold {activeSub === category ? 'text-orange-600' : 'text-gray-700'}"
@@ -76,7 +78,8 @@
         </div>
 
         <!-- COLUMN 2: Sub-Categories (Middle) -->
-        <div class="w-1/4 p-6">
+        <!-- col-span-1 takes up 1 unit. border-b on mobile, removed on md+ -->
+        <div class="col-span-1 p-6 border-b md:border-b-0">
           {#if activeSub}
             <h3 class="text-xs font-bold uppercase mb-4 text-gray-500 tracking-wider">{activeSub}</h3>
             <div class="flex flex-col gap-1">
@@ -93,7 +96,10 @@
         </div>
 
         <!-- COLUMN 3: Featured Lectures (Right) -->
-        <div class="w-2/4 p-6 bg-white border-l">
+        <!-- col-span-2 spans the whole row on mobile. md:col-span-2 takes up 2/4 on desktop -->
+        <!-- border-t on mobile to separate from row above, removed on md+. border-l added on md+ -->
+        <div class="col-span-2 md:col-span-2 p-6 bg-white border-t md:border-t-0 md:border-l">
+
           <h4 class="text-xs font-bold uppercase text-orange-600 mb-4 tracking-wider">Featured Lectures</h4>
           <div class="flex flex-col gap-4">
             {#each menuStructure[activeRoot].featured as item}

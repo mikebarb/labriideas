@@ -5,15 +5,13 @@ import CatalogViewer from '../components/CatalogViewer.svelte';
 // SECURITY PLACEHOLDER:
 // In the future, this will check the request headers/cookies:
 // const isAdmin = Astro.cookies.get('session_token') ? validateJWT(...) : false;
-const isAdmin = true; // <-- Flip this to false to test the "Regular User" view!
+const isAdmin = false; // <-- Flip this to false to test the "Regular User" view!
 ---
 
 <Layout>
-  <main class="flex flex-col items-center py-12">
-    <h1 class="text-4xl font-bold text-white mb-8 text-center">Catalogue Viewer</h1>
+    <h1 class="text-4xl font-bold text-cyan-400 mb-6">MP3 Catalog</h1>
+    <h1 class="text-4xl font-bold text-white mb-8 text-center">View Catalogue</h1>
     <p class="text-slate-300 mb-8 text-center max-w-lg">Fetch a copy of the catalogue and save to cache if not the latest.</p>
     <!-- Pass the variable down as a prop -->
     <CatalogViewer client:load isAdmin={isAdmin} />
-
-</main>
 </Layout>

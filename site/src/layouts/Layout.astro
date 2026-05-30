@@ -19,26 +19,14 @@ const currentPath = Astro.url.pathname;
 	<body class="bg-slate-900 text-white min-h-screen flex flex-col">
 		<!-- Navigation Menu -->
 		<nav class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex gap-6">
-			<a href="/" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/' ? 'text-cyan-400' : 'text-slate-300'}`}>
+			<a href="/labri-home" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/labri-home' ? 'text-cyan-400' : 'text-slate-300'}`}>
 				Home
 			</a>
-			<a href="/catalog" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/catalog' ? 'text-cyan-400' : 'text-slate-300'}`}>
-				Catalog
-			</a>
-			<a href="/calculator" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/catalog' ? 'text-cyan-400' : 'text-slate-300'}`}>
-				Calculator
-			</a>
-			<a href="/CsvToJson" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/catalog' ? 'text-cyan-400' : 'text-slate-300'}`}>
-				Tool - CsvToJson
+			<a href="/viewCatalog" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/viewCatalog' ? 'text-cyan-400' : 'text-slate-300'}`}>
+				View Catalog
 			</a>
 			<a href="/admin" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/catalog' ? 'text-cyan-400' : 'text-slate-300'}`}>
 				Admin
-			</a>
-			<a href="/uploader" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/catalog' ? 'text-cyan-400' : 'text-slate-300'}`}>
-				Uploader
-			</a>
-			<a href="/labri-home" class={`text-lg font-semibold hover:text-cyan-300 transition-colors text-slate-300`}>
-    📚 			L'Abri Library
 			</a>
 		</nav>
 
