@@ -74,7 +74,7 @@ func main() {
 		log.Fatalf("Failed to marshal JSON: %v", err)
 	}
 
-	// 7. Write to a local Gzip file so we can inspect it
+	// 7. Write the Gzip file to the local disk so we can inspect it
 	outputFile := "test-catalog.json.gz"
 	outFile, err := os.Create(outputFile)
 	if err != nil {

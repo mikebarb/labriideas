@@ -65,7 +65,7 @@ func (c *Client) CrawlCatalog(ctx context.Context) (map[string]interface{}, erro
 
 			for _, fieldName := range schema.CatalogSchema {
 				switch fieldName {
-				case "id", "filename":
+				case "filename":
 					// ID and Filename are derived from the R2 Key
 					trackData[fieldName] = key
 				case "hash":

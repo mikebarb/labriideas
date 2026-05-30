@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -96,6 +100,7 @@ func main() {
 // --- CATALOG HANDLER ---
 func catalogHandler(w http.ResponseWriter, r *http.Request) {
 	clientVersion := r.URL.Query().Get("version")
+	fmt.Printf("catalogHandler - clientVersion: %s\n", clientVersion)
 	ctx := r.Context()
 
 	// 1. Ask R2 for the current ETag (The Source of Truth)
@@ -106,19 +111,21 @@ func catalogHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	r2ETag := *head.ETag
-
+	fmt.Printf("catalogHandler - r2ETag: %s\n", r2ETag)
 	// 2. If client version matches R2 ETag, they are up to date!
 	if clientVersion == r2ETag {
+		fmt.Println("catalogHandler - client is up to date")
 		w.WriteHeader(http.StatusNotModified) // 304
 		return
 	}
 
 	// 3. Client needs an update. Let's check our Go Server Cache.
 	cachedETag, cachedBytes := catalogCache.Get()
-
+	fmt.Printf("catalogHandler - cachedETag: %s\n", cachedETag)
 	// 4. If Go Cache is stale or empty, fetch fresh bytes from R2
 	if cachedETag != r2ETag || len(cachedBytes) == 0 {
 		log.Println("Go Server Cache Miss. Fetching catalog from R2...")
+		fmt.Printf("catalogHandler - Go Server Cache Miss. Fetching catalog from R2...\n")
 		freshBytes, err := storageClient.GetObjectBytes(ctx, "catalog.json.gz")
 		if err != nil {
 			http.Error(w, "Failed to fetch catalog", http.StatusInternalServerError)
@@ -128,9 +135,11 @@ func catalogHandler(w http.ResponseWriter, r *http.Request) {
 		catalogCache.Update(r2ETag, freshBytes)
 		cachedETag = r2ETag
 		cachedBytes = freshBytes
+		fmt.Printf("catalogHandler - Updated server cache\n")
 	}
 
 	// 5. Stream the compressed bytes to the client
+	fmt.Printf("catalogHandler - Stream catalogue to client\n")
 	w.Header().Set("Content-Type", "application/gzip")
 	w.Header().Set("ETag", cachedETag) // Send the ETag so the client can save it
 	w.Write(cachedBytes)
@@ -198,28 +207,27 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 // the custom metadata for a specific track in R2.
 // Because R2 does not allow patching metadata directly, this triggers a
 // server-side "Copy-Over-Self" operation via the storage client.
+
 func updateMetadataHandler(w http.ResponseWriter, r *http.Request) {
-	// 1. Enforce HTTP Method
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// 2. Decode the incoming JSON payload
 	var req MetadataUpdateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	// 3. Validate required fields
 	if req.Filename == "" {
 		http.Error(w, "Filename is required", http.StatusBadRequest)
 		return
 	}
 
-	// 4. Execute the R2 metadata update
 	ctx := r.Context()
+
+	// 1. Update the MP3's metadata in R2
 	err := storageClient.UpdateMetadata(ctx, req.Filename, req.Metadata)
 	if err != nil {
 		log.Printf("Failed to update metadata for %s: %v", req.Filename, err)
@@ -227,12 +235,93 @@ func updateMetadataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 5. Invalidate the RAM cache
-	// The catalog in RAM now contains stale metadata. Clearing the cache ensures
-	// the next user request will fetch a fresh catalog from R2 reflecting the changes.
-	catalogCache.Clear()
+	// 2. HOT PATCH: Ensure catalog.json stays in sync
 
-	// 6. Return Success to the admin UI
+	// A. Check the current R2 ETag vs our RAM Cache ETag
+	r2Head, err := storageClient.GetMetadata(ctx, "catalog.json.gz")
+	if err != nil {
+		log.Printf("Warning: Could not check R2 catalog ETag: %v", err)
+		catalogCache.Clear()
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+		return
+	}
+	r2Etag := *r2Head.ETag
+
+	var catalogGzBytes []byte
+	ramEtag, ramBytes := catalogCache.Get()
+
+	if ramEtag == r2Etag && len(ramBytes) > 0 {
+		// B. HASHES MATCH: RAM is fresh! Use the RAM bytes (saves downloading the whole file)
+		catalogGzBytes = ramBytes
+	} else {
+		// C. HASHES DO NOT MATCH: RAM is stale. Fetch the absolute latest from R2.
+		log.Println("Cache stale during admin edit. Fetching fresh catalog from R2.")
+		freshBytes, err := storageClient.GetObjectBytes(ctx, "catalog.json.gz")
+		if err != nil {
+			log.Printf("Warning: Could not fetch fresh catalog: %v", err)
+			catalogCache.Clear()
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+			return
+		}
+		catalogGzBytes = freshBytes
+	}
+
+	// D. Decompress the chosen bytes
+	gzReader, err := gzip.NewReader(bytes.NewReader(catalogGzBytes))
+	if err == nil {
+		jsonBytes, err := io.ReadAll(gzReader)
+		gzReader.Close()
+
+		if err == nil {
+			// E. Unmarshal into dynamic map
+			var catalogData map[string]interface{}
+			if json.Unmarshal(jsonBytes, &catalogData) == nil {
+
+				// F. Find the track and update its fields
+				if tracks, ok := catalogData["tracks"].([]interface{}); ok {
+					for _, t := range tracks {
+						if trackMap, ok := t.(map[string]interface{}); ok {
+							if trackMap["filename"] == req.Filename {
+								for key, value := range req.Metadata {
+									trackMap[key] = value
+								}
+								break
+							}
+						}
+					}
+				}
+
+				// G. Re-marshal to JSON
+				newJsonBytes, err := json.Marshal(catalogData)
+				if err == nil {
+					// H. Re-compress to Gzip
+					var buf bytes.Buffer
+					gzWriter := gzip.NewWriter(&buf)
+					gzWriter.Write(newJsonBytes)
+					gzWriter.Close()
+					newGzBytes := buf.Bytes()
+
+					// I. Upload the freshly patched catalog.json.gz back to R2
+					err := storageClient.PutObjectBytes(ctx, "catalog.json.gz", newGzBytes)
+					if err != nil {
+						log.Printf("Warning: Failed to upload patched catalog to R2: %v", err)
+					}
+
+					// J. Update the RAM cache with the new bytes and fetch the NEW R2 ETag
+					newHead, _ := storageClient.GetMetadata(ctx, "catalog.json.gz")
+					newEtag := ""
+					if newHead != nil {
+						newEtag = *newHead.ETag
+					}
+					catalogCache.Update(newEtag, newGzBytes)
+				}
+			}
+		}
+	}
+
+	// 3. Return Success
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }

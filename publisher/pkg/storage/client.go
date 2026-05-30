@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -83,6 +84,19 @@ func (c *Client) UpdateMetadata(ctx context.Context, filename string, metadata m
 		// REQUIRED: This tells R2 to REPLACE the old metadata with the new map.
 		// Without it, R2 would just ignore the new metadata and copy the old ones.
 		MetadataDirective: types.MetadataDirectiveReplace,
+	})
+
+	return err
+}
+
+// PutObjectBytes uploads a byte slice to R2 at the specified key
+func (c *Client) PutObjectBytes(ctx context.Context, key string, data []byte) error {
+	reader := bytes.NewReader(data)
+
+	_, err := c.s3.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(key),
+		Body:   reader,
 	})
 
 	return err

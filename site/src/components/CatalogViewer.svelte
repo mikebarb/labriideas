@@ -138,7 +138,8 @@
       {#each paginatedCatalog as track}
         <!-- <li class="bg-slate-900 p-3 rounded border border-slate-600 flex justify-between"> -->
         <div class="flex justify-between p-2 bg-slate-700 rounded">
-          <span class="text-white">{track.title}</span>
+          <span class="text-white">{track.filename}</span>
+          <span class="text-slate-400">{track.title}</span>
           <span class="text-slate-400">{track.artist}</span>
           <button 
             on:click={() => currentTrack = track} 

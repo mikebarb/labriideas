@@ -6,7 +6,36 @@ The Crawler is the "Orchestrator" of the asset pipeline. It performs an automate
 ## 2. Dynamic Schema Mapping
 The Crawler is **Schema-Driven**. It does not use hardcoded data structures. Instead, it references `schema/schema.go`. When a new field (e.g., "album" or "bpm") is added to the system schema, the Crawler automatically detects the corresponding R2 metadata field and includes it in the catalog.
 
-## 3. Function Reference
+## 3. Logical Flow
+
+### `Main.go`
+- **Purpose**: Main.go is the root program for this tool.
+- **Input**: Nil - Cloundflare R2 storage bucket is scanned.
+- **Output**: catalog.json.gz output to local disk.
+- **Internal Flow**: 
+    - 1. Load R2 Credentials from Environment Variables
+    - 2. Configure the AWS SDK to point to Cloudflare R2
+    - 3. Create the raw S3 client
+    - 4. Create YOUR storage client using the function you just showed me
+    - 5. Run the Crawl => call CrawlCatalog
+    - 6. Marshal the dynamic map to JSON
+    - 7. Write the Gzip file to the local disk so we can inspect it
+
+### `Crawler.go`
+- **Purpose**: Crawler.go is a library of functional tools that does the heavy lifting scanning Cloudflare R2 storage and returning a catalog map from the stored mpeg files.
+- **Function**: CrawlCatalog
+- **Input**: *Client.
+- **Output**: Catalog map
+- **Internal Flow**: 
+    - 1. Use a slice of dynamic maps instead of a rigid struct
+    - 2. Initialize the Paginator - read back page at a time from R2
+    - 3. Loop through pages of objects
+    - 4. ..Loop through items on this specific page
+    - 5. ....Head the object to get its custom metadata
+    - 6. ....DYNAMIC MAPPING using the Global Schema
+    - 7. Build the final dynamic Catalog map
+
+## 4. Function Reference
 
 ### `CrawlCatalog(ctx context.Context)`
 - **Purpose**: Performs a full bucket scan to generate a current-state manifest.

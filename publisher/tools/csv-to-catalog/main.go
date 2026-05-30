@@ -12,7 +12,6 @@ import (
 )
 
 // "github.com/mikebarb/labriideas-publisher/pkg/storage" // ADJUST TO YOUR MODULE NAME
-// "github.com/mikebarb/labriideas-publisher/pkg/storage" // ADJUST TO YOUR MODULE NAME
 func main() {
 	if len(os.Args) < 3 {
 		fmt.Println("Usage: go run main.go <input.csv> <output.json.gz>")
@@ -43,26 +42,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 1. BUILD THE HEADER MAP
+	// 3. BUILD THE HEADER MAP
 	headerMap := make(map[string]int)
 	for i, colName := range records[0] {
 		headerMap[colName] = i
 	}
-
-	// 3. Map Header Indices (so order doesn't matter)
-	//header := records[0]
-	//colIndex := make(map[string]int)
-	//for i, colName := range header {
-	//	colIndex[colName] = i
-	//}
-
-	// Helper to safely get column data
-	//getCol := func(row []string, colName string) string {
-	//	if idx, ok := colIndex[colName]; ok && idx < len(row) {
-	//		return row[idx]
-	//	}
-	//	return ""
-	//}
 
 	// Helper to safely extract data by column name
 	getValue := func(row []string, columnName string) string {
@@ -74,7 +58,7 @@ func main() {
 		return "" // Return blank if column is missing
 	}
 
-	// 2. PARSE ROWS DYNAMICALLY USING THE GLOBAL SCHEMA
+	// 4. PARSE ROWS DYNAMICALLY USING THE GLOBAL SCHEMA
 	var tracks []map[string]string // Dynamic map instead of struct!
 
 	for i, row := range records {
@@ -91,30 +75,7 @@ func main() {
 		tracks = append(tracks, trackData)
 	}
 
-	// 4. Convert Rows to Track Structs
-	//var tracks []storage.Track
-	//for i, row := range records {
-	//	if i == 0 {
-	//		continue // Skip header row
-	//	}
-	//
-	//	track := storage.Track{
-	//		ID:       getCol(row, "id"),
-	//		Title:    getCol(row, "title"),
-	//		Artist:   getCol(row, "artist"),
-	//		FileName: getCol(row, "filename"),
-	//	}
-	//	tracks = append(tracks, track)
-	//}
-
-	// 5. Build the Catalog Object
-	//catalog := storage.Catalog{
-	//	Version: fmt.Sprintf("csv-import-%s", time.Now().Format("2006-01-02-15-04-05")),
-	//	Count:   len(tracks),
-	//	Tracks:  tracks,
-	//}
-
-	// 3. BUILD CATALOG DYNAMICALLY
+	// 5. BUILD CATALOG DYNAMICALLY
 	// We use a generic interface map for the wrapper
 	catalogData := map[string]interface{}{
 		"release": fmt.Sprintf("csv-import-%s", time.Now().Format("2006-01-02-15-04-05")),
@@ -122,14 +83,7 @@ func main() {
 		"tracks":  tracks,
 	}
 
-	// 6. Marshal to JSON
-	//jsonData, err := json.MarshalIndent(catalog, "", "  ")
-	//if err != nil {
-	//	fmt.Printf("Error marshaling JSON: %v\n", err)
-	//	os.Exit(1)
-	//}
-
-	// 4. MARSHAL & COMPRESS
+	// 6. MARSHAL & COMPRESS
 	// This outputs EXACTLY the same JSON structure as before
 	jsonData, err := json.MarshalIndent(catalogData, "", "  ")
 	if err != nil {

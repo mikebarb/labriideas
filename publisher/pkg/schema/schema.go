@@ -18,9 +18,8 @@ package schema
 // CatalogSchema defines the exact fields we want to extract from any data source (like a CSV).
 // If you add a new field to the system, add its JSON key name here.
 var CatalogSchema = []string{
-	"id",
+	"filename",
 	"title",
 	"artist",
 	"hash",
-	"filename",
 }
