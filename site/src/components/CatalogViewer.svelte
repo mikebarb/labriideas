@@ -6,6 +6,7 @@
 
   import { onMount } from 'svelte';
   import MetadataEditor from '../components/MetadataEditor.svelte';
+  
   let selectedTrack = null;
 
   // Catalog here is a list of tracks, not the json calalog.json content.
@@ -98,8 +99,8 @@
       catalog = data.tracks || [];
       
       status = `Catalog updated to ETag ${newETag}! (${catalog.length} tracks)`;
-
-    }catch (error) {
+      
+    } catch (error) {
       console.error("Catalog load error:", error);
       status = "Error. Trying cache...";
       
@@ -141,10 +142,17 @@
           <span class="text-white">{track.filename}</span>
           <span class="text-slate-400">{track.title}</span>
           <span class="text-slate-400">{track.artist}</span>
+          <!-- 
           <button 
             on:click={() => currentTrack = track} 
             class="bg-cyan-500 hover:bg-cyan-400 px-3 py-1 rounded text-black font-bold">
             ▶ Play
+          </button>
+          -->
+          <button 
+            on:click={() => window.dispatchEvent(new CustomEvent('play-track', { detail: track }))} 
+            class="bg-cyan-500 hover:bg-cyan-400 px-3 py-1 rounded text-black font-bold">
+              ▶ Play
           </button>
           {#if isAdmin}
             <button on:click={() => selectedTrack = track} class="bg-slate-600 hover:bg-slate-500 px-3 py-1 rounded text-white">

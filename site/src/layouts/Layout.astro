@@ -1,6 +1,7 @@
 ---
 // Import Tailwind styles
 import '../styles/global.css';
+import Player from '../components/Player.svelte';
 
 // Get the current URL path to highlight the active link
 const currentPath = Astro.url.pathname;
@@ -31,8 +32,19 @@ const currentPath = Astro.url.pathname;
 		</nav>
 
 		<!-- Main Content -->
-		<main class="flex-1 p-8">
+		<main class="flex-1 p-8 pb-32">
 			<slot />
 		</main>
+		
+		<!-- STICKY PLAYER: Visible on all pages -->
+		<div class="fixed bottom-0 left-0 right-0 z-50 bg-slate-800 border-t border-slate-700 shadow-2xl flex justify-center">
+		  <Player 
+			client:load 
+			showTracklist={false} 
+			apiBase="http://localhost:8080" 
+			isAdmin={true} 
+		  />
+		</div>
+		
 	</body>
 </html>
