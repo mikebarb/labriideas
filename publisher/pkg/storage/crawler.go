@@ -13,10 +13,33 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
+// CrawlProgress holds the data sent back to the server during a crawl
+type CrawlProgress struct {
+	Percent int    `json:"percent"`
+	Message string `json:"message"`
+}
+
+// sendProgress is a helper to safely send progress updates without blocking or panicking
+func (c *Client) sendProgress(progressChan chan<- CrawlProgress, percent int, message string) {
+	if progressChan != nil {
+		// Use a select statement to prevent blocking if the channel isn't being read fast enough
+		select {
+		case progressChan <- CrawlProgress{Percent: percent, Message: message}:
+		default:
+			// Channel full, skip this update to keep the crawler moving fast
+		}
+	}
+}
+
 // CrawlCatalog scans the entire R2 bucket, reads metadata, and builds a dynamic Catalog map
-func (c *Client) CrawlCatalog(ctx context.Context) (map[string]interface{}, error) {
+// It now accepts an optional progressChan. Pass nil to ignore progress (keeps desktop tool working!).
+func (c *Client) CrawlCatalog(ctx context.Context, progressChan chan<- CrawlProgress) (map[string]interface{}, error) {
+
+	c.sendProgress(progressChan, 10, "Fetching file list from R2...")
+
 	// 1. Use a slice of dynamic maps instead of a rigid struct
 	var tracks []map[string]string
+	itemsProcessed := 0
 
 	// 2. Initialize the Paginator
 	paginator := s3.NewListObjectsV2Paginator(c.s3, &s3.ListObjectsV2Input{
@@ -79,8 +102,16 @@ func (c *Client) CrawlCatalog(ctx context.Context) (map[string]interface{}, erro
 			}
 
 			tracks = append(tracks, trackData)
+			itemsProcessed++
+
+			// Update progress every 50 items to avoid flooding the channel
+			if itemsProcessed%50 == 0 {
+				c.sendProgress(progressChan, 30, fmt.Sprintf("Processed %d files...", itemsProcessed))
+			}
 		}
 	}
+
+	c.sendProgress(progressChan, 90, fmt.Sprintf("Finished processing %d files. Building catalog...", itemsProcessed))
 
 	// 7. Build the final dynamic Catalog map
 	catalog := map[string]interface{}{
@@ -88,6 +119,8 @@ func (c *Client) CrawlCatalog(ctx context.Context) (map[string]interface{}, erro
 		"count":   len(tracks),
 		"tracks":  tracks,
 	}
+
+	c.sendProgress(progressChan, 100, "Crawl complete.")
 
 	return catalog, nil
 }

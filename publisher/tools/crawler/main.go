@@ -61,7 +61,7 @@ func main() {
 	fmt.Println("Starting R2 Crawl...")
 
 	// 5. Run the Crawl
-	catalogData, err := client.CrawlCatalog(context.Background())
+	catalogData, err := client.CrawlCatalog(context.Background(), nil)
 	if err != nil {
 		log.Fatalf("Crawl failed: %v", err)
 	}

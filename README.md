@@ -19,6 +19,8 @@ The system uses a "Content-Delivery Proxy" architecture:
 - [API Reference](./docs/API.md)
 - [Crawler Reference](./docs/CRAWLER.md)
 - [API Design Reference](./docs/API_DESIGN.md)
+- [Upload Manager](./docs/UPLOADMANAGER.md)
+- [Tool - Uploader](./docs/UPLOADER.md)
 
 
 **Front End:** Web Pages.

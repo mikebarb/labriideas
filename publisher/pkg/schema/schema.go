@@ -22,4 +22,9 @@ var CatalogSchema = []string{
 	"title",
 	"artist",
 	"hash",
+	"speaker",
+	"category",
+	"keywords",
+	"year",
+	"topten",
 }

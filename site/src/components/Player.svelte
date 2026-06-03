@@ -13,6 +13,8 @@
     hash: string;
     metadata: TrackMeta;
     playbackRate?: number;
+    title?: string;
+    artist?: string;
   }
 
   type PlaybackStatus =
@@ -105,11 +107,11 @@
   );
 
   let displayTitle: string = $derived(
-    currentTrack?.metadata?.title ?? currentTrack?.filename ?? 'No track selected'
+    currentTrack?.title ?? 'No track selected'
   );
 
   let displayArtist: string = $derived(
-    currentTrack?.metadata?.artist ?? 'Unknown Artist'
+    currentTrack?.artist ?? 'Unknown Artist'
   );
 
   let statusLabel: string = $derived(
@@ -341,6 +343,7 @@
   // Playback Controls
   // ──────────────────────────────────────────────
   async function playTrack(track: Track) {
+    console.log('Attempting to play track:', track);
     clearRefreshTimer();
     retryCount = 0;
     currentTime = 0;
@@ -352,8 +355,24 @@
     let trackToPlay = tracks.find((t) => t.filename === track.filename);
 
     if (!trackToPlay) {
+      // --- METADATA EXTRACTION LOGIC ---
+      console.log("playTrack - passed metadata: ", track.metadata);
+      //const meta = track.metadata || {};
+      console.log(`playTrack - Extracting metadata for ${track.filename}: `, track);
+      // 1. Extract Title (fallback to filename if missing)
+      const extractedTitle = 
+        track.title || track.filename.replace(/\.[^/.]+$/, ""); // removes .mp3 extension if used as fallback
+      // 2. Extract Artist/Author
+      const extractedArtist = 
+        track.artist || 'Unknown Artist';
       // If not in queue, create a new entry with a guaranteed unique ID (using filename)
-      trackToPlay = { ...track, id: track.filename, playbackRate: 1.0 }; 
+      trackToPlay = {
+        ...track,
+        id: track.filename,
+        playbackRate: 1.0,
+        title: extractedTitle,
+        artist: extractedArtist
+      }; 
       // Add it to the end of the queue
       tracks = [...tracks, trackToPlay];
     }
@@ -602,6 +621,7 @@
 
     // Listen for individual play requests from CatalogViewer island
     const handlePlay = (e: Event) => {
+      console.log('Received play-track event with detail:', (e as CustomEvent).detail);
       playTrack((e as CustomEvent).detail);
     };
 
