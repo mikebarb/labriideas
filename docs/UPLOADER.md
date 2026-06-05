@@ -66,3 +66,55 @@ The desktop tool relies on the following existing web server endpoints:
 | `POST` | `/api/update-metadata` | Triggers R2 Copy-Over-Self to inject ID3 headers. |
 | `POST` | `/api/start-crawl` | Initiates the asynchronous catalog rebuild job. |
 | `GET` | `/api/crawl-status?job_id=` | Polls the status/progress of the rebuild job. |
+
+## 5. Future Enhancements / TODO List
+
+The following features have been identified as high-value upgrades to further improve the tool's resilience and storage efficiency:
+
+*   **[ ] Content Fingerprinting (Duplicate Detection):**
+    *   **Objective:** Prevent the storage of duplicate audio content under different filenames.
+    *   **Implementation:** Compute MD5 hashes of local audio files during the pre-flight verification stage. Compare these against the `hash` values already present in the `catalog.json.gz` manifest.
+    *   **Benefit:** Significant bandwidth and R2 storage savings.
+
+*   **[ ] Resume-on-Interrupt:**
+    *   **Objective:** Allow the tool to recover instantly if the network drops or the tool is closed during a large batch.
+    *   **Implementation:** Maintain a local SQLite or JSON 'state' file that tracks `pending`, `uploaded`, and `metadata-synced` states for each record in the current batch.
+
+*   **[ ] Concurrent Upload Schedulers:**
+    *   **Objective:** Increase throughput for very large libraries.
+    *   **Implementation:** Implement a Go worker pool using `channels` and `sync.WaitGroup` to perform 3-5 concurrent uploads rather than the current sequential upload process.
+
+*   **[ ] Automatic ID3 Tag Correction:**
+    *   **Objective:** Automatically propagate local ID3 tag changes discovered during the crawler phase back to the CSV manifest.
+    *   **Implementation:** Create a "Sync-Back" routine that exports the R2-derived metadata from the crawler into an updated local CSV.
+
+
+The following features have been identified as high-value upgrades to further improve the tool's resilience and storage efficiency:
+
+*   **[ ] Standardized Audio Fingerprinting (Content-Based Deduplication):**
+    *   **Objective:** Detect duplicate audio content regardless of filename changes or ID3 metadata edits.
+    *   **Design Decision:** We will implement an "Audio-Only" MD5 hash. Since ID3 tags are stored inside the MP3 container but *outside* the actual audio frames, we must strip the headers before hashing.
+    *   **Implementation Strategy:**
+        1.  **Shared Algorithm:** Use a "Jump-to-Audio" algorithm. Both Go (in the Bulk Tool/Server) and Svelte (in the Browser) will:
+            *   Inspect the file header for `ID3` bytes.
+            *   Calculate the size of the ID3 tag (using synchsafe integer logic).
+            *   Seek past the tag header.
+            *   Compute the MD5 hash of the remaining byte stream.
+        2.  **Storage:** Store the resulting hash as a permanent R2 object header: `x-amz-meta-audio-hash`.
+        3.  **Cross-Platform Consistency:** By following the same byte-seeking logic in both Go and JS, the hash will be identical regardless of whether it was calculated on the client's PC or the web browser.
+    *   **Benefit:** Enables instant duplicate detection, prevents redundant bandwidth usage, and ensures data integrity even if files are renamed or re-tagged.
+
+*   **[ ] Resume-on-Interrupt:**
+    *   **Objective:** Allow the tool to recover instantly if the network drops or the tool is closed during a large batch.
+    *   **Implementation:** Maintain a local SQLite or JSON 'state' file.
+    *   **Benefit:** Eliminates the need to restart large batches from file #1.
+
+*   **[ ] Concurrent Upload Schedulers:**
+    *   **Objective:** Increase throughput for high-volume libraries.
+    *   **Implementation:** Utilize Go `channels` and `sync.WaitGroup` to handle 3–5 concurrent uploads per batch.
+    *   **Benefit:** Dramatically reduces the time required for massive library migrations.
+
+*   **[ ] Automatic ID3 Tag Sync:**
+    *   **Objective:** Propagate local ID3 tag changes discovered during the Crawler phase back to the source CSV manifest.
+    *   **Benefit:** Simplifies the "cycle of truth" between the local CMS (spreadsheet) and the R2 cloud storage.
+

@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/mikebarb/labriideas-publisher/pkg/csvparser"
+	"github.com/mikebarb/labriideas-publisher/pkg/media"
 )
 
 // --- CONFIGURATION ---
@@ -26,6 +27,25 @@ func main() {
 
 	csvPath := "./enriched_catalog_short.csv"
 	audioDirPath := `C:\Users\Barbara\labri_audio_files`
+
+	// ==========================================
+	// Ensure we have a fresh catalog before doing a bulk upload
+	// This covers the case of someone manipulating R2 in the admin panel.
+	// This process is too important not to have a valid catalogue.
+	// ------------------------------------------
+	// STEP prep 0a: Trigger Asynchronous Crawl on Server (NEW)
+	// ==========================================
+	fmt.Println("\n--- Triggering Catalog Rebuild on Server - initial run ---")
+	jobID1, err := triggerCrawlOnServer()
+	if err != nil {
+		log.Fatalf("Failed to trigger crawl - initial run: %v", err)
+	}
+
+	// ==========================================
+	// STEP 0b: Poll Crawl Status until Complete (NEW)
+	// ==========================================
+	fmt.Printf("Crawl Job Started (ID: %s). Waiting for server to rebuild catalog - initial run ...\n", jobID1)
+	pollCrawlStatus(jobID1)
 
 	// ==========================================
 	// STEP 1: Parse CSV & Verify Local Files
@@ -66,7 +86,7 @@ func main() {
 	// STEP 2: Fetch Current Catalog from Server (NEW)
 	// ==========================================
 	fmt.Println("\n--- Fetching current catalog from server ---")
-	r2Catalog, err := fetchCatalogFromServer()
+	r2Catalog, r2HashCatalog, err := fetchCatalogFromServer()
 	if err != nil {
 		log.Fatalf("Failed to fetch catalog: %v", err)
 	}
@@ -85,6 +105,17 @@ func main() {
 		r2Track, existsInR2 := r2Catalog[localRec.Filename]
 
 		if !existsInR2 {
+			// Check for duplicate AUDIO CONTENT before marking as Upload
+			localFilePath := filepath.Join(audioDirPath, localRec.Filename)
+			audioHash, _ := media.CalculateAudioHash(localFilePath)
+
+			if existingFile, isDuplicate := r2HashCatalog[audioHash]; isDuplicate {
+				fmt.Printf("  ⚠️ DUPLICATE AUDIO: %s is identical to %s (Skipping)\n", localRec.Filename, existingFile)
+				continue // Skip this file entirely
+			}
+
+			// If not a duplicate, add the hash to the metadata for the upload
+			localRec.Metadata["audio-hash"] = audioHash
 			listUpload = append(listUpload, localRec)
 		} else {
 			if metadataMatches(localRec.Metadata, r2Track) {
@@ -140,7 +171,7 @@ func main() {
 	// STEP 5: Trigger Asynchronous Crawl on Server (NEW)
 	// ==========================================
 	fmt.Println("\n--- Triggering Catalog Rebuild on Server ---")
-	jobID, err := triggerCrawlOnServer()
+	jobID2, err := triggerCrawlOnServer()
 	if err != nil {
 		log.Fatalf("Failed to trigger crawl: %v", err)
 	}
@@ -148,8 +179,8 @@ func main() {
 	// ==========================================
 	// STEP 6: Poll Crawl Status until Complete (NEW)
 	// ==========================================
-	fmt.Printf("Crawl Job Started (ID: %s). Waiting for server to rebuild catalog...\n", jobID)
-	pollCrawlStatus(jobID)
+	fmt.Printf("Crawl Job Started (ID: %s). Waiting for server to rebuild catalog...\n", jobID2)
+	pollCrawlStatus(jobID2)
 
 	fmt.Println("\n=== Bulk Upload Complete! ===")
 }
@@ -159,36 +190,44 @@ func main() {
 // ==========================================
 
 // Fetches the catalog JSON directly from the web server's cache/R2
-func fetchCatalogFromServer() (map[string]map[string]string, error) {
+func fetchCatalogFromServer() (map[string]map[string]string, map[string]string, error) {
 	emptyCatalog := make(map[string]map[string]string)
+	emptyHashCatalog := make(map[string]string)
+
 	resp, err := http.Get(serverBaseURL + "/api/catalog")
 	if err != nil {
-		return emptyCatalog, err
+		return emptyCatalog, emptyHashCatalog, err
 	}
 	defer resp.Body.Close()
 
+	//Handle fresh bucket where catalog doesn't exist yet (404) or server error (500)
+	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusInternalServerError {
+		fmt.Println("  (No existing catalog found. Starting with a fresh bucket.)")
+		return emptyCatalog, emptyHashCatalog, nil
+	}
+
 	if resp.StatusCode != 200 {
-		return emptyCatalog, fmt.Errorf("server returned %d", resp.StatusCode)
+		return emptyCatalog, emptyHashCatalog, fmt.Errorf("server returned %d", resp.StatusCode)
 	}
 
 	// 1. Read the raw bytes from the response
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return emptyCatalog, fmt.Errorf("failed to read response body: %w", err)
+		return emptyCatalog, emptyHashCatalog, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	// 2. Check if the response is Gzipped (GZIP magic number is 0x1f 0x8b)
 	if len(bodyBytes) >= 2 && bodyBytes[0] == 0x1f && bodyBytes[1] == 0x8b {
 		gzReader, err := gzip.NewReader(bytes.NewReader(bodyBytes))
 		if err != nil {
-			return emptyCatalog, fmt.Errorf("failed to init gzip reader: %w", err)
+			return emptyCatalog, emptyHashCatalog, fmt.Errorf("failed to init gzip reader: %w", err)
 		}
 		defer gzReader.Close()
 
 		// Decompress into a new byte slice
 		bodyBytes, err = io.ReadAll(gzReader)
 		if err != nil {
-			return emptyCatalog, fmt.Errorf("failed to decompress gzip: %w", err)
+			return emptyCatalog, emptyHashCatalog, fmt.Errorf("failed to decompress gzip: %w", err)
 		}
 	}
 
@@ -197,11 +236,12 @@ func fetchCatalogFromServer() (map[string]map[string]string, error) {
 		Tracks []map[string]interface{} `json:"tracks"`
 	}
 	if err := json.Unmarshal(bodyBytes, &catalogData); err != nil {
-		return emptyCatalog, fmt.Errorf("failed to parse catalog JSON: %w", err)
+		return emptyCatalog, emptyHashCatalog, fmt.Errorf("failed to parse catalog JSON: %w", err)
 	}
 
 	// 4. Convert to our lookup map
 	catalogMap := make(map[string]map[string]string)
+	catalogByAudioHash := make(map[string]string) // NEW: Maps Audio Hash -> Filename
 	for _, track := range catalogData.Tracks {
 		if filename, ok := track["filename"].(string); ok {
 			metaMap := make(map[string]string)
@@ -212,9 +252,13 @@ func fetchCatalogFromServer() (map[string]map[string]string, error) {
 				metaMap[k] = fmt.Sprintf("%v", v)
 			}
 			catalogMap[filename] = metaMap
+			// Populate the audio hash map for quick reverse lookups
+			if audioHash, exists := metaMap["audio-hash"]; exists && audioHash != "" {
+				catalogByAudioHash[audioHash] = filename
+			}
 		}
 	}
-	return catalogMap, nil
+	return catalogMap, catalogByAudioHash, nil
 }
 
 func metadataMatches(csvMeta map[string]string, r2Meta map[string]string) bool {

@@ -1,5 +1,6 @@
 ---
-// Import Tailwind styles
+// Imports
+import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 import Player from '../components/Player.svelte';
 
@@ -16,6 +17,7 @@ const currentPath = Astro.url.pathname;
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Labri Ideas</title>
+		<ClientRouter /> 
 	</head>
 	<body class="bg-slate-900 text-white min-h-screen flex flex-col">
 		<!-- Navigation Menu -->
@@ -35,16 +37,15 @@ const currentPath = Astro.url.pathname;
 		<main class="flex-1 p-8 pb-32">
 			<slot />
 		</main>
-		
-		<!-- STICKY PLAYER: Visible on all pages -->
-		<div class="fixed bottom-0 left-0 right-0 z-50 bg-slate-800 border-t border-slate-700 shadow-2xl flex justify-center">
-		  <Player 
+
+		<!-- PLAYER: Visible on all pages, controls its own visibility -->
+		<div transition:persist="audio-player">
+			<Player 
 			client:load 
 			showTracklist={false} 
 			apiBase="http://localhost:8080" 
 			isAdmin={true} 
-		  />
+			/>
 		</div>
-		
 	</body>
 </html>

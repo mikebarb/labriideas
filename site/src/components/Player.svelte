@@ -4,6 +4,7 @@
   // ──────────────────────────────────────────────
   import type { Snippet } from 'svelte';
   import { onMount } from 'svelte';
+  import { fly } from 'svelte/transition'; 
 
   type TrackMeta = Record<string, any>;
 
@@ -15,6 +16,7 @@
     playbackRate?: number;
     title?: string;
     artist?: string;
+    speaker?: string;
   }
 
   type PlaybackStatus =
@@ -88,6 +90,9 @@
   let seekBarElement: HTMLElement | null = $state(null);
   let isDragging: boolean = $state(false);
   let dragProgress: number = $state(0);
+
+  let isMinimized: boolean = $state(false);
+  let isPlaylistOpen: boolean = $state(showTracklist); // Initialize from the prop
 
   // ──────────────────────────────────────────────
   // Derived
@@ -343,7 +348,6 @@
   // Playback Controls
   // ──────────────────────────────────────────────
   async function playTrack(track: Track) {
-    console.log('Attempting to play track:', track);
     clearRefreshTimer();
     retryCount = 0;
     currentTime = 0;
@@ -356,15 +360,13 @@
 
     if (!trackToPlay) {
       // --- METADATA EXTRACTION LOGIC ---
-      console.log("playTrack - passed metadata: ", track.metadata);
       //const meta = track.metadata || {};
-      console.log(`playTrack - Extracting metadata for ${track.filename}: `, track);
       // 1. Extract Title (fallback to filename if missing)
       const extractedTitle = 
         track.title || track.filename.replace(/\.[^/.]+$/, ""); // removes .mp3 extension if used as fallback
       // 2. Extract Artist/Author
       const extractedArtist = 
-        track.artist || 'Unknown Artist';
+        track.speaker || 'Speaker Unknown';
       // If not in queue, create a new entry with a guaranteed unique ID (using filename)
       trackToPlay = {
         ...track,
@@ -621,7 +623,6 @@
 
     // Listen for individual play requests from CatalogViewer island
     const handlePlay = (e: Event) => {
-      console.log('Received play-track event with detail:', (e as CustomEvent).detail);
       playTrack((e as CustomEvent).detail);
     };
 
@@ -658,6 +659,13 @@
 <!-- ────────────────────────────────────────────── -->
 <!-- Template -->
 <!-- ────────────────────────────────────────────── -->
+<!-- Hidden audio engine -->
+<!-- MUST be at the root level so it never unmounts when minimizing -->
+<audio
+  bind:this={audioElement}
+  crossorigin="anonymous"
+  preload="auto"
+></audio>
 
 {#if children}
   {@const controls = {
@@ -689,329 +697,257 @@
 
   {@render children({ controls, state, admin, trackList })}
 {:else}
-  <!-- Default built-in UI — all Tailwind -->
-  <div
-    class="
-      bg-[#0f0f0f] border border-[#222] rounded-xl p-5
-      max-w-[480px] font-sans text-neutral-200
-      {status === 'error' ? '!border-[#c0392b]' : ''}
-    "
-  >
-    <!-- Hidden audio engine -->
-    <audio
-      bind:this={audioElement}
-      crossorigin="anonymous"
-      preload="auto"
-    ></audio>
-
-    <!-- ── Track Info ── -->
-    <div class="flex items-center gap-3 mb-4">
-      <span class="text-xl shrink-0">{statusIcon()}</span>
-      <div class="flex flex-col min-w-0">
-        <!-- NEW: Wrapper for Title + Speed Badge -->
-        <div class="flex items-center gap-2">
-          <span class="text-base font-semibold truncate">{displayTitle}</span>
-          {#if currentTrack?.playbackRate && currentTrack.playbackRate !== 1.0}
-            <span class="text-[9px] bg-[#1db954]/20 text-[#1db954] px-1.5 py-0.5 rounded flex-shrink-0">
-              {currentTrack.playbackRate}x
-            </span>
-          {/if}
-        </div>
-        <!-- END NEW -->
-        <span class="text-sm text-[#888] truncate">{displayArtist}</span>
-      </div>
-    </div>
-
-    <!-- ── Progress / Seek Bar ── -->
-    <div class="flex items-center gap-2 mb-4">
-      <span class="text-xs text-[#888] min-w-[36px] text-center tabular-nums">
-        {formatTime(displayTime)}
-      </span>
-
-      <!-- Seek rail -->
-      <div
-        bind:this={seekBarElement}
-        class="seek-rail flex-1 h-1.5 bg-[#333] rounded-full relative cursor-pointer"
-        role="slider"
-        aria-label="Seek"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(progress)}
-        tabindex="0"
-        
-        onpointerdown={handleSeekPointerDown}
-        onpointermove={handleSeekPointerMove}
-        onpointerup={handleSeekPointerUp}
-        onpointercancel={handleSeekPointerUp}
-        
-        onkeydown={(e) => {
-          if (e.key === 'ArrowRight') seekTo(Math.min(progress + 5, 100));
-          if (e.key === 'ArrowLeft') seekTo(Math.max(progress - 5, 0));
-        }}
-      >
-        <!-- Buffered -->
-        <div
-          class="absolute top-0 left-0 h-full bg-[#444] rounded-full transition-[width] duration-300"
-          style="width: {duration > 0 ? (buffered / duration) * 100 : 0}%"
-        ></div>
-        <!-- Played -->
-        <div
-          class="absolute top-0 left-0 h-full bg-[#1db954] rounded-full transition-[width] {isDragging ? 'duration-0' : 'duration-100'}"
-          style="width: {progress}%"
-        ></div>
-        <!-- Thumb (Grows slightly when dragging) -->
-        <div
-          class="
-            absolute top-1/2 bg-white rounded-full -translate-x-1/2 -translate-y-1/2 shadow 
-            transition-[left,width,height] {isDragging ? 'duration-0' : 'duration-100'}
-            {isDragging ? 'w-4 h-4' : 'w-3 h-3'}
-          "
-          style="left: {progress}%"
-        ></div>
-      </div>
-
-      <!-- Duration time on the right -->
-      <span class="text-xs text-[#888] min-w-[36px] text-center tabular-nums">
-        {formatTime(duration)}
-      </span>
-    </div>
-
-    <!-- ── Main Controls ── -->
-        <!-- ── Main Controls ── -->
-    <div class="grid grid-cols-3 items-center mb-3">
-      
-      <!-- LEFT COLUMN: Speed Control Entity -->
-      <div class="flex items-center justify-start">
-        <div class="flex items-center gap-1 bg-[#1a1a1a] border border-[#333] rounded-lg px-1.5 py-1 select-none">
-          <button 
-            class="bg-transparent border-none text-white cursor-pointer text-sm w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition disabled:opacity-30 disabled:cursor-default"
-            onclick={decrementSpeed}
-            disabled={(currentTrack?.playbackRate || 1.0) <= MIN_SPEED}
-            aria-label="Decrease speed"
-          >
-            −
-          </button>
-          <div class="flex items-center gap-1 text-white px-1">
-            <span class="text-sm">🐇</span>
-            <span class="text-[11px] font-semibold min-w-[30px] text-center tabular-nums">
-              {(currentTrack?.playbackRate || 1.0).toFixed(1)}x
-            </span>
-          </div>
-          <button 
-            class="bg-transparent border-none text-white cursor-pointer text-sm w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition disabled:opacity-30 disabled:cursor-default"
-            onclick={incrementSpeed}
-            disabled={(currentTrack?.playbackRate || 1.0) >= MAX_SPEED}
-            aria-label="Increase speed"
-          >
-            +
-          </button>
-        </div>
-      </div>
-
-      <!-- CENTER COLUMN: Playback Controls -->
-      <div class="flex items-center justify-center gap-4">
-        <!-- Previous -->
-        <button
-          class="
-            bg-transparent border-none text-neutral-200 cursor-pointer
-            text-xl p-1.5 rounded-full transition
-            hover:bg-white/10 active:scale-[0.92]
-            flex items-center justify-center w-10 h-10
-            disabled:opacity-30 disabled:cursor-default
-          "
-          onclick={playPrev}
-          aria-label="Previous track"
-          disabled={tracks.length === 0}
-        >
-          ⏮
-        </button>
-
-        <!-- Play / Pause -->
-        <button
-          class="
-            border-none cursor-pointer
-            text-3xl p-2 rounded-full transition
-            hover:active:scale-[0.92]
-            flex items-center justify-center
-            w-14 h-14
-            bg-[#1db954] text-black
-            hover:bg-[#1ed760]
-            disabled:opacity-30 disabled:cursor-default
-            shadow-lg shadow-[#1db954]/25
-          "
-          onclick={togglePlayPause}
-          aria-label={status === 'playing' ? 'Pause' : 'Play'}
-          disabled={tracks.length === 0 && status === 'idle'}
-        >
-          {#if status === 'loading' || status === 'buffering'}
-            <span class="inline-block w-6 h-6 border-2 border-transparent border-t-current rounded-full animate-spin"></span>
-          {:else if status === 'playing'}
-            ⏸
-          {:else}
-            ▶
-          {/if}
-        </button>
-
-        <!-- Next -->
-        <button
-          class="
-            bg-transparent border-none text-neutral-200 cursor-pointer
-            text-xl p-1.5 rounded-full transition
-            hover:bg-white/10 active:scale-[0.92]
-            flex items-center justify-center w-10 h-10
-            disabled:opacity-30 disabled:cursor-default
-          "
-          onclick={playNext}
-          aria-label="Next track"
-          disabled={tracks.length === 0}
-        >
-          ⏭
-        </button>
-
-        <!-- Delete from Queue -->
-        {#if status === 'playing' || status === 'paused'}
-          <button
-            class="bg-red-500/80 hover:bg-red-500 border-none text-white cursor-pointer text-xs p-1.5 rounded-full transition flex items-center justify-center w-8 h-8"
-            onclick={(e) => { e.stopPropagation(); removeFromQueue(currentTrack.filename); }}
-            aria-label="Remove from queue"
-          >
-            ✕
-          </button>
-        {/if}
-      </div>
-
-      <!-- RIGHT COLUMN: Volume -->
-      <div class="flex items-center justify-end gap-1">
-        <button
-          class="
-            bg-transparent border-none text-neutral-200 cursor-pointer
-            text-xl p-1.5 rounded-full transition
-            hover:bg-white/10
-            flex items-center justify-center w-10 h-10
-          "
-          onclick={toggleMute}
-          aria-label={isMuted ? 'Unmute' : 'Mute'}
-        >
-          {isMuted ? '🔇' : volume > 0.5 ? '🔊' : '🔉'}
-        </button>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          bind:value={volume}
-          oninput={(e) => setVolume(parseFloat(e.currentTarget.value))}
-          aria-label="Volume"
-          class="w-[70px] accent-[#1db954]"
-        />
-      </div>
-
-    </div>
-
-    <!-- ── Error Banner ── -->
-    {#if status === 'error'}
-      <div class="flex items-center justify-between bg-[#c0392b]/15 border border-[#c0392b] rounded-md px-3 py-2 text-sm mb-3">
-        <span>{errorMessage}</span>
-        <button
-          class="bg-[#c0392b] border-none text-white px-2.5 py-1 rounded cursor-pointer text-xs hover:bg-[#e74c3c] transition"
-          onclick={() => currentTrack && playTrack(currentTrack)}
-        >
-          Retry
-        </button>
-      </div>
-    {:else if status === 'buffering'}
-      <div class="bg-white/5 rounded px-3 py-1.5 text-sm text-[#888] text-center mb-3">
-        Buffering…
-      </div>
-    {/if}
-
-    <!-- ── Admin Section ── -->
-    {#if isAdmin}
-      <div class="flex items-center gap-2.5 border-t border-[#222] pt-3 mb-3">
-        <span class="bg-[#f39c12] text-black text-[0.65rem] font-bold uppercase px-1.5 py-0.5 rounded tracking-wide">
-          Admin
-        </span>
-        {#if currentTrack}
-          <button
-            class="bg-white/8 border border-[#333] text-[#ccc] px-2.5 py-1 rounded text-xs cursor-pointer hover:bg-white/15 transition"
-            onclick={() => downloadTrack(currentTrack)}
-          >
-            ⬇ Download
-          </button>
-          <a
-            class="bg-white/8 border border-[#333] text-[#ccc] px-2.5 py-1 rounded text-xs cursor-pointer hover:bg-white/15 transition no-underline"
-            href="/admin/edit?id={currentTrack.id}"
-            target="_blank"
-            rel="noopener"
-          >
-            ✏ Edit Metadata
-          </a>
-        {/if}
-      </div>
-    {/if}
-
-    <!-- ── Track List ── -->
-    {#if showTracklist}
-      {#if tracks.length > 0}
-        <div class="tracklist max-h-60 overflow-y-auto border-t border-[#222] pt-2">
-          {#each tracks as track, i (track.id)}
+  
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- MINIMIZED VIEW (The "Pill" Player) -->
+    <!-- ══════════════════════════════════════════════ -->
+    {#if isMinimized}
+        <div class="bg-[#181818] border border-[#333] rounded-full px-4 py-2 flex items-center gap-3 max-w-[480px] shadow-lg">
+            <!-- Play/Pause -->
             <button
-              class="
-                flex items-center gap-2.5 w-full
-                bg-transparent border-none
-                px-1.5 py-2 rounded-md cursor-pointer
-                text-sm text-left transition
-                hover:bg-white/5
-                {currentTrack?.id === track.id
-                  ? 'text-[#1db954] bg-[#1db954]/8'
-                  : 'text-[#bbb]'
-                }
-              "
-              onclick={() => playTrack(track)}
+                class="bg-transparent border-none text-white cursor-pointer text-lg p-0 transition hover:scale-110"
+                onclick={togglePlayPause}
+                aria-label={status === 'playing' ? 'Pause' : 'Play'}
             >
-              <span
-                class="
-                  text-xs min-w-[20px] text-right
-                  {currentTrack?.id === track.id ? 'text-[#1db954]' : 'text-[#666]'}
-                "
-              >
-                {i + 1}
-              </span>
-               <span class="flex-1 truncate flex items-center gap-2">
-                {track.metadata?.title ?? track.filename}
-                 <!-- Show speed badge if not 1.0 (Use 'track' not 'currentTrack' here!) -->
-                {#if track.playbackRate && track.playbackRate !== 1.0}
-                   <span class="text-[9px] bg-[#1db954]/20 text-[#1db954] px-1.5 py-0.5 rounded flex-shrink-0">
-                    {track.playbackRate}x
-                  </span>
+                {#if status === 'loading' || status === 'buffering'}
+                    <span class="inline-block w-4 h-4 border-2 border-transparent border-t-current rounded-full animate-spin"></span>
+                {:else if status === 'playing'}
+                    ⏸
+                {:else}
+                    ▶
                 {/if}
-              </span>
-              <span class="text-[#666] text-xs min-w-[60px] text-right">
-                {track.metadata?.artist ?? ''}
-              </span>
             </button>
 
-            {#if isAdmin}
-              <span class="flex gap-1">
-                <button
-                  class="bg-transparent border-none text-[#888] cursor-pointer text-sm p-0.5 rounded hover:text-white transition"
-                  onclick={(e) => { e.stopPropagation(); downloadTrack(track); }}
-                >
-                  ⬇
-                </button>
-              </span>
+            <!-- Track Info -->
+            <div class="flex-1 min-w-0 truncate text-sm text-neutral-200">
+                <span class="font-semibold">{displayTitle}</span>
+                <span class="text-[#888] mx-1">—</span>
+                <span class="text-[#888]">{displayArtist}</span>
+            </div>
+
+            <!-- Speed Badge (if active) -->
+            {#if currentTrack?.playbackRate && currentTrack.playbackRate !== 1.0}
+                <span class="text-[9px] bg-[#1db954]/20 text-[#1db954] px-1.5 py-0.5 rounded flex-shrink-0">
+                    {currentTrack.playbackRate}x
+                </span>
             {/if}
 
-          {/each}
+            <!-- Expand Button -->
+            <button
+                class="shrink-0 bg-transparent border-none text-[#888] cursor-pointer text-lg p-1.5 rounded-full transition hover:bg-white/10 hover:text-white"
+                onclick={() => isMinimized = false}
+                aria-label="Expand player"
+                title="Expand player"
+            >
+                ⬆
+            </button>
         </div>
-      {:else}
-        <div class="text-center text-[#555] text-sm py-6">
-          No tracks available
-        </div>
-      {/if}
-    {/if}
-  </div>
-{/if}
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- FULL VIEW (The Standard Player) -->
+    <!-- ══════════════════════════════════════════════ -->
+    {:else}
+        <div
+            class="
+                bg-[#0f0f0f] border border-[#222] rounded-xl p-5
+                max-w-[480px] font-sans text-neutral-200
+                {status === 'error' ? '!border-[#c0392b]' : ''}
+            "
+        >
+            <!-- ── Track Info ── -->
+            <div class="flex items-center gap-3 mb-4">
+                <span class="text-xl shrink-0">{statusIcon()}</span>
+                <div class="flex flex-col min-w-0 flex-1">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base font-semibold truncate">{displayTitle}</span>
+                        {#if currentTrack?.playbackRate && currentTrack.playbackRate !== 1.0}
+                        <span class="text-[9px] bg-[#1db954]/20 text-[#1db954] px-1.5 py-0.5 rounded flex-shrink-0">
+                            {currentTrack.playbackRate}x
+                        </span>
+                        {/if}
+                    </div>
+                    <span class="text-sm text-[#888] truncate">{displayArtist}</span>
+                </div>
+
+                <!-- Action Buttons (Top Right) -->
+                {#if currentTrack}
+                    <div class="flex items-center gap-1">
+                        <!-- Playlist Toggle -->
+                        <button
+                            class="shrink-0 bg-transparent border-none text-[#888] cursor-pointer text-lg p-1.5 rounded-full transition hover:bg-white/10 hover:text-white"
+                            onclick={() => isPlaylistOpen = !isPlaylistOpen}
+                            aria-label="Toggle playlist"
+                            title={isPlaylistOpen ? "Hide playlist" : "Show playlist"}
+                        >
+                            🎵
+                        </button>
+                        <!-- Minimize -->
+                        <button
+                            class="shrink-0 bg-transparent border-none text-[#888] cursor-pointer text-lg p-1.5 rounded-full transition hover:bg-white/10 hover:text-white"
+                            onclick={() => isMinimized = true}
+                            aria-label="Minimize player"
+                            title="Minimize player"
+                        >
+                            ⬇
+                        </button>
+                        <!-- Remove Track -->
+                        <button
+                            class="shrink-0 bg-transparent border-none text-[#888] cursor-pointer text-lg p-1.5 rounded-full transition hover:bg-white/10 hover:text-red-400"
+                            onclick={() => removeFromQueue(currentTrack.filename)}
+                            aria-label="Remove current track"
+                            title="Remove from queue"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                {/if}
+            </div>
+            
+            <!-- REMOVED STRAY </div> HERE -->
+
+            <!-- ── Progress / Seek Bar ── -->
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-xs text-[#888] min-w-[36px] text-center tabular-nums">
+                    {formatTime(displayTime)}
+                </span>
+                <div
+                    bind:this={seekBarElement}
+                    class="seek-rail flex-1 h-1.5 bg-[#333] rounded-full relative cursor-pointer"
+                    role="slider"
+                    aria-label="Seek"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.round(progress)}
+                    tabindex="0"
+                    onpointerdown={handleSeekPointerDown}
+                    onpointermove={handleSeekPointerMove}
+                    onpointerup={handleSeekPointerUp}
+                    onpointercancel={handleSeekPointerUp}
+                    onkeydown={(e) => {
+                        if (e.key === 'ArrowRight') seekTo(Math.min(progress + 5, 100));
+                        if (e.key === 'ArrowLeft') seekTo(Math.max(progress - 5, 0));
+                    }}
+                >
+                    <div
+                        class="absolute top-0 left-0 h-full bg-[#444] rounded-full transition-[width] duration-300"
+                        style="width: {duration > 0 ? (buffered / duration) * 100 : 0}%"
+                    ></div>
+                    <div
+                        class="absolute top-0 left-0 h-full bg-[#1db954] rounded-full transition-[width] {isDragging ? 'duration-0' : 'duration-100'}"
+                        style="width: {progress}%"
+                    ></div>
+                    <div
+                        class="absolute top-1/2 bg-white rounded-full -translate-x-1/2 -translate-y-1/2 shadow transition-[left,width,height] {isDragging ? 'duration-0' : 'duration-100'} {isDragging ? 'w-4 h-4' : 'w-3 h-3'}"
+                        style="left: {progress}%"
+                    ></div>
+                </div>
+                <!-- MOVED DURATION SPAN OUT OF seek-rail div -->
+                <span class="text-xs text-[#888] min-w-[36px] text-center tabular-nums">
+                    {formatTime(duration)}
+                </span>
+            </div>
+
+            <!-- ── Main Controls ── -->
+            <div class="grid grid-cols-3 items-center mb-3">
+                <div class="flex items-center justify-start">
+                    <div class="flex items-center gap-1 bg-[#1a1a1a] border border-[#333] rounded-lg px-1.5 py-1 select-none">
+                        <button class="bg-transparent border-none text-white cursor-pointer text-sm w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition disabled:opacity-30 disabled:cursor-default" onclick={decrementSpeed} disabled={(currentTrack?.playbackRate || 1.0) <= MIN_SPEED} aria-label="Decrease speed">−</button>
+                        <div class="flex items-center gap-1 text-white px-1">
+                            <span class="text-sm">🐇</span>
+                            <span class="text-[11px] font-semibold min-w-[30px] text-center tabular-nums">{(currentTrack?.playbackRate || 1.0).toFixed(1)}x</span>
+                        </div>
+                        <button class="bg-transparent border-none text-white cursor-pointer text-sm w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition disabled:opacity-30 disabled:cursor-default" onclick={incrementSpeed} disabled={(currentTrack?.playbackRate || 1.0) >= MAX_SPEED} aria-label="Increase speed">+</button>
+                    </div>
+                </div> <!-- ADDED MISSING CLOSING DIV for Left Column -->
+
+                <div class="flex items-center justify-center gap-4">
+                    <button class="bg-transparent border-none text-neutral-200 cursor-pointer text-xl p-1.5 rounded-full transition hover:bg-white/10 active:scale-[0.92] flex items-center justify-center w-10 h-10 disabled:opacity-30 disabled:cursor-default" onclick={playPrev} aria-label="Previous track" disabled={tracks.length === 0}>⏮</button>
+                    <button class="border-none cursor-pointer text-3xl p-2 rounded-full transition hover:active:scale-[0.92] flex items-center justify-center w-14 h-14 bg-[#1db954] text-black hover:bg-[#1ed760] disabled:opacity-30 disabled:cursor-default shadow-lg shadow-[#1db954]/25" onclick={togglePlayPause} aria-label={status === 'playing' ? 'Pause' : 'Play'} disabled={tracks.length === 0 && status === 'idle'}>
+                        {#if status === 'loading' || status === 'buffering'}
+                            <span class="inline-block w-6 h-6 border-2 border-transparent border-t-current rounded-full animate-spin"></span>
+                        {:else if status === 'playing'}⏸{:else}▶{/if}
+                    </button>
+                    <button class="bg-transparent border-none text-neutral-200 cursor-pointer text-xl p-1.5 rounded-full transition hover:bg-white/10 active:scale-[0.92] flex items-center justify-center w-10 h-10 disabled:opacity-30 disabled:cursor-default" onclick={playNext} aria-label="Next track" disabled={tracks.length === 0}>⏭</button>
+                </div>
+
+                <div class="flex items-center justify-end gap-1">
+                    <button class="bg-transparent border-none text-neutral-200 cursor-pointer text-xl p-1.5 rounded-full transition hover:bg-white/10 flex items-center justify-center w-10 h-10" onclick={toggleMute} aria-label={isMuted ? 'Unmute' : 'Mute'}>
+                        {isMuted ? '🔇' : volume > 0.5 ? '🔊' : '🔉'}
+                    </button>
+                    <input type="range" min="0" max="1" step="0.01" bind:value={volume} oninput={(e) => setVolume(parseFloat(e.currentTarget.value))} aria-label="Volume" class="w-[70px] accent-[#1db954]" />
+                </div>
+            </div>
+
+            <!-- ── Error / Buffering Banners ── -->
+            {#if status === 'error'}
+                <div class="flex items-center justify-between bg-[#c0392b]/15 border border-[#c0392b] rounded-md px-3 py-2 text-sm mb-3">
+                    <span>{errorMessage}</span>
+                    <button class="bg-[#c0392b] border-none text-white px-2.5 py-1 rounded cursor-pointer text-xs hover:bg-[#e74c3c] transition" onclick={() => currentTrack && playTrack(currentTrack)}>Retry</button>
+                </div>
+            {:else if status === 'buffering'}
+                <div class="bg-white/5 rounded px-3 py-1.5 text-sm text-[#888] text-center mb-3">Buffering…</div>
+            {/if}
+
+            <!-- ── Admin Section ── -->
+            {#if isAdmin}
+                <div class="flex items-center gap-2.5 border-t border-[#222] pt-3 mb-3">
+                    <span class="bg-[#f39c12] text-black text-[0.65rem] font-bold uppercase px-1.5 py-0.5 rounded tracking-wide">Admin</span>
+                    {#if currentTrack}
+                        <button class="bg-white/8 border border-[#333] text-[#ccc] px-2.5 py-1 rounded text-xs cursor-pointer hover:bg-white/15 transition" onclick={() => downloadTrack(currentTrack)}>⬇ Download</button>
+                        <a class="bg-white/8 border border-[#333] text-[#ccc] px-2.5 py-1 rounded text-xs cursor-pointer hover:bg-white/15 transition no-underline" href="/admin/edit?id={currentTrack.id}" target="_blank" rel="noopener">✏ Edit Metadata</a>
+                    {/if}
+                </div>
+            {/if}
+
+            <!-- ── Track List ── -->
+            {#if isPlaylistOpen}
+                {#if tracks.length > 0}
+                    <div class="tracklist max-h-60 overflow-y-auto border-t border-[#222] pt-2">
+                        {#each tracks as track, i (track.id)}            
+                            <!-- Changed outer element to <div> to avoid nesting <button> inside <button> -->
+                            <div
+                                class="group flex items-center gap-2.5 w-full bg-transparent border-none px-1.5 py-2 rounded-md cursor-pointer text-sm text-left transition hover:bg-white/5 {currentTrack?.id === track.id ? 'text-[#1db954] bg-[#1db954]/8' : 'text-[#bbb]'}"
+                                role="button"
+                                tabindex="0"
+                                onclick={() => playTrack(track)}
+                                onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playTrack(track); } }}
+                            >
+                                <span class="text-xs min-w-[20px] text-right {currentTrack?.id === track.id ? 'text-[#1db954]' : 'text-[#666]'}">{i + 1}</span>
+                                
+                                <span class="flex-1 truncate flex items-center gap-2">
+                                    {track.metadata?.title ?? track.filename}
+                                    {#if track.playbackRate && track.playbackRate !== 1.0}
+                                    <span class="text-[9px] bg-[#1db954]/20 text-[#1db954] px-1.5 py-0.5 rounded flex-shrink-0">{track.playbackRate}x</span>
+                                    {/if}
+                                </span>
+                                
+                                <span class="flex items-center gap-1.5 text-[#666] text-xs min-w-[60px] justify-end">
+                                    <span class="truncate">{track.metadata?.artist ?? ''}</span>
+                                        <!-- These inner buttons are now valid! -->
+                                        <button 
+                                            class="bg-transparent border-none text-[#888] cursor-pointer text-sm p-0.5 rounded hover:text-red-400 transition opacity-0 group-hover:opacity-100" 
+                                            onclick={(e) => { e.stopPropagation(); removeFromQueue(track.filename); }} 
+                                            aria-label="Remove from queue"
+                                        >✕</button>
+                                    
+                                    {#if isAdmin}
+                                        <button 
+                                            class="bg-transparent border-none text-[#888] cursor-pointer text-sm p-0.5 rounded hover:text-white transition opacity-0 group-hover:opacity-100" 
+                                            onclick={(e) => { e.stopPropagation(); downloadTrack(track); }}
+                                        >⬇</button>
+                                    {/if}
+                                </span>
+                            </div>
+                        {/each}
+                    </div>
+                {:else}
+                    <div class="text-center text-[#555] text-sm py-6">No tracks available</div>
+                {/if}
+            {/if}
+        </div> <!-- ADDED: Close Full View Container -->
+    {/if}   <!-- ADDED: Close isMinimized / {:else} block -->
+{/if}     <!-- ADDED: Close if children / {:else} block -->
+
 
 <!-- ────────────────────────────────────────────── -->
 <!-- Minimal styles — scrollbar only -->

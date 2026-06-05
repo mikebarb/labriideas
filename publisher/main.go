@@ -163,7 +163,13 @@ func catalogHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 5. Stream the compressed bytes to the client
 	fmt.Printf("catalogHandler - Stream catalogue to client\n")
-	w.Header().Set("Content-Type", "application/gzip")
+	// CHANGED: Tell the browser it's a binary blob, NOT auto-decompressing gzip
+	w.Header().Set("Content-Type", "application/octet-stream")
+	// REMOVED: w.Header().Set("Content-Encoding", "gzip")
+	// Tell the browser it's JSON, but it's Gzipped (Browser will auto-decompress!)
+	//w.Header().Set("Content-Type", "application/json")
+	//w.Header().Set("Content-Encoding", "gzip")
+
 	w.Header().Set("ETag", cachedETag) // Send the ETag so the client can save it
 	w.Write(cachedBytes)
 
@@ -207,10 +213,12 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	// 3. Get metadata from form data
 	title := r.FormValue("title")
 	artist := r.FormValue("artist")
+	audioHash := r.FormValue("audio-hash")
 
 	metadata := map[string]string{
-		"title":  title,
-		"artist": artist,
+		"title":      title,
+		"artist":     artist,
+		"audio-hash": audioHash, // Saves the fingerprint to R2
 	}
 
 	// 4. Call the library to upload!

@@ -22,6 +22,8 @@
     delete metadataPayload.id;
     delete metadataPayload.filename;
     delete metadataPayload.hash;
+    // NOTE: We do NOT delete `audio-hash`. It must be sent back to R2 
+    // so the Copy-Over-Self operation preserves the fingerprint!
 
     try {
       const response = await fetch('http://localhost:8080/api/update-metadata', {
@@ -52,7 +54,8 @@
     
     <div class="grid gap-4">
       {#each Object.entries(editableMetadata) as [key, value]}
-        {#if key !== 'id' && key !== 'filename' && key !== 'hash'}
+        <!-- UPDATED: Hide audio-hash from the UI so users can't edit it -->
+        {#if key !== 'id' && key !== 'filename' && key !== 'hash' && key !== 'audio-hash'}
           <label class="block">
             <span class="text-xs text-slate-400 uppercase">{key}</span>
             <input 

@@ -6,8 +6,7 @@
 
   import { onMount } from 'svelte';
   import MetadataEditor from '../components/MetadataEditor.svelte';
-  import { getCatalog } from '../lib/catalogStore';
-
+  
   let selectedTrack = null;
 
   // Catalog here is a list of tracks, not the json calalog.json content.
@@ -28,7 +27,6 @@
   function prevPage() { if (currentPage > 1) currentPage -= 1; }
 
  // Helper: Convert Base64 string back to ArrayBuffer
- /*
   function base64ToArrayBuffer(base64) {
     const binaryString = window.atob(base64);
     const bytes = new Uint8Array(binaryString.length);
@@ -37,10 +35,8 @@
     }
     return bytes.buffer;
   }
-  */
-
+  
   // Helper: Convert ArrayBuffer to Base64 string for localStorage
- /*
   function arrayBufferToBase64(buffer) {
     let binary = '';
     const bytes = new Uint8Array(buffer);
@@ -49,17 +45,16 @@
     }
     return window.btoa(binary);
   }
-*/
+
    // The "Inflator": Decompresses Gzip and Parses JSON
-/*
-   async function inflateCatalog(arrayBuffer) {
+  async function inflateCatalog(arrayBuffer) {
     const ds = new DecompressionStream('gzip');
     const decompressedStream = new Response(arrayBuffer).body.pipeThrough(ds);
     const blob = await new Response(decompressedStream).blob();
     const text = await blob.text();
     return JSON.parse(text);
   }
-*/
+
   // ==================================================================================
   // load the catalog into memory. 
   // Get it from the closest source that is not stale.
@@ -86,19 +81,59 @@
     
     // Get our stored ETag/Version from local storage / cache
     const clientVersion = localStorage.getItem('catalog_version') || "";
-    try{
-      // Ask the service for the catalog. 
-      // It will either return the memory cache instantly, or run the pipeline.
-      const loadedCatalog = await getCatalog();
+    
+    try {
+      const res = await fetch(`http://localhost:8080/api/catalog?version=${clientVersion}`);
+      
+      // 304 means our cache is perfectly valid
+      if (res.status === 304) {
+        status = "Catalog is up to date (Loaded from cache).";
+        // Inflate from local storage
+        const cachedBase64 = localStorage.getItem('catalog_data');
+        if (cachedBase64) {
+          const buffer = base64ToArrayBuffer(cachedBase64);
+          const data = await inflateCatalog(buffer);
+          catalog = data.tracks || [];
+          console.log("CatalogViewer - catalog: ", catalog);
+        }
+        isLoading = false;
+        return;
+      }
+      
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
-      catalog = loadedCatalog;
-      status = `Catalog loaded (${catalog.length} tracks)`;
+      status = "New version found. Downloading compressed catalog...";
+      
+      // 1. Get the raw binary Gzip data and the new ETag
+      const arrayBuffer = await res.arrayBuffer();
+      const newETag = res.headers.get('ETag');
 
-      // Broadcast to Player
-      //window.dispatchEvent(new CustomEvent('catalog-loaded', { detail: catalog }));
+      // 2. Save compressed to localStorage (as Base64)
+      const base64Data = arrayBufferToBase64(arrayBuffer);
+      localStorage.setItem('catalog_data', base64Data);
+      localStorage.setItem('catalog_version', newETag);
 
-    } catch (err) {
-      status = "Failed to load catalog.";
+      // 3. Inflate into memory for Svelte to use
+      status = "Decompressing catalog...";
+      const data = await inflateCatalog(arrayBuffer);
+      catalog = data.tracks || [];
+      console.log("loadCatalog - catalog: catalog");
+      
+      status = `Catalog updated to ETag ${newETag}! (${catalog.length} tracks)`;
+      
+    } catch (error) {
+      console.error("Catalog load error:", error);
+      status = "Error. Trying cache...";
+      
+      const cachedBase64 = localStorage.getItem('catalog_data');
+      if (cachedBase64) {
+        const buffer = base64ToArrayBuffer(cachedBase64);
+        const data = await inflateCatalog(buffer);
+        catalog = data.tracks || [];
+        status = "Loaded from cache (Offline mode).";
+      } else {
+        status = "Failed to load catalog.";
+      }
     } finally {
       isLoading = false;
     }
@@ -107,7 +142,6 @@
   onMount(() => {
     loadCatalog();
   });
-
 </script>
 
 <div class="text-white p-6 bg-slate-800 rounded-lg border border-slate-700 shadow-xl max-w-2xl mx-auto">

@@ -27,4 +27,5 @@ var CatalogSchema = []string{
 	"keywords",
 	"year",
 	"topten",
+	"audio-hash",
 }
