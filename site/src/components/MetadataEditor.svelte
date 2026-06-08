@@ -1,5 +1,8 @@
 <script>
+  import MetadataForm from './MetadataForm.svelte'; // Update path if needed
+  
   export let track = null; // The track object passed from the parent list
+  export let onClose = () => {}; // Callback to close the editor
   
   let editableMetadata = {};
   let isSaving = false;
@@ -9,6 +12,15 @@
   $: if (track) {
     editableMetadata = { ...track };
     status = "";
+  }
+
+ // Cancel function to revert changes
+  function handleCancel() {
+   // 1. Revert changes locally
+    editableMetadata = { ...track };
+    status = "";
+    // 2. Tell the parent to close the editor
+    onClose(); 
   }
 
   async function handleSave() {
@@ -52,27 +64,27 @@
   <div class="bg-slate-800 p-6 rounded-lg border border-cyan-500/50 shadow-xl">
     <h3 class="text-lg font-bold text-cyan-400 mb-4">Edit: {track.filename}</h3>
     
-    <div class="grid gap-4">
-      {#each Object.entries(editableMetadata) as [key, value]}
-        <!-- UPDATED: Hide audio-hash from the UI so users can't edit it -->
-        {#if key !== 'id' && key !== 'filename' && key !== 'hash' && key !== 'audio-hash'}
-          <label class="block">
-            <span class="text-xs text-slate-400 uppercase">{key}</span>
-            <input 
-              bind:value={editableMetadata[key]} 
-              class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white"
-            />
-          </label>
-        {/if}
-      {/each}
-    </div>
+    <!-- SHARED COMPONENT -->
+    <MetadataForm 
+      bind:metadata={editableMetadata} 
+      hiddenFields={['id', 'filename', 'hash', 'audio-hash']} 
+    />
 
-    <button 
-      on:click={handleSave}
-      disabled={isSaving}
-      class="mt-6 w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-2 px-4 rounded transition-colors">
-      {isSaving ? 'Saving...' : 'Save Metadata'}
-    </button>
+    <div class="mt-6 flex gap-4">
+      <button 
+        on:click={handleCancel}
+        disabled={isSaving}
+        class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-2 px-4 rounded transition-colors">
+        Cancel
+      </button>
+
+      <button 
+        on:click={handleSave}
+        disabled={isSaving}
+        class="mt-6 w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-2 px-4 rounded transition-colors">
+        {isSaving ? 'Saving...' : 'Save Metadata'}
+      </button>
+    </div>
 
     {#if status}
       <p class="mt-4 text-center text-sm font-medium text-cyan-400">{status}</p>

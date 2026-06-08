@@ -27,40 +27,12 @@
   function nextPage() { if (currentPage < totalPages) currentPage += 1; }
   function prevPage() { if (currentPage > 1) currentPage -= 1; }
 
- // Helper: Convert Base64 string back to ArrayBuffer
- /*
-  function base64ToArrayBuffer(base64) {
-    const binaryString = window.atob(base64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes.buffer;
+  // Function to close the metadata editor
+  function closeEditor() {
+    selectedTrack = null;
   }
-  */
 
-  // Helper: Convert ArrayBuffer to Base64 string for localStorage
- /*
-  function arrayBufferToBase64(buffer) {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-  }
-*/
-   // The "Inflator": Decompresses Gzip and Parses JSON
-/*
-   async function inflateCatalog(arrayBuffer) {
-    const ds = new DecompressionStream('gzip');
-    const decompressedStream = new Response(arrayBuffer).body.pipeThrough(ds);
-    const blob = await new Response(decompressedStream).blob();
-    const text = await blob.text();
-    return JSON.parse(text);
-  }
-*/
-  // ==================================================================================
+  // ================================== loadCatalog ======================================
   // load the catalog into memory. 
   // Get it from the closest source that is not stale.
   // Input: 
@@ -93,9 +65,6 @@
 
       catalog = loadedCatalog;
       status = `Catalog loaded (${catalog.length} tracks)`;
-
-      // Broadcast to Player
-      //window.dispatchEvent(new CustomEvent('catalog-loaded', { detail: catalog }));
 
     } catch (err) {
       status = "Failed to load catalog.";
@@ -152,7 +121,7 @@
     </ul>
   
     {#if isAdmin}
-      <MetadataEditor track={selectedTrack} />
+      <MetadataEditor track={selectedTrack} onClose={closeEditor} />
     {/if}
 
     <!-- PAGINATION CONTROLS -->

@@ -1,12 +1,13 @@
 <script>
   import SparkMD5 from 'spark-md5';
   import { onMount } from 'svelte';
+  import MetadataForm from './MetadataForm.svelte'; // Update path if needed
+  import { getCatalog, clearCatalogMemoryCache } from '../lib/catalogStore'; // Import the store!
 
   export let catalog = { tracks: [] }; // Passed in from parent
-
-  // Make sure catalog is initialized
-  //let catalog = { tracks: [] }; 
   let isCatalogLoading = true; // NEW: Start as true
+
+  let fileInput; // Reference to the HTML file input
 
   let selectedFile = null;
   let fileAudioHash = "";
@@ -21,19 +22,57 @@
   // Fetch the catalog as soon as the component loads
   onMount(async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/catalog');
-      if (!response.ok) throw new Error('Failed to fetch catalog');
-      
-      // If your server returns gzip, the browser handles it automatically here
-      catalog = await response.json(); 
+      // Use the store! It handles GZIP, Memory Cache, LocalStorage, and ETags.
+      const tracksArray = await getCatalog(); 
+      catalog = { tracks: tracksArray }; 
       console.log("Catalog loaded with", catalog.tracks.length, "tracks.");
-      } catch (error) {
+    } catch (error) {
       console.error("Error fetching catalog:", error);
       duplicateWarning = "⚠️ Could not load existing catalog. Duplicate checks are disabled.";
     } finally {
-      isCatalogLoading = false; // Mark as loaded (even if it failed)
+      isCatalogLoading = false;
     }
   });
+
+  // Helper to generate a blank metadata object with ALL schema keys
+  function generateBlankMetadata(filename, audioHash) {
+    const blank = {
+      filename: filename,
+      'audio-hash': audioHash,
+      title: filename.replace(/\.[^/.]+$/, ""),
+      artist: ""
+    };
+
+    // If catalog is loaded, copy its keys to ensure we show ALL possible fields
+    if (catalog.tracks && catalog.tracks.length > 0) {
+      const templateTrack = catalog.tracks[0];
+      for (const key of Object.keys(templateTrack)) {
+        if (!(key in blank)) {
+          blank[key] = ""; // Initialize missing schema fields as empty
+        }
+      }
+    }
+    
+    // Remove internal system fields we don't want in the form at all
+    delete blank.id;
+    delete blank.hash; 
+
+    return blank;
+  }
+
+  // Reset the uploader to its initial state
+  function handleCancelUpload() {
+    selectedFile = null;
+    metadata = {};
+    duplicateWarning = "";
+    statusMessage = "";
+    isCalculatingHash = false;
+    
+    // Crucial: Reset the native HTML file input so it's ready for a new selection
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
 
   // 1. Handle File Selection & Calculate MD5
   async function handleFileChange(event) {
@@ -62,10 +101,6 @@
       if (isCatalogLoading) {
         duplicateWarning = "⏳ The catalog is still loading. Duplicate check skipped.";
       } else if (catalog.tracks && catalog.tracks.length > 0) {
-        //isDuplicate = catalog.tracks.some(track => 
-        //  track.filename === selectedFile.name || track['audio-hash'] === fileAudioHash
-        //);
-
         // Check for exact filename match first
         const matchedByFilename = catalog.tracks.find(track => track.filename === selectedFile.name);
         
@@ -81,18 +116,11 @@
         } else if (matchedByHash) {
           duplicateWarning = `⚠️ Warning: The audio content of this file is identical to an existing track: "${matchedByHash.filename}"!`;
         }
-
-
-
-
-
-
         console.log("Duplicate check:", isDuplicate);
       }
-      if (isDuplicate) {
-        duplicateWarning = "⚠️ Warning: A track with this filename or hash already exists in the catalog!";
-      }
-
+      //if (isDuplicate) {
+      //  duplicateWarning = "⚠️ Warning: A track with this filename or hash already exists in the catalog!";
+      //}
     } catch (error) {
       console.error("❌ ERROR during file processing:", error);
       isCalculatingHash = false;
@@ -106,16 +134,17 @@
       //duplicateWarning = ""; // clear for testing.
 
       // 3. Pre-fill dynamic metadata form (Guaranteed to run!)
-      metadata = {
-        id: selectedFile.name,
-        filename: selectedFile.name,
-        hash: fileAudioHash || "unknown",
-        title: selectedFile.name.replace(/\.[^/.]+$/, ""), // strip extension for default title
-        artist: ""
-      };
+       metadata = generateBlankMetadata(selectedFile.name, fileAudioHash || "unknown");
+      //metadata = {
+      //  id: selectedFile.name,
+      //  filename: selectedFile.name,
+      //  hash: fileAudioHash || "unknown",
+      //  title: selectedFile.name.replace(/\.[^/.]+$/, ""), // strip extension for default title
+      //  artist: ""
+      //};
     }
   }
-
+  /*
   function calculateMD5(file) {
     return new Promise((resolve) => {
       const blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
@@ -143,6 +172,7 @@
       loadNext();
     });
   }
+  */
 
   async function calculateAudioHash(file) {
     return new Promise((resolve, reject) => {
@@ -174,10 +204,8 @@
 
         // 4. Hash the audio slice using SparkMD5
         const spark = new SparkMD5.ArrayBuffer();
-        spark.append(audioBuffer);
-        const hash = spark.end();
-        
-        resolve(hash);
+        spark.append(audioBuffer);        
+        resolve(spark.end());
       };
       reader.onerror = reject;
       reader.readAsArrayBuffer(file);
@@ -194,9 +222,7 @@
 
     // Prepare metadata payload (strip system fields)
     const metadataPayload = { ...metadata };
-    delete metadataPayload.id;
-    delete metadataPayload.filename;
-    delete metadataPayload.hash;
+    // No need to delete id/hash as generateBlankMetadata already removed them
 
     const formData = new FormData();
     formData.append("audioFile", selectedFile);
@@ -217,6 +243,8 @@
     xhr.onload = () => {
       if (xhr.status === 200) {
         statusMessage = "✅ Upload complete! Catalog updated.";
+         // This forces the store to re-fetch the fresh catalog from the server
+        clearCatalogMemoryCache(); 
       } else {
         statusMessage = "❌ Upload failed.";
       }
@@ -261,32 +289,33 @@
     <!-- Make filename read-only so it can be viewed/copied but not changed -->
     <!-- Apply locked styling only to the filename -->
      <!-- class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white" -->
-   {#if metadata.filename}
-    <div class="grid gap-4 mb-6 bg-slate-900 p-4 rounded">
-      {#each Object.entries(metadata) as [key, value]}
-        {#if key !== 'id' && key !== 'hash'}
-          <label class="block">
-            <span class="text-xs text-slate-400 uppercase">{key}</span>
-            <input 
-              type="text" 
-              bind:value={metadata[key]} 
-                readonly={key === 'filename'} 
-                class="w-full border rounded p-2 {key === 'filename' 
-                  ? 'bg-slate-950 border-slate-700 text-slate-400 cursor-default' 
-                  : 'bg-slate-800 border-slate-600 text-white'}"
-            />
-          </label>
-        {/if}
-      {/each}
+  {#if metadata.filename}
+    <!-- SHARED COMPONENT -->
+    <!-- Filename and audio-hash are visible but locked. id/hash are hidden. -->
+    <div class="mb-6">
+      <MetadataForm 
+        bind:metadata 
+        hiddenFields={['id', 'hash']} 
+        readonlyFields={['filename', 'audio-hash']} 
+      />
     </div>
+  
+    <!-- 4. Upload & Cancel Buttons & Progress -->
+    <div class="flex gap-4">
+       <button 
+        on:click={handleCancelUpload}
+        disabled={isUploading}
+        class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-2 px-4 rounded transition-colors">
+        Cancel
+      </button>
 
-    <!-- 4. Upload Button & Progress -->
-    <button 
-      on:click={handleUpload} 
-      disabled={isUploading || isCatalogLoading || duplicateWarning}
-      class="w-full bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-slate-900 font-bold py-2 px-4 rounded transition-colors">
-      {isUploading ? `Uploading... ${uploadProgress}%` : '🚀 Upload Track'}
-    </button>
+      <button 
+        on:click={handleUpload} 
+        disabled={isUploading || isCatalogLoading || duplicateWarning}
+        class="flex-1 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-slate-900 font-bold py-2 px-4 rounded transition-colors">
+        {isUploading ? `Uploading... ${uploadProgress}%` : '🚀 Upload Track'}
+      </button>
+    </div>
 
     {#if isUploading}
       <div class="w-full bg-slate-700 rounded-full h-2.5 mt-4">
