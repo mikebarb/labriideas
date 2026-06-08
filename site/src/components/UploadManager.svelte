@@ -1,6 +1,6 @@
 <script>
   import SparkMD5 from 'spark-md5';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import MetadataForm from './MetadataForm.svelte'; // Update path if needed
   import { getCatalog, clearCatalogMemoryCache } from '../lib/catalogStore'; // Import the store!
 
@@ -19,6 +19,9 @@
   let uploadProgress = 0;
   let statusMessage = "";
 
+  let previewUrl = ""; // Stores the temporary local blob URL
+  let previewTrack = null; // Stores the temporary track object for the player
+
   // Fetch the catalog as soon as the component loads
   onMount(async () => {
     try {
@@ -32,6 +35,11 @@
     } finally {
       isCatalogLoading = false;
     }
+  });
+
+  //  on destroy, revoke the URL so you don’t leak memory
+  onDestroy(() => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
   });
 
   // Helper to generate a blank metadata object with ALL schema keys
@@ -135,45 +143,24 @@
 
       // 3. Pre-fill dynamic metadata form (Guaranteed to run!)
        metadata = generateBlankMetadata(selectedFile.name, fileAudioHash || "unknown");
-      //metadata = {
-      //  id: selectedFile.name,
-      //  filename: selectedFile.name,
-      //  hash: fileAudioHash || "unknown",
-      //  title: selectedFile.name.replace(/\.[^/.]+$/, ""), // strip extension for default title
-      //  artist: ""
-      //};
+
+      // Create a temporary Blob URL for local playback
+      if (previewUrl) URL.revokeObjectURL(previewUrl); // Clean up old one if exists
+      previewUrl = URL.createObjectURL(selectedFile);
+
+      // Construct a temporary Track object to send to the player
+      previewTrack = {
+        id: metadata.filename,
+        filename: metadata.filename,
+        hash: fileAudioHash || "unknown",
+        title: metadata.title,
+        artist: metadata.artist,
+        metadata: metadata,
+        localPreviewUrl: previewUrl // <-- The magic key!
+      };
     }
   }
-  /*
-  function calculateMD5(file) {
-    return new Promise((resolve) => {
-      const blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
-      const chunkSize = 2097152; // Read in 2MB chunks
-      const spark = new SparkMD5.ArrayBuffer();
-      const fileReader = new FileReader();
-      let currentChunk = 0;
-
-      fileReader.onload = (e) => {
-        spark.append(e.target.result);
-        currentChunk++;
-        if (currentChunk * chunkSize < file.size) {
-          loadNext();
-        } else {
-          resolve(spark.end());
-        }
-      };
-
-      function loadNext() {
-        const start = currentChunk * chunkSize;
-        const end = ((start + chunkSize) >= file.size) ? file.size : start + chunkSize;
-        fileReader.readAsArrayBuffer(blobSlice.call(file, start, end));
-      }
-
-      loadNext();
-    });
-  }
-  */
-
+ 
   async function calculateAudioHash(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -274,6 +261,16 @@
       class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-cyan-500 file:text-slate-900 hover:file:bg-cyan-400 cursor-pointer"
     />
   </div>
+   <!-- Preview Button -->
+  {#if previewTrack}
+    <div class="mb-4">
+      <button 
+        on:click={() => window.dispatchEvent(new CustomEvent('play-track', { detail: previewTrack }))} 
+        class="bg-emerald-500 hover:bg-emerald-400 px-4 py-2 rounded text-slate-900 font-bold text-sm transition-colors">
+        ▶ Preview Audio Locally
+      </button>
+    </div>
+  {/if}
 
   {#if isCalculatingHash}
     <p class="text-yellow-400 text-sm mb-4">{statusMessage}</p>

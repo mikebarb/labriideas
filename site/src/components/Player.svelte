@@ -17,6 +17,7 @@
     title?: string;
     artist?: string;
     speaker?: string;
+    localPreviewUrl?: string;
   }
 
   type PlaybackStatus =
@@ -390,13 +391,22 @@
     }
 
     try {
-      //presignedTicket = await fetchPresignedUrl(track.filename);
-      presignedTicket = await fetchPresignedUrl(trackToPlay.filename);
+      let audioSrc = '';
+      
+      // NEW: Check for local preview first!
+      if (trackToPlay.localPreviewUrl) {
+        audioSrc = trackToPlay.localPreviewUrl;
+        // Skip presigned URL fetching entirely
+        presignedTicket = null; 
+      } else {
+        // Standard R2 flow
+        presignedTicket = await fetchPresignedUrl(trackToPlay.filename);
+        audioSrc = presignedTicket.url;
+      }
 
       if (audioElement) {
-        audioElement.src = presignedTicket.url;
+        audioElement.src = audioSrc;
         audioElement.load();
-        //await audioElement.play();
       }
 
       // CRITICAL: Set the playback rate AFTER setting the src!
@@ -410,9 +420,11 @@
         await playPromise;
         status = 'playing';
       }
-
-      scheduleUrlRefresh();
-
+      // Only schedule URL refreshes if we are playing from R2, not local files
+      if (!trackToPlay.localPreviewUrl) {
+        scheduleUrlRefresh();
+      }
+      
     } catch (err: any) {
        if (err.name === 'NotAllowedError' || err.name === 'AbortError') {
         // The browser blocked autoplay because the click came from another component.
