@@ -47,3 +47,13 @@ graph TD
 - **Security:** The endpoint is currently open for development convenience. Future iterations will wrap this route with JWT authentication middleware (Admin-only).
 - **Statelessness:** The Go server maintains no local disk storage; all operations are performed in-memory and proxied directly to R2.
 
+## 7. Track Preview Play - Logical Flow
+- **1. ** Admin selects an MP3 in the Uploader.
+- **2. ** The browser instantly creates a blob: URL pointing to that file on their hard drive.
+- **3. ** The “▶ Preview Audio Locally” button appears.
+- **4. ** Admin clicks it. The play-track event fires with the previewTrack object.
+- **5. ** The Player receives it, sees localPreviewUrl, and bypasses the R2 presigned URL fetch entirely.
+- **6. ** The audio plays instantly, locally, with zero network latency!
+- **7. ** The Player UI will populate with the temporary Title/Artist derived from the filename.
+- **8. ** If the admin clicks Cancel or navigates away, onDestroy cleans up the blob: URL from memory.
+
