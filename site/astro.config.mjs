@@ -6,10 +6,11 @@ import cloudflare from '@astrojs/cloudflare';
 
 // https://astro.build/config
 export default defineConfig({
-  output: 'server',
-  adapter: cloudflare({
-    mode: 'advanced', // THIS forces the single _worker.js file
-  }),
+  //output: 'server',
+  output: 'static', // Astro generates pure HTML
+  //adapter: cloudflare({
+  //  mode: 'advanced', // THIS forces the single _worker.js file
+  //}),
   integrations: [svelte()],
 
   vite: {
