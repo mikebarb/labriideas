@@ -13,7 +13,7 @@
     }
   }
 
-async function calculateAudioHash_alternative(file) {
+  async function calculateAudioHash_alternative(file) {
     // 1. Peek at the first 10 bytes to check for ID3
     const header = await file.slice(0, 10).arrayBuffer();
     const view = new DataView(header);
@@ -34,9 +34,9 @@ async function calculateAudioHash_alternative(file) {
     // Convert to hex string
     return Array.from(new Uint8Array(hashBuffer))
         .map(b => b.toString(16).padStart(2, '0')).join('');
-}
+  }
 
-async function calculateAudioHash(file) {
+  async function calculateAudioHash(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = function(e) {
