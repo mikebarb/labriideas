@@ -8,7 +8,7 @@ import cloudflare from '@astrojs/cloudflare';
 export default defineConfig({
   output: 'server',
   adapter: cloudflare({
-    mode: 'advanced', // <--- ADD THIS: Forces a single _worker.js output
+    mode: 'advanced', // THIS forces the single _worker.js file
   }),
   integrations: [svelte()],
 
@@ -16,3 +16,4 @@ export default defineConfig({
     plugins: [tailwindcss()]
   }
 });
+
