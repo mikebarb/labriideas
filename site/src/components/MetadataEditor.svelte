@@ -38,7 +38,7 @@
     // so the Copy-Over-Self operation preserves the fingerprint!
 
     try {
-      const response = await fetch('http://localhost:8080/api/update-metadata', {
+      const response = await fetch('${import.meta.env.PUBLIC_API_BASE_URL}/api/update-metadata', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

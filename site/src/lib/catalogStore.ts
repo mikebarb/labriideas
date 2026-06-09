@@ -152,7 +152,7 @@ async function loadCatalogInternal(): Promise<any[]> {
   console.log("catalogStore - clientVersion: ", clientVersion);
   
   try {
-    const res = await fetch(`http://localhost:8080/api/catalog?version=${clientVersion}`);
+    const res = await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/api/catalog?version=${clientVersion}`);
     console.log("catalogStore - response: ", res  );
     // 304 means our cache is perfectly valid
     if (res.status === 304) {

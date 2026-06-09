@@ -12,6 +12,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^13.6.1",
     "@astrojs/svelte": "^8.1.2",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^6.4.0",
@@ -23,6 +24,8 @@
   },
   "allowScripts": {
     "esbuild@0.27.7": true,
-    "sharp@0.34.5": true
+    "sharp@0.34.5": true,
+    "workerd@1.20260603.1": true,
+    "esbuild@0.27.3": true
   }
 }

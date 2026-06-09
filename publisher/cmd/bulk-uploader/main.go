@@ -19,7 +19,15 @@ import (
 )
 
 // --- CONFIGURATION ---
-const serverBaseURL = "http://localhost:8080"
+// const serverBaseURL = "http://localhost:8080"
+var serverBaseURL string
+
+func init() {
+	serverBaseURL = os.Getenv("API_BASE_URL")
+	if serverBaseURL == "" {
+		serverBaseURL = "http://localhost:8080"
+	}
+}
 
 func main() {
 	fmt.Println("=== Labriideas Bulk Upload Tool ===")

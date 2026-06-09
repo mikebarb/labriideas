@@ -14,7 +14,7 @@
 
     try {
       // 1. Ask our Go API for the signed URL
-      const response = await fetch(`http://localhost:8080/api/download?file=${encodeURIComponent(fileName)}`);
+      const response = await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/api/download?file=${encodeURIComponent(fileName)}`);
       
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);

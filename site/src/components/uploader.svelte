@@ -104,7 +104,7 @@ async function calculateAudioHash(file) {
       formData.append("audio-hash", audioHash); // INJECT THE FINGERPRINT!
       
       // 2. Send to our Go API
-      const response = await fetch("http://localhost:8080/api/upload", {
+      const response = await fetch('${import.meta.env.PUBLIC_API_BASE_URL}/api/upload', {
         method: "POST",
         body: formData, // Fetch automatically sets the correct headers for FormData!
       });

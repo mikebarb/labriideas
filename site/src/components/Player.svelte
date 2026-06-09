@@ -92,8 +92,8 @@
   let isDragging: boolean = $state(false);
   let dragProgress: number = $state(0);
 
-  let isMinimized: boolean = $state(false);
-  let isPlaylistOpen: boolean = $state(showTracklist); // Initialize from the prop
+  let isMinimized = $state(false);
+  let isPlaylistOpen = $state(true);   // Default to true, updated in onMount
 
   // ──────────────────────────────────────────────
   // Derived
@@ -281,6 +281,12 @@
   }
 
   async function attemptRecovery() {
+    // NEW: If the track was intentionally cleared (e.g., queue empty), abort recovery!
+    if (!currentTrack) {
+      status = 'idle';
+      return;
+    }
+
     if (retryCount >= MAX_RETRIES) {
       status = 'error';
       errorMessage = `Failed after ${MAX_RETRIES} retries: ${errorMessage}`;
@@ -632,7 +638,9 @@
   // Lifecycle & Event Listeners
   // ──────────────────────────────────────────────
   onMount(() => {
-
+    // Sync the initial prop value once on mount to bypass the Svelte 5 linter warning
+    isPlaylistOpen = showTracklist ?? true;
+    
     // Listen for individual play requests from CatalogViewer island
     const handlePlay = (e: Event) => {
       playTrack((e as CustomEvent).detail);
@@ -709,6 +717,7 @@
 
   {@render children({ controls, state, admin, trackList })}
 {:else}
+  {#if tracks.length > 0}
   
     <!-- ══════════════════════════════════════════════ -->
     <!-- MINIMIZED VIEW (The "Pill" Player) -->
@@ -956,9 +965,10 @@
                     <div class="text-center text-[#555] text-sm py-6">No tracks available</div>
                 {/if}
             {/if}
-        </div> <!-- ADDED: Close Full View Container -->
-    {/if}   <!-- ADDED: Close isMinimized / {:else} block -->
-{/if}     <!-- ADDED: Close if children / {:else} block -->
+        </div> <!-- Close Full View Container -->
+    {/if}   <!-- Close isMinimized / {:else} block -->
+  {/if}    <!-- Close tracks.length > 0 -->
+{/if}     <!-- Close if children / {:else} block -->
 
 
 <!-- ────────────────────────────────────────────── -->

@@ -243,7 +243,7 @@
       isUploading = false;
     };
 
-    xhr.open("POST", "http://localhost:8080/api/upload-track");
+    xhr.open("POST", `${import.meta.env.PUBLIC_API_BASE_URL}/api/upload-track`);
     xhr.send(formData);
   }
 </script>
@@ -257,7 +257,8 @@
       type="file" 
       accept="audio/mpeg"
       on:change={handleFileChange}
-      disabled={isCatalogLoading} 
+      disabled={isCatalogLoading}
+      bind:this={fileInput}
       class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-cyan-500 file:text-slate-900 hover:file:bg-cyan-400 cursor-pointer"
     />
   </div>
