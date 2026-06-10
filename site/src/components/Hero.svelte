@@ -1,7 +1,8 @@
 <script>
   import BrushStroke from './BrushStroke.svelte';
   export let title = "L'Abri Ideas Library";
-  export let backgroundImage = "/images/labri-home.avif"; // Update path to your actual image
+  export let backgroundImage = import.meta.env.BASE_URL + "images/labri-home.avif";  
+                            // "/images/labri-home.avif"; // Update path to your actual image
 </script>
 
 <div class="relative w-full h-[400px] flex items-center justify-center overflow-hidden">
