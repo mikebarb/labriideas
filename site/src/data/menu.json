@@ -1,0 +1,26 @@
+{
+  "subMenu": "Playlists",
+  "albums": [
+    {
+      "id": "how-to-read-the-bible",
+      "title": "How to Read the Bible",
+      "description": "A collection of lectures on where the Bible came from, how to read it, and its reliability.",
+      "backgroundImage": "/images/playlists/how-to-read-the-bible-bg.avif",
+      "tracks": [
+        { "displayTitle": "The Canon of Scripture - Part One", "filename": "(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3" },
+        { "displayTitle": "The Canon of Scripture - Part Two", "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3" }
+      ]
+    },
+    {
+      "id": "difficult-questions",
+      "title": "Difficult Questions in Theology",
+      "description": "Are all religions the same? Is God a construction? Are there any certainties? Here is a collection of L'Abri lectures on the most difficult questions of the day.",
+      "backgroundImage": "/images/playlists/difficult-questions-bg.avif",
+      "tracks": [
+        { "displayTitle": "Is God Angry", "filename": "Are We Better Than God^ part 3_ Is God Angry^ - Wade Bradshaw___130.mp3" },
+        { "displayTitle": "An Historical Defense of the Exodus - Part 1", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
+        { "displayTitle": "An Historical Defense of the Exodus - Part 2", "filename": "An Historical Defense of the Exodus & Conquest (Part 2) - Sandra Richter___99.mp3" }
+      ]
+    }
+  ]
+}

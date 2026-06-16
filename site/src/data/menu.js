@@ -12,10 +12,17 @@ export const navItems = [
       { label: 'History of L\'Abri', href: '/about/history' }
     ]
   },
-  { id: 'learn', label: 'LEARN', href: '/learn' },
+  { 
+    id: 'learn', 
+    label: 'LEARN', 
+    href: '/learn',
+    dropdown: [
+      { label: 'Playlists', href: '/playlists/' }
+    ]
+  },
   { id: 'contact', label: 'CONTACT', href: '/contact' },
   { id: 'external', label: 'L\'ABRI.ORG', href: 'https://labri.org' },
-  { id: 'dev', label: 'DEV', href: '/' }
+  { id: 'dev', label: 'DEV', href: '/admin' }
 ];
 
 // 2. Mega Menu Taxonomy (Worldview, Culture, etc.)

@@ -1,0 +1,24 @@
+---
+import Layout from '../../layouts/LabriLayout.astro';
+import TrackList from '../../components/TrackList.svelte';
+import menuData from '../../data/menu.json';
+
+export function getStaticPaths() {
+  return menuData.albums.map(album => ({
+    params: { album: album.id },
+    props: { album }
+  }));
+}
+
+const { album } = Astro.props;
+---
+
+<Layout title={album.title}>
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-4 text-white">{album.title}</h1>
+    <p class="text-gray-400 mb-8">{album.description}</p>
+
+    {/* Pass the tracks from menu.json into the Svelte island */}
+    <TrackList tracks={album.tracks} client:load />
+  </div>
+</Layout>

@@ -22,13 +22,13 @@ const currentPath = Astro.url.pathname;
 	<body class="bg-slate-900 text-white min-h-screen flex flex-col">
 		<!-- Navigation Menu -->
 		<nav class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex gap-6">
-			<a href="/labri-home" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/labri-home' ? 'text-cyan-400' : 'text-slate-300'}`}>
+			<a href="/" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/labri-home' ? 'text-cyan-400' : 'text-slate-300'}`}>
 				Labri Home
 			</a>
-			<a href="/viewCatalog" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/viewCatalog' ? 'text-cyan-400' : 'text-slate-300'}`}>
+			<a href="/admin/viewCatalog" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/viewCatalog' ? 'text-cyan-400' : 'text-slate-300'}`}>
 				View Catalog
 			</a>
-			<a href="/admin" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/catalog' ? 'text-cyan-400' : 'text-slate-300'}`}>
+			<a href="/admin/admin" class={`text-lg font-semibold hover:text-cyan-300 transition-colors ${currentPath === '/catalog' ? 'text-cyan-400' : 'text-slate-300'}`}>
 				Admin
 			</a>
 		</nav>

@@ -1,0 +1,26 @@
+---
+import Layout from '../../layouts/LabriLayout.astro';
+import menuData from '../../data/menu.json';
+---
+
+<Layout title="Playlists">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6 text-white">Playlists</h1>
+    <p class="text-gray-400 mb-8">Selected lectures grouped by theme.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {menuData.albums.map(album => (
+        <a 
+          href={`/playlists/${album.id}/`}
+          class="block relative h-48 rounded-lg overflow-hidden bg-cover bg-center group"
+          style={`background-image: url(${album.backgroundImage})`}
+        >
+          <div class="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition p-4 flex flex-col justify-end">
+            <h2 class="text-white text-xl font-bold">{album.title}</h2>
+            <p class="text-gray-200 text-sm mt-1">{album.description}</p>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</Layout>

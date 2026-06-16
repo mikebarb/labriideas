@@ -19,6 +19,7 @@
 </script>
 
 <!-- Hidden on mobile, flex on desktop -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="hidden md:flex items-center gap-x-6" on:mouseleave={handleMouseLeave}>
   {#each navItems as item}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
