@@ -24,7 +24,9 @@ The system uses a "Content-Delivery Proxy" architecture:
 
 
 **Front End:** Web Pages.
-- [Front End Web Design](.docs/FrontEndWebDesign.md)
+- [Front End Web Design](./docs/FrontEndWebDesign.md)
+- [Dynamic Menu Architecture](./docs/DynamicMenuArchitecture.md)
+
 
 **Developers:** Environment Setup.
 - [Development Setup](./docs/DEVELOPMENT.md)
