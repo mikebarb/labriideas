@@ -1,26 +1,132 @@
 {
-  "subMenu": "Playlists",
-  "albums": [
+  "subMenus": [
     {
-      "id": "how-to-read-the-bible",
-      "title": "How to Read the Bible",
-      "description": "A collection of lectures on where the Bible came from, how to read it, and its reliability.",
-      "backgroundImage": "/images/playlists/how-to-read-the-bible-bg.avif",
-      "tracks": [
-        { "displayTitle": "The Canon of Scripture - Part One", "filename": "(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3" },
-        { "displayTitle": "The Canon of Scripture - Part Two", "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3" }
+      "subMenu": "Playlists",
+      "albums": [
+        {
+          "id": "how-to-read-the-bible",
+          "title": "How to Read the Bible",
+          "description": "A collection of lectures on where the Bible came from, how to read it, and its reliability.",
+          "backgroundImage": "/images/playlists/how-to-read-the-bible-bg.avif",
+          "tracks": [
+            { "displayTitle": "The Canon of Scripture - Part One", "filename": "(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3" },
+            { "displayTitle": "The Canon of Scripture - Part Two", "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3" }
+          ]
+        },
+        {
+          "id": "difficult-questions",
+          "title": "Difficult Questions in Theology",
+          "description": "Are all religions the same? Is God a construction? Are there any certainties? Here is a collection of L'Abri lectures on the most difficult questions of the day.",
+          "backgroundImage": "/images/playlists/difficult-questions-bg.avif",
+          "tracks": [
+            { "displayTitle": "Is God Angry", "filename": "Are We Better Than God^ part 3_ Is God Angry^ - Wade Bradshaw___130.mp3" },
+            { "displayTitle": "An Historical Defense of the Exodus - Part 1", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
+            { "displayTitle": "An Historical Defense of the Exodus - Part 2", "filename": "An Historical Defense of the Exodus & Conquest (Part 2) - Sandra Richter___99.mp3" }
+          ]
+        }
       ]
     },
     {
-      "id": "difficult-questions",
-      "title": "Difficult Questions in Theology",
-      "description": "Are all religions the same? Is God a construction? Are there any certainties? Here is a collection of L'Abri lectures on the most difficult questions of the day.",
-      "backgroundImage": "/images/playlists/difficult-questions-bg.avif",
-      "tracks": [
-        { "displayTitle": "Is God Angry", "filename": "Are We Better Than God^ part 3_ Is God Angry^ - Wade Bradshaw___130.mp3" },
-        { "displayTitle": "An Historical Defense of the Exodus - Part 1", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
-        { "displayTitle": "An Historical Defense of the Exodus - Part 2", "filename": "An Historical Defense of the Exodus & Conquest (Part 2) - Sandra Richter___99.mp3" }
-      ]
+      "subMenu": "Topics",
+      "hierarchy": {
+        "Theology & Worldview": {
+          "L'Abri": [
+            { "subtopic": "Introduction to L'Abri", "category": "Christianity and Film" },
+            { "subtopic": "Core Ideas of L'Abri", "category": "labri" }
+          ],
+          "Doctrine": [
+            { "subtopic": "Big Questions in Theology", "category": "doctrine" },
+            { "subtopic": "Jesus", "category": "doctrine" },
+            { "subtopic": "The Holy Spirit", "category": "doctrine" },
+            { "subtopic": "Sin and Evil", "category": "doctrine" },
+            { "subtopic": "Being Human", "category": "doctrine" },
+            { "subtopic": "The Law", "category": "doctrine" },
+            { "subtopic": "Prayer and Worship", "category": "doctrine" },
+            { "subtopic": "Prophecy and the Future", "category": "doctrine" },
+            { "subtopic": "Church and Sacraments", "category": "doctrine" },
+            { "subtopic": "Spiritual Growth", "category": "doctrine" }
+          ],
+          "Bible": [
+            { "subtopic": "New Testament", "category": "bible" },
+            { "subtopic": "Old Testament", "category": "bible" },
+            { "subtopic": "Interpretation", "category": "bible" },
+            { "subtopic": "Inspiration", "category": "bible" },
+            { "subtopic": "Canon", "category": "bible" }
+          ],
+          "Apologetics": [
+            { "subtopic": "Exploring Christianity", "category": "apologetics" },
+            { "subtopic": "Sharing Your Faith", "category": "apologetics" },
+            { "subtopic": "Modern Questions, Ancient Answers", "category": "apologetics" }
+          ],
+          "History": [
+            { "subtopic": "Church History", "category": "history" },
+            { "subtopic": "Catholicism", "category": "history" },
+            { "subtopic": "Liberalism", "category": "history" }
+          ],
+          "Other": [
+            { "subtopic": "Ethics and Morality", "category": "other" },
+            { "subtopic": "Eastern Religion and the New Age", "category": "other" },
+            { "subtopic": "Islam", "category": "other" },
+            { "subtopic": "Cults ad the Occult", "category": "other" }
+          ]
+        },
+        "Culture and Society": {
+          "Arts": [
+            { "subtopic": "Theology of Art", "category": "arts" },
+            { "subtopic": "Literature and Poetry", "category": "arts" },
+            { "subtopic": "Film", "category": "arts" },
+            { "subtopic": "Modern Art", "category": "arts" },
+            { "subtopic": "Theater and the Stage", "category": "arts" },
+            { "subtopic": "Classical Music", "category": "arts" },
+            { "subtopic": "Popular Music", "category": "arts" },
+            { "subtopic": "Music: General", "category": "arts" }
+          ],
+          "Science": [{ "subtopic": "Science and Faith", "category": "science" }],
+          "Technology": [{ "subtopic": "Technology and the Future", "category": "technology" }],
+          "Philosophy": [{ "subtopic": "Engaging Philosophy", "category": "philosophy" }],
+          "The Church and Modernity": [
+            { "subtopic": "Christianity and the Modern Age", "category": "church-modernity" },
+            { "subtopic": "Reflections on Modern Culture", "category": "church-modernity" }
+          ],
+          "Other": [
+            { "subtopic": "History of Thought", "category": "other" },
+            { "subtopic": "Politics", "category": "other" },
+            { "subtopic": "Economics", "category": "other" },
+            { "subtopic": "Race", "category": "other" },
+            { "subtopic": "War", "category": "other" },
+            { "subtopic": "Education", "category": "other" },
+            { "subtopic": "Medical Ethics", "category": "other" },
+            { "subtopic": "Leasure and Games", "category": "other" },
+            { "subtopic": "Ecology", "category": "other" },
+            { "subtopic": "Work", "category": "other" }
+          ]
+        },
+        "Personal - Identity & Relationships": {
+          "Relationships": [
+            { "subtopic": "Community", "category": "relationships" },
+            { "subtopic": "Hospitality", "category": "relationships" },
+            { "subtopic": "Marriage", "category": "relationships" },
+            { "subtopic": "Family", "category": "relationships" },
+            { "subtopic": "Singleness", "category": "relationships" }
+          ],
+          "Self": [
+            { "subtopic": "Identity", "category": "self" },
+            { "subtopic": "Psychology", "category": "self" },
+            { "subtopic": "Emotions", "category": "self" }
+          ],
+          "Sex and Gender": [
+            { "subtopic": "Sexuality, Gender, and Feminism", "category": "sex-gender" }
+          ],
+          "Suffering": [
+            { "subtopic": "Suffering, Pain, and Healing", "category": "suffering" }
+          ],
+          "Other": [
+            { "subtopic": "Making Decisions", "category": "other" },
+            { "subtopic": "Food and Eating", "category": "other" },
+            { "subtopic": "Ethics", "category": "other" }
+          ]
+        }
+      }
     }
   ]
 }

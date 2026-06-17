@@ -1,0 +1,72 @@
+---
+import LabriLayout from '../../layouts/LabriLayout.astro';
+import TrackList from '../../components/TrackList.svelte';
+import { menuStructure } from '../../data/menu.js';
+
+const slugify = (text) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+export async function getStaticPaths() {
+  const paths = [];
+
+  for (const rootKey of Object.keys(menuStructure)) {
+    const root = menuStructure[rootKey];
+    const rootSlug = rootKey.toLowerCase();
+    const rootLabel = rootKey.charAt(0) + rootKey.slice(1).toLowerCase();
+
+    // Level 1: Major Theme
+    paths.push({
+      params: { topic: rootSlug },
+      props: {
+        topicName: rootLabel,
+        filterTopic: rootLabel,
+        isMajor: true,
+        majorSlug: rootSlug,
+        majorLabel: rootLabel
+      }
+    });
+
+    // Level 2: Minor Themes
+    for (const catKey of Object.keys(root.categories)) {
+      for (const sub of root.categories[catKey]) {
+        const subSlug = slugify(sub);
+        paths.push({
+          params: { topic: rootSlug + '/' + subSlug },
+          props: {
+            topicName: sub,
+            filterTopic: sub,
+            isMajor: false,
+            majorSlug: rootSlug,
+            majorLabel: rootLabel
+          }
+        });
+      }
+    }
+  }
+
+  return paths;
+}
+
+const { topicName, filterTopic, isMajor, majorSlug, majorLabel } = Astro.props;
+
+// Build breadcrumb HTML
+let breadcrumbHtml = '<a href="/topics" class="hover:text-orange-600">Topics</a>' +
+  ' <span>/</span> ' +
+  '<a href="/topics/' + majorSlug + '" class="hover:text-orange-600 capitalize">' + majorLabel + '</a>';
+
+if (isMajor === false) {
+  breadcrumbHtml += ' <span>/</span> <span class="text-gray-300">' + topicName + '</span>';
+}
+
+const subheaderHtml = isMajor 
+  ? '<p class="text-gray-500 mb-8">Explore sub-categories below or browse all tracks.</p>' 
+  : '';
+---
+
+<LabriLayout title={topicName}>
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <nav class="text-sm text-gray-500 mb-4" set:html={breadcrumbHtml}></nav>
+    <h1 class="text-3xl font-bold mb-2">{topicName}</h1>
+    <div set:html={subheaderHtml}></div>
+    <TrackList topic={filterTopic} client:load />
+  </div>
+</LabriLayout>

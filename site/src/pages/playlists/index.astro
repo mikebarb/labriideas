@@ -1,6 +1,11 @@
 ---
 import Layout from '../../layouts/LabriLayout.astro';
 import menuData from '../../data/menu.json';
+
+// Defensive: handle both old (flat) and new (subMenus) menu.json structures
+const albums = menuData.subMenus 
+  ? (menuData.subMenus.find(s => s.subMenu === 'Playlists')?.albums ?? [])
+  : (menuData.albums ?? []);
 ---
 
 <Layout title="Playlists">
@@ -9,7 +14,7 @@ import menuData from '../../data/menu.json';
     <p class="text-gray-400 mb-8">Selected lectures grouped by theme.</p>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {menuData.albums.map(album => (
+      {albums.map(album => (
         <a 
           href={`/playlists/${album.id}/`}
           class="block relative h-48 rounded-lg overflow-hidden bg-cover bg-center group"

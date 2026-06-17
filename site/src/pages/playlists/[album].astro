@@ -4,7 +4,14 @@ import TrackList from '../../components/TrackList.svelte';
 import menuData from '../../data/menu.json';
 
 export function getStaticPaths() {
-  return menuData.albums.map(album => ({
+  const playlistsMenu = menuData.subMenus.find(s => s.subMenu === 'Playlists');
+  
+  // Return empty array if Playlists submenu not found
+  if (!playlistsMenu || !playlistsMenu.albums) {
+    return [];
+  }
+  
+  return playlistsMenu.albums.map(album => ({
     params: { album: album.id },
     props: { album }
   }));

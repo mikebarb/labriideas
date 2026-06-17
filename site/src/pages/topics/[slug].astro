@@ -1,0 +1,58 @@
+---
+import LabriLayout from '../../layouts/LabriLayout.astro';
+import TrackList from '../../components/TrackList.svelte';
+
+export async function getStaticPaths() {
+  const menuData = (await import('../../data/menu.json')).default;
+  
+  // Find the Topics submenu, defaulting to empty object if not found
+  const topicsMenu: any = menuData.subMenus.find((s: any) => s.subMenu === 'Topics') || {};
+  
+  // Cast hierarchy to the expected shape (or empty object as fallback)
+  const hierarchy: Record<string, Record<string, any[]>> = topicsMenu.hierarchy || {};
+  
+  // Build a Map: category -> first subtopic name found
+  const categoryMap = new Map<string, string>();
+  
+  for (const majorTheme of Object.keys(hierarchy)) {
+    const minorMap = hierarchy[majorTheme];
+    
+    // Skip if minorMap is somehow undefined
+    if (!minorMap) continue;
+    
+    for (const minorTheme of Object.keys(minorMap)) {
+      const leaves = minorMap[minorTheme];
+      
+      // Skip if leaves is somehow undefined
+      if (!leaves || !Array.isArray(leaves)) continue;
+      
+      for (const item of leaves) {
+        if (item && item.category && !categoryMap.has(item.category)) {
+          categoryMap.set(item.category, item.subtopic || item.category);
+        }
+      }
+    }
+  }
+  
+  return Array.from(categoryMap.entries()).map(([category, subtopic]) => ({
+    params: { slug: category },
+    props: { label: subtopic, category: category }
+  }));
+}
+
+const { label, category } = Astro.props;
+---
+
+<LabriLayout title={label}>
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <nav class="text-sm text-gray-500 mb-4">
+      <a href="/topics" class="hover:text-orange-600">Topics</a>
+      <span> / </span>
+      <span class="text-gray-300">{label}</span>
+    </nav>
+    <h1 class="text-3xl font-bold mb-6 text-white">{label}</h1>
+    <p class="text-sm text-gray-500 mb-6">Category: {category}</p>
+    
+    <TrackList topic={category} client:load />
+  </div>
+</LabriLayout>
