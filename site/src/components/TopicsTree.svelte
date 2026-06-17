@@ -1,17 +1,24 @@
 <!-- src/components/TopicsTree.svelte -->
 <script lang="ts">
   import { ChevronDown, ChevronRight, Search, Maximize2, Minimize2 } from 'lucide-svelte';
+  import menuData from '../data/menu.json';
 
-  export interface LeafItem {
+  interface LeafItem {
     subtopic: string;
+    altName?: string;
     category: string;
   }
 
-  export interface Props {
-    data: Record<string, Record<string, LeafItem[]>>;
+  // Find the Topics menu (this returns 'SubMenu | undefined')
+  const topicsSubMenu = menuData.subMenus.find(s => s.subMenu === 'Topics');
+  
+  // Guard clause: if menu.json is malformed, throw a build error
+  if (!topicsSubMenu || !topicsSubMenu.hierarchy) {
+    throw new Error('Configuration error: "Topics" subMenu with hierarchy not found in menu.json');
   }
-
-  let { data }: Props = $props();
+  
+  // Now TypeScript knows hierarchy exists
+  const hierarchy = topicsSubMenu.hierarchy;
 
   // Track open state for BOTH minor themes (under majors) and the major themes themselves
   let openSections: Record<string, boolean> = $state({});
@@ -30,7 +37,7 @@
 
   function expandAll() {
     const allOpen: Record<string, boolean> = {};
-    for (const [majorTheme, minorMap] of Object.entries(data)) {
+    for (const [majorTheme, minorMap] of Object.entries(hierarchy)) {
       allOpen[majorTheme] = true; // Open the major
       for (const minorTheme of Object.keys(minorMap)) {
         allOpen[getKey(majorTheme, minorTheme)] = true; // Open the minor
@@ -76,7 +83,7 @@
     </button>
   </div>
 
-  {#each Object.entries(data) as [majorTheme, minorMap]}
+  {#each Object.entries(hierarchy) as [majorTheme, minorMap]}
     <div class="mb-6">
       
       <!-- MAJOR THEME HEADER (Now also collapsible) -->

@@ -31,101 +31,118 @@
       "hierarchy": {
         "Theology & Worldview": {
           "L'Abri": [
-            { "subtopic": "Introduction to L'Abri", "category": "Christianity and Film" },
-            { "subtopic": "Core Ideas of L'Abri", "category": "labri" }
+            { "subtopic": "Introduction to L'Abri", "altName": "Introduction", "category": "Christianity and Film" },
+            { "subtopic": "Core Ideas of L'Abri", "altName": "Core Ideas", "category": "labri" }
           ],
           "Doctrine": [
-            { "subtopic": "Big Questions in Theology", "category": "doctrine" },
-            { "subtopic": "Jesus", "category": "doctrine" },
-            { "subtopic": "The Holy Spirit", "category": "doctrine" },
-            { "subtopic": "Sin and Evil", "category": "doctrine" },
-            { "subtopic": "Being Human", "category": "doctrine" },
-            { "subtopic": "The Law", "category": "doctrine" },
-            { "subtopic": "Prayer and Worship", "category": "doctrine" },
-            { "subtopic": "Prophecy and the Future", "category": "doctrine" },
-            { "subtopic": "Church and Sacraments", "category": "doctrine" },
-            { "subtopic": "Spiritual Growth", "category": "doctrine" }
+            { "subtopic": "Big Questions in Theology", "altName": "Big Questions", "category": "doctrine" },
+            { "subtopic": "Jesus", "altName": "", "category": "doctrine" },
+            { "subtopic": "The Holy Spirit", "altName": "", "category": "doctrine" },
+            { "subtopic": "Sin and Evil", "altName": "", "category": "doctrine" },
+            { "subtopic": "Being Human", "altName": "", "category": "doctrine" },
+            { "subtopic": "The Law", "altName": "", "category": "doctrine" },
+            { "subtopic": "Prayer and Worship", "altName": "Prayer & Worship", "category": "doctrine" },
+            { "subtopic": "Prophecy and the Future", "altName": "Prophecy & Future", "category": "doctrine" },
+            { "subtopic": "Church and Sacraments", "altName": "Church & Sacraments", "category": "doctrine" },
+            { "subtopic": "Spiritual Growth", "altName": "", "category": "doctrine" }
           ],
           "Bible": [
-            { "subtopic": "New Testament", "category": "bible" },
-            { "subtopic": "Old Testament", "category": "bible" },
-            { "subtopic": "Interpretation", "category": "bible" },
-            { "subtopic": "Inspiration", "category": "bible" },
-            { "subtopic": "Canon", "category": "bible" }
+            { "subtopic": "New Testament", "altName": "", "category": "bible" },
+            { "subtopic": "Old Testament", "altName": "", "category": "bible" },
+            { "subtopic": "Interpretation", "altName": "", "category": "bible" },
+            { "subtopic": "Inspiration", "altName": "", "category": "bible" },
+            { "subtopic": "Canon", "altName": "", "category": "bible" }
           ],
           "Apologetics": [
-            { "subtopic": "Exploring Christianity", "category": "apologetics" },
-            { "subtopic": "Sharing Your Faith", "category": "apologetics" },
-            { "subtopic": "Modern Questions, Ancient Answers", "category": "apologetics" }
+            { "subtopic": "Exploring Christianity", "altName": "", "category": "apologetics" },
+            { "subtopic": "Sharing Your Faith", "altName": "", "category": "apologetics" },
+            { "subtopic": "Modern Questions, Ancient Answers", "altName": "Common Questions", "category": "apologetics" }
           ],
           "History": [
-            { "subtopic": "Church History", "category": "history" },
-            { "subtopic": "Catholicism", "category": "history" },
-            { "subtopic": "Liberalism", "category": "history" }
+            { "subtopic": "Church History", "altName": "", "category": "history" },
+            { "subtopic": "Catholicism", "altName": "", "category": "history" },
+            { "subtopic": "Liberalism", "altName": "", "category": "history" }
           ],
           "Other": [
-            { "subtopic": "Ethics and Morality", "category": "other" },
-            { "subtopic": "Eastern Religion and the New Age", "category": "other" },
-            { "subtopic": "Islam", "category": "other" },
-            { "subtopic": "Cults ad the Occult", "category": "other" }
+            { "subtopic": "Ethics and Morality", "altName": "Ethics & Morality", "category": "other" },
+            { "subtopic": "Eastern Religion and the New Age", "altName": "Eastern Religion", "category": "other" },
+            { "subtopic": "Islam", "altName": "", "category": "other" },
+            { "subtopic": "Cults ad the Occult", "altName": "Cults & Occult", "category": "other" }
           ]
         },
         "Culture and Society": {
           "Arts": [
-            { "subtopic": "Theology of Art", "category": "arts" },
-            { "subtopic": "Literature and Poetry", "category": "arts" },
-            { "subtopic": "Film", "category": "arts" },
-            { "subtopic": "Modern Art", "category": "arts" },
-            { "subtopic": "Theater and the Stage", "category": "arts" },
-            { "subtopic": "Classical Music", "category": "arts" },
-            { "subtopic": "Popular Music", "category": "arts" },
-            { "subtopic": "Music: General", "category": "arts" }
+            { "subtopic": "Theology of Art", "altName": "Theology", "category": "arts" },
+            { "subtopic": "Literature and Poetry", "altName": "Literature & Poetry", "category": "arts" },
+            { "subtopic": "Film", "altName": "", "category": "arts" },
+            { "subtopic": "Modern Art", "altName": "", "category": "arts" },
+            { "subtopic": "Theater and the Stage", "altName": "Theatre & Stage", "category": "arts" },
+            { "subtopic": "Classical Music", "altName": "", "category": "arts" },
+            { "subtopic": "Popular Music", "altName": "", "category": "arts" },
+            { "subtopic": "Music: General", "altName": "", "category": "arts" }
           ],
-          "Science": [{ "subtopic": "Science and Faith", "category": "science" }],
-          "Technology": [{ "subtopic": "Technology and the Future", "category": "technology" }],
-          "Philosophy": [{ "subtopic": "Engaging Philosophy", "category": "philosophy" }],
+          "Science": [{ "subtopic": "Science and Faith", "altName": "", "category": "science" }],
+          "Technology": [{ "subtopic": "Technology and the Future", "altName": "", "category": "technology" }],
+          "Philosophy": [{ "subtopic": "Engaging Philosophy", "altName": "Christianity & Philosophy", "category": "philosophy" }],
           "The Church and Modernity": [
-            { "subtopic": "Christianity and the Modern Age", "category": "church-modernity" },
-            { "subtopic": "Reflections on Modern Culture", "category": "church-modernity" }
+            { "subtopic": "Christianity and the Modern Age", "altName": "Christianity & Modernity", "category": "church-modernity" },
+            { "subtopic": "Reflections on Modern Culture", "altName": "Christianity & Culture", "category": "church-modernity" }
           ],
           "Other": [
-            { "subtopic": "History of Thought", "category": "other" },
-            { "subtopic": "Politics", "category": "other" },
-            { "subtopic": "Economics", "category": "other" },
-            { "subtopic": "Race", "category": "other" },
-            { "subtopic": "War", "category": "other" },
-            { "subtopic": "Education", "category": "other" },
-            { "subtopic": "Medical Ethics", "category": "other" },
-            { "subtopic": "Leasure and Games", "category": "other" },
-            { "subtopic": "Ecology", "category": "other" },
-            { "subtopic": "Work", "category": "other" }
+            { "subtopic": "History of Thought", "altName": "", "category": "other" },
+            { "subtopic": "Politics", "altName": "", "category": "other" },
+            { "subtopic": "Economics", "altName": "", "category": "other" },
+            { "subtopic": "Race", "altName": "", "category": "other" },
+            { "subtopic": "War", "altName": "", "category": "other" },
+            { "subtopic": "Education", "altName": "", "category": "other" },
+            { "subtopic": "Medical Ethics", "altName": "", "category": "other" },
+            { "subtopic": "Leasure and Games", "altName": "Leisure & Games", "category": "other" },
+            { "subtopic": "Ecology", "altName": "", "category": "other" },
+            { "subtopic": "Work", "altName": "", "category": "other" }
           ]
         },
         "Personal - Identity & Relationships": {
           "Relationships": [
-            { "subtopic": "Community", "category": "relationships" },
-            { "subtopic": "Hospitality", "category": "relationships" },
-            { "subtopic": "Marriage", "category": "relationships" },
-            { "subtopic": "Family", "category": "relationships" },
-            { "subtopic": "Singleness", "category": "relationships" }
+            { "subtopic": "Community", "altName": "", "category": "relationships" },
+            { "subtopic": "Hospitality", "altName": "", "category": "relationships" },
+            { "subtopic": "Marriage", "altName": "", "category": "relationships" },
+            { "subtopic": "Family", "altName": "", "category": "relationships" },
+            { "subtopic": "Singleness", "altName": "", "category": "relationships" }
           ],
           "Self": [
-            { "subtopic": "Identity", "category": "self" },
-            { "subtopic": "Psychology", "category": "self" },
-            { "subtopic": "Emotions", "category": "self" }
+            { "subtopic": "Identity", "altName": "", "category": "self" },
+            { "subtopic": "Psychology", "altName": "", "category": "self" },
+            { "subtopic": "Emotions", "altName": "", "category": "self" }
           ],
           "Sex and Gender": [
-            { "subtopic": "Sexuality, Gender, and Feminism", "category": "sex-gender" }
+            { "subtopic": "Sexuality, Gender, and Feminism", "altName": "Christianity & Sexuality", "category": "sex-gender" }
           ],
           "Suffering": [
-            { "subtopic": "Suffering, Pain, and Healing", "category": "suffering" }
+            { "subtopic": "Suffering, Pain, and Healing", "altName": "Suffering, Pain, and Healing", "category": "suffering" }
           ],
           "Other": [
-            { "subtopic": "Making Decisions", "category": "other" },
-            { "subtopic": "Food and Eating", "category": "other" },
-            { "subtopic": "Ethics", "category": "other" }
+            { "subtopic": "Making Decisions", "altName": "", "category": "other" },
+            { "subtopic": "Food and Eating", "altName": "Food", "category": "other" },
+            { "subtopic": "Ethics", "altName": "", "category": "other" }
           ]
         }
+      },
+      "featured": {
+        "Theology & Worldview": [
+          { "title": "The Five Themes of L'Abri", "speaker": "Dick Keyes", "url": "/lectures/themes" },
+          { "title": "An Introduction to Francis Schaeffer", "speaker": "Jerram Barrs", "url": "/lectures/intro-schaeffer" },
+          { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "url": "/lectures/comprehensive-spirituality" }
+        ],
+        "Culture and Society": [
+          { "title": "Art & The Bible", "speaker": "Francis Schaeffer", "url": "/lectures/art-bible" },
+          { "title": "Les Misérables", "speaker": "John Hodges", "url": "/lectures/les-miserables" },
+          { "title": "On Saving Leonardo", "speaker": "Nancy Pearcey", "url": "/lectures/saving-leonardo" }
+        ],
+        "Personal - Identity & Relationships": [
+          { "title": "What is a 'Personal Relationship with God'?", "speaker": "Jim Paul", "url": "/lectures/personal-relationship" },
+          { "title": "Community As A Subversion of Modernity", "speaker": "Andrew Fellows", "url": "/lectures/community-subversion" },
+          { "title": "Navigating Relationships", "speaker": "Jerram Barrs", "url": "/lectures/navigating-relationships" }
+        ]
       }
     }
   ]
