@@ -145,5 +145,26 @@
         ]
       }
     }
-  ]
+  ],
+  "featuredLectures": {
+    "sectionTitle": "FEATURED LECTURES",
+    "sectionSubtitle": "/images/featured/themes.jpg",
+    "sectionImage": "",
+    "items": [
+      {
+        "id": "themes",
+        "title": "The Five Themes of L'Abri",
+        "speaker": "Dick Keyes",
+        "image": "/images/featured/themes.jpg",
+        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+      },
+      {
+        "id": "intro-schaeffer",
+        "title": "An Introduction to Francis Schaeffer",
+        "speaker": "Jerram Barrs",
+        "image": "/images/featured/schaeffer.jpg",
+        "filename": "Intro to Schaeffer - Jerram Barrs___12.mp3"
+      }
+    ]
+  }
 }
