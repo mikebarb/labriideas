@@ -166,5 +166,44 @@
         "filename": "Intro to Schaeffer - Jerram Barrs___12.mp3"
       }
     ]
+  },
+  "schaefferCollection": {
+    "sectionTitle": "THE SCHAEFFER COLLECTION",
+    "sectionSubtitle": "Explore the lectures and sermons of Francis and Edith Schaeffer.",
+    "sectionImage": "/images/schaeffer/hero-blurred.jpg",
+    "people": {
+      "francis": {
+        "speakerName": "Francis Schaeffer",
+        "items": [
+          {
+            "id": "francis-1",
+            "title": "Two Contents, Two Realities",
+            "filename": "Two_Contents_Two_Realities___5.mp3"
+          },
+          {
+            "id": "francis-2",
+            "title": "Art in the Bible",
+            "filename": "Art_in_the_Bible___12.mp3"
+          }
+        ],
+        "moreLink": "/topics/francis-schaeffer"
+      },
+      "edith": {
+        "speakerName": "Edith Schaeffer",
+        "items": [
+          {
+            "id": "edith-1",
+            "title": "True Spirituality",
+            "filename": "True_Spirituality___8.mp3"
+          },
+          {
+            "id": "edith-2",
+            "title": "Study on Prayer",
+            "filename": "Study_on_Prayer___15.mp3"
+          }
+        ],
+        "moreLink": "/topics/edith-schaeffer"
+      }
+    }
   }
 }
