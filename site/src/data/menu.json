@@ -170,7 +170,7 @@
   "schaefferCollection": {
     "sectionTitle": "THE SCHAEFFER COLLECTION",
     "sectionSubtitle": "Explore the lectures and sermons of Francis and Edith Schaeffer.",
-    "sectionImage": "/images/schaeffer/hero-blurred.jpg",
+    "sectionImage": "/images/schaeffer.avif",
     "people": {
       "francis": {
         "speakerName": "Francis Schaeffer",
@@ -178,7 +178,7 @@
           {
             "id": "francis-1",
             "title": "Two Contents, Two Realities",
-            "filename": "Two_Contents_Two_Realities___5.mp3"
+            "filename": "(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3"
           },
           {
             "id": "francis-2",
@@ -186,7 +186,7 @@
             "filename": "Art_in_the_Bible___12.mp3"
           }
         ],
-        "moreLink": "/topics/francis-schaeffer"
+        "moreLink": "/schaeffer/francis"
       },
       "edith": {
         "speakerName": "Edith Schaeffer",
@@ -194,7 +194,7 @@
           {
             "id": "edith-1",
             "title": "True Spirituality",
-            "filename": "True_Spirituality___8.mp3"
+            "filename": "(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3"
           },
           {
             "id": "edith-2",
@@ -202,7 +202,7 @@
             "filename": "Study_on_Prayer___15.mp3"
           }
         ],
-        "moreLink": "/topics/edith-schaeffer"
+        "moreLink": "/schaeffer/edith"
       }
     }
   }

@@ -6,9 +6,11 @@
   interface Props {
     tracks?: Array<{ displayTitle: string; filename: string }>;
     topic?: string;
+    speaker?: string;
   }
 
-  let { tracks: trackRefs = [], topic = '' }: Props = $props();
+  //let { tracks: trackRefs = [], topic = '' }: Props = $props();
+  let { tracks: trackRefs = [], topic = '', speaker = '' }: Props = $props();
   let playableTracks: any[] = $state([]);
   let isLoading: boolean = $state(true);
 
@@ -34,6 +36,13 @@
             return t.category.map((c: string) => c.toLowerCase()).includes(searchTag);
           }
           return t.category.toLowerCase() === searchTag;
+        });
+      } else if (speaker) {
+        // SPEAKER MODE
+        const searchSpeaker = speaker.toLowerCase();
+        playableTracks = catalog.filter((t: any) => {
+          if (!t.speaker) return false;
+          return t.speaker.toLowerCase() === searchSpeaker;
         });
       }
     } catch (err) {

@@ -59,6 +59,8 @@
       {#if person.moreLink}
         <a 
           href={person.moreLink}
+          target="_blank"
+          rel="noopener noreferrer"
           class="inline-block bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-2 rounded-md transition"
         >
           Listen to More →

@@ -1,0 +1,41 @@
+---
+import LabriLayout from '../../layouts/LabriLayout.astro';
+import TrackList from '../../components/TrackList.svelte';
+import menuData from '../../data/menu.json';
+
+// Generate static paths for each person in the collection
+export async function getStaticPaths() {
+  const data = (await import('../../data/menu.json')).default;
+  const people = data.schaefferCollection?.people ?? {};
+  
+  // One path per person (e.g., /schaeffer/francis, /schaeffer/edith)
+  return Object.keys(people).map(slug => ({
+    params: { slug },
+    props: { person: (people as Record<string, any>)[slug] }
+  }));
+}
+
+const { person } = Astro.props;
+
+if (!person) {
+  return Astro.redirect('/404');
+}
+---
+
+<LabriLayout title={person.speakerName}>
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <nav class="text-sm text-gray-500 mb-4">
+      <a href="/schaeffer" class="hover:text-orange-600">Schaeffer Collection</a>
+      <span> / </span>
+      <span class="text-gray-300">{person.speakerName}</span>
+    </nav>
+    
+    <h1 class="text-3xl font-bold mb-6 text-white">{person.speakerName}</h1>
+    <p class="text-sm text-gray-500 mb-6">
+      All lectures and sermons by {person.speakerName}
+    </p>
+    
+    <!-- Reuse TrackList, but filter by speaker instead of category -->
+    <TrackList speaker={person.speakerName} client:load />
+  </div>
+</LabriLayout>
