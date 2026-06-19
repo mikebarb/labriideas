@@ -4,6 +4,7 @@ import '../styles/global.css';
 import Navbar from '../components/Navbar.svelte';
 import MegaMenu from '../components/MegaMenu.svelte';
 import Player from '../components/Player.svelte';
+import { ClientRouter } from 'astro:transitions';
 
 // 1. Import the static configuration
 import menuData from '../data/menu.json';
@@ -31,6 +32,7 @@ const showMegaMenu = isHome;
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<title>{title} | L'Abri Ideas Library</title>
+		 <ClientRouter />
 	</head>
     <!-- Note the white background and dark text for the L'Abri site -->
 	<body class="bg-white text-gray-900 font-sans min-h-screen flex flex-col">
@@ -42,8 +44,14 @@ const showMegaMenu = isHome;
 		<main class="flex-1">
 			<slot />
 		</main>
-		<!-- PLAYER: Visible on all pages, controls its own visibility -->
-		<div transition:persist="audio-player">
+		<!-- 
+		    PLAYER: Visible on all pages, controls its own visibility
+			Sticky Player Container:
+			- `fixed bottom-0 left-0 right-0`: anchors to the bottom of the viewport.
+			- `z-50`: keeps it above scrolling page content.
+			- `transition:persist`: ensures audio doesn't stop/reload on navigation.
+		-->
+		<div transition:persist="audio-player" class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
 			<Player 
 			client:load 
 			showTracklist={false} 

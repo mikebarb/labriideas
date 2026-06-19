@@ -76,7 +76,7 @@
         <button
           type="button"
           onclick={() => playThisTrack(track)}
-          class="bg-green-600 hover:bg-green-500 text-black px-3 py-1 rounded text-sm font-semibold transition flex-shrink-0 ml-3"
+          class="bg-green-600 hover:bg-green-500 text-black px-3 py-1 rounded text-sm font-semibold transition shrink-0 ml-3"
         >
           Play
         </button>

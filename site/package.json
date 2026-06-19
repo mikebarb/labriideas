@@ -16,6 +16,7 @@
     "@astrojs/svelte": "^8.1.2",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^6.4.0",
+    "fuse.js": "^7.4.2",
     "lucide-svelte": "^1.0.1",
     "spark-md5": "^3.0.2",
     "svelte": "^5.55.7",

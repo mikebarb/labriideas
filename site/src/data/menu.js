@@ -20,7 +20,8 @@ export const navItems = [
       { label: 'Topics', href: '/topics/' },
       { label: 'Playlists', href: '/playlists/' },
       { label: 'Featured Lectures', href: '/featured/' },
-      { label: 'Schaeffer Collection', href: '/schaeffer/' }
+      { label: 'Schaeffer Collection', href: '/schaeffer/' },
+      { label: 'Search', href: '/search/' }
     ]
   },
   { id: 'contact', label: 'CONTACT', href: '/contact' },

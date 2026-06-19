@@ -91,6 +91,53 @@ The Search & Discover system provides a robust interface for users to browse a c
 3. **Filter:** An `$derived` value computes the subset of tracks based on inputs + fuzzy logic.
 4. **Render:** The component loops over the result and renders the "Expandable Card".
 
+=======================================
+
+# Architectural Specification: URL-Driven State Management
+
+## 1. Overview
+The application utilizes a "Browser-as-a-Database" architectural pattern to manage the state of the search and filtering system. By treating the browser URL as the primary "Source of Truth," we ensure that the application state is bookmarkable, shareable, and persistence-aware without requiring server-side reloads.
+
+## 2. The Communication Mechanism
+The system operates as a decoupling of **State Storage** (the URL) and **Event Notification** (Svelte Custom Events).
+
+### A. The Message Board (State Storage)
+- **Primary Mechanism:** URL Query Parameters (e.g., `?speaker=Francis+Schaeffer&fuzzy=true`).
+- **Storage Logic:** When a user interacts with a filter, the UI updates the browser's address bar using `window.history.replaceState()`.
+- **Persistence:** This process does not trigger a server request or page reload. It is an internal browser memory update.
+- **Benefits:**
+    - **Native History:** Users can use the browser "Back" button to undo filter changes.
+    - **Refresh Safety:** State is preserved if the page is reloaded.
+    - **Shareability:** Search states can be copied as links and sent to other users.
+
+### B. The Notification Bell (Event Dispatching)
+- **Primary Mechanism:** `window.dispatchEvent(new Event('search-updated'))`.
+- **Notification Logic:** Since updating the URL does not inherently trigger reactive UI updates across different Svelte "islands," we use a custom event to notify components.
+- **Decoupling Strategy:**
+    - **The Sender (`SearchFilter`):** Does not need to know which components are listening. It simply updates the "Message Board" (URL) and rings the "Notification Bell" (Event).
+    - **The Receiver (`SearchResults`):** Does not need to know how the UI state was changed. It simply listens for the bell, reads the Message Board, and re-filters the displayed list.
+
+## 3. Data Lifecycle Diagram
+The following cycle occurs every time a filter interaction takes place:
+
+1. **User Interaction**: User toggles a filter or types a query.
+2. **State Commit**: UI updates the URL Query Parameters via the Web History API.
+3. **Signal Blast**: A `search-updated` event is dispatched across the `window` object.
+4. **Data Sync**: The `SearchResults` component receives the event, parses the URL parameters, and updates its local reactive state.
+5. **UI Re-render**: Svelte’s reactivity triggers a DOM update to reflect the new set of search results.
+
+## 4. Why This Architecture?
+| Feature | Old Web (Server-Side) | Modern Web (This Repo) |
+| :--- | :--- | :--- |
+| **URL Change** | Reloads Page / Hits Server | **Instant Client-Side Update** |
+| **Search State** | Lost on refresh | **Persisted via URL** |
+| **Back Button** | Usually breaks or restarts | **Natively Handled** |
+| **Modularity** | Monolithic HTML | **Decoupled Svelte Islands** |
+
+## 5. Security & Safety Notes
+- **Sanitization:** All inputs read from the URL are sanitized and trimmed to prevent malformed queries.
+- **Validity:** The "Strict Combobox" logic enforces category validity on exit, ensuring the URL cannot contain invalid filter states.
+- **Performance:** Filtering is performed in-memory on the client using the pre-loaded `catalog.json`, ensuring the system scales to thousands of entries without server latency.
 
 
 
