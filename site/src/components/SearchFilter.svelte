@@ -3,6 +3,7 @@
   import FilterCombobox from './FilterCombobox.svelte'; // ← The new generic component
   import { onMount } from 'svelte';
   import { getCatalog } from '../lib/catalogStore.js';
+  import { extractAllKeywords } from '../lib/dataUtils.js';
 
   let titleQuery = $state('');
   let speakerQuery = $state('');
@@ -12,35 +13,25 @@
   let isFuzzy = $state(false);
   let allAvailableKeywords: string[] = $state([]);
 
-  onMount(async() => {
-    // Load catalog to extract all unique keywords
-    const catalog = await getCatalog();
-    const kwSet = new Set<string>();
-    catalog.forEach((t: any) => {
-      // Normalize keywords: handle arrays, strings, and missing values
-      let trackKeywords: string[] = [];
-      if (Array.isArray(t.keywords)) {
-        trackKeywords = t.keywords;
-      } else if (typeof t.keywords === 'string' && t.keywords.trim() !== '') {
-        // Split comma-separated strings
-        trackKeywords = t.keywords.split(',').map((k: string) => k.trim());
-      }
-      trackKeywords.forEach((k: string) => kwSet.add(k.toLowerCase()));
-    });
-    allAvailableKeywords = Array.from(kwSet).sort();
-    
-    // URL State Load
-    const params = new URLSearchParams(window.location.search);
-    titleQuery = params.get('title') || '';
-    speakerQuery = params.get('speaker') || '';
-    categoryQuery = params.get('category') || '';
-    isFuzzy = params.get('fuzzy') === 'true';
-    
-    const kwParam = params.get('keywords');
-    if (kwParam) {
-      keywords = kwParam.split(',').filter(Boolean);
-    }
-  });
+onMount(async () => {
+  // 1. Load catalog
+  const catalog = await getCatalog();
+
+  // 2. Build the keyword universe using the shared utility
+  allAvailableKeywords = extractAllKeywords(catalog);
+  
+  // 3. Read the current URL state
+  const params = new URLSearchParams(window.location.search);
+  titleQuery = params.get('title') || '';
+  speakerQuery = params.get('speaker') || '';
+  categoryQuery = params.get('category') || '';
+  isFuzzy = params.get('fuzzy') === 'true';
+  
+  const kwParam = params.get('keywords');
+  if (kwParam) {
+    keywords = kwParam.split(',').map(k => k.trim().toLowerCase()).filter(Boolean);
+  }
+});
 
   // New: Filter suggestions based on what the user types
   let keywordSuggestions = $derived(

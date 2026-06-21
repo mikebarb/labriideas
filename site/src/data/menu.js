@@ -21,7 +21,9 @@ export const navItems = [
       { label: 'Playlists', href: '/playlists/' },
       { label: 'Featured Lectures', href: '/featured/' },
       { label: 'Schaeffer Collection', href: '/schaeffer/' },
-      { label: 'Search', href: '/search/' }
+      { label: 'Search', href: '/search/' },
+      { label: 'Search-ranked', href: '/search/search-ranked/' },
+      { label: 'Search-scoped', href: '/search/search-scoped/' }
     ]
   },
   { id: 'contact', label: 'CONTACT', href: '/contact' },

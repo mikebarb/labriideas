@@ -1,0 +1,14 @@
+---
+import LabriLayout from '../../layouts/LabriLayout.astro';
+import ScopedSearch from '../../components/ScopedSearch.svelte';
+import ScopedResults from '../../components/ScopedResults.svelte';
+---
+
+<LabriLayout title="Scoped Search">
+  <div class="max-w-4xl mx-auto px-4 py-4">
+    <ScopedSearch client:load />
+    <div class="pt-4">
+      <ScopedResults client:load />
+    </div>
+  </div>
+</LabriLayout>

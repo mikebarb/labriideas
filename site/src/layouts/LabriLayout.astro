@@ -39,8 +39,9 @@ const showMegaMenu = isHome;
 		<Navbar client:load />
 		<!-- {showMegaMenu && <MegaMenu client:load />}  -->
 		<!-- 3. Pass the hierarchy as a prop instead of letting the component import it -->
-    	{showMegaMenu && <MegaMenu hierarchy={topicsHierarchy} client:load />}
-		
+    	<!-- {showMegaMenu && <MegaMenu hierarchy={topicsHierarchy} client:load />} -->
+		{showMegaMenu && <MegaMenu client:load />}
+
 		<main class="flex-1">
 			<slot />
 		</main>
