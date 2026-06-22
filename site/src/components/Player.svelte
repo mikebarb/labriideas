@@ -1,988 +1,483 @@
+<!-- src/components/Player.svelte -->
 <script lang="ts">
-  // ──────────────────────────────────────────────
-  // Types
-  // ──────────────────────────────────────────────
-  import type { Snippet } from 'svelte';
   import { onMount } from 'svelte';
-  import { fly } from 'svelte/transition'; 
+  import { 
+    Play, Pause, SkipBack, SkipForward, Rewind, FastForward, 
+    Volume2, VolumeX, ListMusic, Minimize2, Maximize2, Download 
+  } from 'lucide-svelte';
+  import { 
+    isPlaylistOpen, trackList, currentTrackStore, statusStore, isAdminStore 
+  } from '../lib/playerStore.js';
+  import type { Track } from '../lib/types.js';
 
-  type TrackMeta = Record<string, any>;
-
-  interface Track {
-    id: string;
-    filename: string;
-    hash: string;
-    metadata: TrackMeta;
-    playbackRate?: number;
-    title?: string;
-    artist?: string;
-    speaker?: string;
-    localPreviewUrl?: string;
-  }
-
-  type PlaybackStatus =
-    | 'idle'
-    | 'loading'
-    | 'playing'
-    | 'paused'
-    | 'buffering'
-    | 'error';
-
-  interface PresignedTicket {
-    url: string;
-    expiresAt: number;
-  }
-
-  // ──────────────────────────────────────────────
-  // Props
-  // ──────────────────────────────────────────────
+  // ─── Props ───
   interface Props {
-    /** Base URL for the Go proxy (defaults to origin) */
     apiBase?: string;
-    /** Presigned URL TTL in seconds (must match server-side config) */
-    urlTtlSeconds?: number;
-    /** Seconds before expiry to proactively refresh the URL */
-    refreshBufferSeconds?: number;
-    /** Admin mode flag — placeholder until JWT is wired */
-    isAdmin?: boolean;
-    /** Autoplay the first track on mount */
-    autoplay?: boolean;
-    /** Hide the built-in tracklist if CatalogViewer handles it */
     showTracklist?: boolean;
-    /** children snippet for custom layout override */
-    children?: Snippet;
+    isAdmin?: boolean;
   }
+  let { apiBase = '', showTracklist = true, isAdmin = false }: Props = $props();
 
-  let {
-    apiBase = '',
-    urlTtlSeconds = 3600,
-    refreshBufferSeconds = 120,
-    isAdmin = false,
-    autoplay = false,
-    showTracklist = true,
-    children,
-  }: Props = $props();
+  // ─── State ───
+  let tracks = $state<Track[]>([]);
+  let currentTrack = $state<Track | null>(null);
+  let status = $state<'idle' | 'loading' | 'playing' | 'paused' | 'buffering' | 'error'>('idle');
+  let currentTime = $state(0);
+  let duration = $state(0);
+  let volume = $state(0.8);
+  let isMuted = $state(false);
+  let errorMessage = $state('');
+  let isMobileExpanded = $state(false);
+  let trackPositions = $state(new Map<string, number>());  // Remember playback position for each track
 
-  // ──────────────────────────────────────────────
-  // Reactive State
-  // ──────────────────────────────────────────────
-  // Tracks are now internal state, populated by the 'catalog-loaded' event
-  let tracks: Track[] = $state([]); 
-  
-  let currentTrack: Track | null = $state(null);
-  let status: PlaybackStatus = $state('idle');
-  let currentTime: number = $state(0);
-  let duration: number = $state(0);
-  let buffered: number = $state(0);
-  let volume: number = $state(0.8);
-  let isMuted: boolean = $state(false);
-  let errorMessage: string = $state('');
-  let retryCount: number = $state(0);
-  let playbackRate: number = $state(1.0);
-
-
-  // Internal references
-  let audioElement: HTMLAudioElement | null = null;
-  let presignedTicket: PresignedTicket | null = null;
-  let refreshTimer: ReturnType<typeof setTimeout> | null = null;
-  let retryTimer: ReturnType<typeof setTimeout> | null = null;
-  const MAX_RETRIES = 3;
-
+  let audioElement: HTMLAudioElement | null = $state(null);
   let seekBarElement: HTMLElement | null = $state(null);
-  let isDragging: boolean = $state(false);
-  let dragProgress: number = $state(0);
+  let isDragging = $state(false);
+  let dragProgress = $state(0);
 
-  let isMinimized = $state(false);
-  let isPlaylistOpen = $state(true);   // Default to true, updated in onMount
+  // ─── Sync local state to shared stores ───
+  $effect(() => { trackList.set(tracks); });
+  $effect(() => { currentTrackStore.set(currentTrack); });
+  $effect(() => { statusStore.set(status); });
+  $effect(() => { isAdminStore.set(isAdmin); });
 
-  // ──────────────────────────────────────────────
-  // Derived
-  // ──────────────────────────────────────────────
-  //let progress: number = $derived(
-  //  duration > 0 ? (currentTime / duration) * 100 : 0
-  //);
-  // If we are dragging, show the drag position. Otherwise, show actual time.
-  let progress: number = $derived(
+  // ─── Derived ───
+  let progress = $derived(
     isDragging ? dragProgress : (duration > 0 ? (currentTime / duration) * 100 : 0)
   );
-
-  // If we are dragging, calculate the time based on drag position. 
-  // Otherwise, use the actual audio current time.
-  let displayTime: number = $derived(
+  let displayTime = $derived(
     isDragging ? (dragProgress / 100) * duration : currentTime
   );
 
-  let displayTitle: string = $derived(
-    currentTrack?.title ?? 'No track selected'
-  );
+  // ─── Helpers ───
+  function formatTime(s: number): string {
+    if (!isFinite(s) || s < 0) return '0:00';
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  }
 
-  let displayArtist: string = $derived(
-    currentTrack?.artist ?? 'Unknown Artist'
-  );
-
-  let statusLabel: string = $derived(
-    status === 'idle'      ? '' :
-    status === 'loading'   ? 'Loading…' :
-    status === 'playing'   ? 'Playing' :
-    status === 'paused'    ? 'Paused' :
-    status === 'buffering' ? 'Buffering…' :
-    status === 'error'     ? `Error: ${errorMessage}` :
-    ''
-  );
-
-  // ──────────────────────────────────────────────
-  // Presigned URL Manager
-  // ──────────────────────────────────────────────
-  async function fetchPresignedUrl(filename: string): Promise<PresignedTicket> {
-    const endpoint = `${apiBase}/api/download?file=${encodeURIComponent(filename)}`;
-    const res = await fetch(endpoint);
-
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new Error(`Failed to get presigned URL (${res.status}): ${body}`);
-    }
-
-    const contentType = res.headers.get('content-type') ?? '';
-    let url: string;
-
-    if (contentType.includes('application/json')) {
-      const json = await res.json();
-      url = json.url ?? json;
-    } else {
-      url = await res.text();
-    }
-
+  function bindSeekBar(node: HTMLElement) {
+    seekBarElement = node;
     return {
-      url,
-      expiresAt: Date.now() + urlTtlSeconds * 1000,
+      destroy() {
+        if (seekBarElement === node) seekBarElement = null;
+      }
     };
   }
 
-  function scheduleUrlRefresh() {
-    clearRefreshTimer();
-    if (!presignedTicket || !currentTrack) return;
+  //async function fetchPresignedUrl(filename: string) {
+  //  const res = await fetch(`${apiBase}/api/download?file=${encodeURIComponent(filename)}`);
+  //  if (!res.ok) throw new Error('Failed to get URL');
+  //  return { url: await res.text(), expiresAt: Date.now() + 3600 * 1000 };
+  //}
 
-    const msUntilExpiry = presignedTicket.expiresAt - Date.now();
-    const bufferMs = refreshBufferSeconds * 1000;
-    const refreshIn = Math.max(msUntilExpiry - bufferMs, 5000);
-
-    refreshTimer = setTimeout(async () => {
-      try {
-        presignedTicket = await fetchPresignedUrl(currentTrack!.filename);
-        if (audioElement && (status === 'playing' || status === 'buffering')) {
-          const wasPlaying = !audioElement.paused;
-          audioElement.src = presignedTicket.url;
-          audioElement.currentTime = currentTime;
-          if (wasPlaying) audioElement.play();
-        }
-        scheduleUrlRefresh();
-      } catch (err) {
-        console.error('Proactive URL refresh failed:', err);
-        refreshTimer = setTimeout(() => scheduleUrlRefresh(), 30_000);
-      }
-    }, refreshIn);
-  }
-
-  function clearRefreshTimer() {
-    if (refreshTimer !== null) {
-      clearTimeout(refreshTimer);
-      refreshTimer = null;
-    }
-  }
-
-  // ──────────────────────────────────────────────
-  // Audio Element Lifecycle (Svelte 5 Idiomatic)
-  // ──────────────────────────────────────────────
-  $effect(() => {
-    const el = audioElement;
-    if (!el) return; // Wait until the element actually exists in the DOM
-
-    const handleCanPlay = () => {
-      if (status === 'loading' || status === 'buffering') status = 'playing';
-    };
-    const handlePlay = () => { status = 'playing'; };
-    const handlePause = () => {
-      if (!el.ended && el.error === null && status !== 'loading') status = 'paused';
-    };
-    const handleTimeUpdate = () => { currentTime = el.currentTime; };
-    const handleDurationChange = () => {
-      if (el.duration && isFinite(el.duration)) duration = el.duration;
-    };
-    const handleProgress = () => {
-      if (el.buffered.length > 0) buffered = el.buffered.end(el.buffered.length - 1);
-    };
-    const handleWaiting = () => {
-      if (status === 'playing') status = 'buffering';
-    };
-    const handleEnded = () => { playNext(); };
-    const handleError = () => { handleAudioError(el.error); };
-    const handleStalled = () => {
-      if (status === 'playing') status = 'buffering';
-    };
-
-    el.addEventListener('canplay', handleCanPlay);
-    el.addEventListener('play', handlePlay);
-    el.addEventListener('pause', handlePause);
-    el.addEventListener('timeupdate', handleTimeUpdate);
-    el.addEventListener('durationchange', handleDurationChange);
-    el.addEventListener('progress', handleProgress);
-    el.addEventListener('waiting', handleWaiting);
-    el.addEventListener('ended', handleEnded);
-    el.addEventListener('error', handleError);
-    el.addEventListener('stalled', handleStalled);
-
-    // Cleanup function: removes listeners if component is destroyed
-    return () => {
-      el.removeEventListener('canplay', handleCanPlay);
-      el.removeEventListener('play', handlePlay);
-      el.removeEventListener('pause', handlePause);
-      el.removeEventListener('timeupdate', handleTimeUpdate);
-      el.removeEventListener('durationchange', handleDurationChange);
-      el.removeEventListener('progress', handleProgress);
-      el.removeEventListener('waiting', handleWaiting);
-      el.removeEventListener('ended', handleEnded);
-      el.removeEventListener('error', handleError);
-      el.removeEventListener('stalled', handleStalled);
-    };
-  });
-
-  function handleAudioError(error: MediaError | null) {
-    if (!error) {
-      errorMessage = 'Unknown audio error';
-      status = 'error';
-      return;
-    }
-
-    switch (error.code) {
-      case MediaError.MEDIA_ERR_ABORTED:
-        errorMessage = 'Playback aborted';
-        status = 'idle';
-        return;
-
-      case MediaError.MEDIA_ERR_NETWORK:
-        errorMessage = 'Network error — URL may have expired';
-        attemptRecovery();
-        return;
-
-      case MediaError.MEDIA_ERR_DECODE:
-        errorMessage = 'Decode error — file may be corrupted';
-        status = 'error';
-        return;
-
-      case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-        errorMessage = 'Source not supported — attempting URL refresh';
-        attemptRecovery();
-        return;
-
-      default:
-        errorMessage = `Error code ${error.code}`;
-        status = 'error';
-    }
-  }
-
-  async function attemptRecovery() {
-    // NEW: If the track was intentionally cleared (e.g., queue empty), abort recovery!
-    if (!currentTrack) {
-      status = 'idle';
-      return;
-    }
-
-    if (retryCount >= MAX_RETRIES) {
-      status = 'error';
-      errorMessage = `Failed after ${MAX_RETRIES} retries: ${errorMessage}`;
-      return;
-    }
-
-    retryCount++;
-    status = 'buffering';
-    console.warn(`Recovery attempt ${retryCount}/${MAX_RETRIES}`);
-
-    try {
-      presignedTicket = await fetchPresignedUrl(currentTrack!.filename);
-
-      if (audioElement) {
-        audioElement.src = presignedTicket.url;
-        audioElement.currentTime = currentTime;
-        await audioElement.play();
-      }
-
-      retryCount = 0;
-      scheduleUrlRefresh();
-    } catch (err: any) {
-      errorMessage = err.message;
-      retryTimer = setTimeout(
-        () => attemptRecovery(),
-        2000 * Math.pow(2, retryCount - 1)
-      );
-    }
-  }
-
- // ──────────────────────────────────────────────
-  // Seek Bar Drag Logic (Add these functions)
-  // ──────────────────────────────────────────────
-  function calculateProgress(e: PointerEvent): number {
-    if (!seekBarElement) return 0;
-    const rect = seekBarElement.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    return Math.max(0, Math.min(100, (x / rect.width) * 100));
-  }
-
-  function handleSeekPointerDown(e: PointerEvent) {
-    if (!seekBarElement) return;
-    isDragging = true;
-    
-    // Capture the pointer so we track mouse movement even outside the bar
-    seekBarElement.setPointerCapture(e.pointerId);
-    
-    dragProgress = calculateProgress(e);
-  }
-
-  function handleSeekPointerMove(e: PointerEvent) {
-    if (!isDragging) return;
-    dragProgress = calculateProgress(e);
-  }
-
-  function handleSeekPointerUp(e: PointerEvent) {
-    if (!isDragging) return;
-    isDragging = false;
-    
-    // Apply the seek now that the user let go
-    seekTo(dragProgress);
-  }
-
-
-  // ──────────────────────────────────────────────
-  // Playback Controls
-  // ──────────────────────────────────────────────
-  async function playTrack(track: Track) {
-    clearRefreshTimer();
-    retryCount = 0;
-    currentTime = 0;
-    duration = 0;
-    buffered = 0;
-    errorMessage = '';
-
-    // Check if the track is already in our queue
-    let trackToPlay = tracks.find((t) => t.filename === track.filename);
-
-    if (!trackToPlay) {
-      // --- METADATA EXTRACTION LOGIC ---
-      //const meta = track.metadata || {};
-      // 1. Extract Title (fallback to filename if missing)
-      const extractedTitle = 
-        track.title || track.filename.replace(/\.[^/.]+$/, ""); // removes .mp3 extension if used as fallback
-      // 2. Extract Artist/Author
-      const extractedArtist = 
-        track.speaker || 'Speaker Unknown';
-      // If not in queue, create a new entry with a guaranteed unique ID (using filename)
-      trackToPlay = {
-        ...track,
-        id: track.filename,
-        playbackRate: 1.0,
-        title: extractedTitle,
-        artist: extractedArtist
-      }; 
-      // Add it to the end of the queue
-      tracks = [...tracks, trackToPlay];
-    }
-
-    //currentTrack = track;
-    currentTrack = trackToPlay;
-    // 1. Force the status to 'loading' first to show the spinner
-    status = 'loading';
-    
-    // Apply the track's specific playback rate immediately
-    if (audioElement) {
-      audioElement.playbackRate = trackToPlay.playbackRate || 1.0;
-    }
-
-    try {
-      let audioSrc = '';
-      
-      // NEW: Check for local preview first!
-      if (trackToPlay.localPreviewUrl) {
-        audioSrc = trackToPlay.localPreviewUrl;
-        // Skip presigned URL fetching entirely
-        presignedTicket = null; 
-      } else {
-        // Standard R2 flow
-        presignedTicket = await fetchPresignedUrl(trackToPlay.filename);
-        audioSrc = presignedTicket.url;
-      }
-
-      if (audioElement) {
-        audioElement.src = audioSrc;
-        audioElement.load();
-      }
-
-      // CRITICAL: Set the playback rate AFTER setting the src!
-      // Browsers reset the rate to 1.0 when the source changes.
-      audioElement.playbackRate = trackToPlay.playbackRate || 1.0;
-
-      // 2. Wrap the play attempt
-      const playPromise = audioElement.play();
-      
-      if (playPromise !== undefined) {
-        await playPromise;
-        status = 'playing';
-      }
-      // Only schedule URL refreshes if we are playing from R2, not local files
-      if (!trackToPlay.localPreviewUrl) {
-        scheduleUrlRefresh();
-      }
-      
-    } catch (err: any) {
-       if (err.name === 'NotAllowedError' || err.name === 'AbortError') {
-        // The browser blocked autoplay because the click came from another component.
-        // We just pause it so the user can click the physical play button.
-        // The browser blocked autoplay. Explicitly pause and show the play button.
-        if (audioElement) {
-          audioElement.pause();
-          audioElement.currentTime = 0;
-        }
-        status = 'paused';
-        errorMessage = ''; 
-      } else {
-        status = 'error';
-        errorMessage = err.message;
-      }
-    }
-  }
-
-  const MIN_SPEED = 0.5;
-  const MAX_SPEED = 3.0;
-
-  function incrementSpeed() {
-    if (!currentTrack) return;
-    let currentRate = currentTrack.playbackRate || 1.0;
-    // Add 0.1 and round to 1 decimal place to avoid floating point bugs
-    let newRate = Math.round((currentRate + 0.1) * 10) / 10;
-    if (newRate > MAX_SPEED) newRate = MAX_SPEED;
-    setPlaybackRate(newRate);
-  }
-
-  function decrementSpeed() {
-    if (!currentTrack) return;
-    let currentRate = currentTrack.playbackRate || 1.0;
-    let newRate = Math.round((currentRate - 0.1) * 10) / 10;
-    if (newRate < MIN_SPEED) newRate = MIN_SPEED;
-    setPlaybackRate(newRate);
-  }
-
- function setPlaybackRate(rate: number) {
-    //playbackRate = rate;
-    if (currentTrack) {
-      // Find the track in the array
-      const idx = tracks.findIndex((t) => t.filename === currentTrack.filename);
-      
-      if (idx !== -1) {
-        // Create a brand new object with the updated rate (Svelte 5 loves this)
-        const updatedTrack = { ...tracks[idx], playbackRate: rate };
-        
-        // Replace the old track in the array
-        tracks[idx] = updatedTrack;
-        
-        // Update the currentTrack reference to point to this new object
-        currentTrack = updatedTrack;
-      }
-    }
-    if (audioElement) {
-      audioElement.playbackRate = rate;
-    }
-  }
-
-  function removeFromQueue(filename: string) {
-    const wasCurrentlyPlaying = currentTrack?.filename === filename;
-    
-    // Filter out the track
-    tracks = tracks.filter((t) => t.filename !== filename);
-
-    if (wasCurrentlyPlaying) {
-      if (tracks.length === 0) {
-        // Queue is empty, reset player
-        currentTrack = null;
-        status = 'idle';
-        if (audioElement) {
-          audioElement.pause();
-          audioElement.src = '';
-        }
-      } else {
-        // Play the next track in the queue, or stop if we deleted the last one
-        playNext();
-      }
-    }
-  }
+  // ─── Playback Functions ───
+async function playTrack(track: Track) {
+  if (!audioElement) return;
   
-  async function togglePlayPause() {
-    if (!audioElement || !currentTrack) return;
-
-    if (status === 'idle') {
-      if (tracks.length > 0) {
-        await playTrack(tracks[0]);
-      }
-      return;
-    }
-
-    if (status === 'error') {
-      if (currentTrack) {
-        await playTrack(currentTrack);
-      }
-      return;
-    }
-
+  // CASE 1: Clicking the currently playing/loaded track → toggle play/pause
+  if (currentTrack?.filename === track.filename && audioElement.src) {
     if (audioElement.paused) {
-      try {
-        await audioElement.play();
-      } catch (err: any) {
-        if (err.name === 'NotAllowedError') {
-          errorMessage = 'Autoplay blocked — click play to start';
-          status = 'paused';
-        }
-      }
+      await audioElement.play();
+      status = 'playing';
     } else {
       audioElement.pause();
+      status = 'paused';
+    }
+    return;
+  }
+  
+  // CASE 2: Clicking a different track → load from start
+  if (!tracks.find(t => t.filename === track.filename)) {
+    tracks = [...tracks, { ...track, playbackRate: 1.0 }];
+  }
+  
+  // Remember the position of the track we're leaving
+  if (currentTrack && currentTrack.filename !== track.filename) {
+    trackPositions.set(currentTrack.filename, currentTime);
+  }
+
+  currentTrack = { ...track, playbackRate: track.playbackRate ?? 1.0 };
+  status = 'loading';
+  //currentTime = 0;
+  errorMessage = '';
+  duration = 0;
+  
+  try {
+    const ticket = await fetchPresignedUrl(track.filename);
+    audioElement.pause();
+    audioElement.src = '';
+    audioElement.load();
+    audioElement.src = ticket.url;
+    audioElement.load();
+    audioElement.playbackRate = currentTrack.playbackRate || 1.0;
+
+    // Restore the saved position if it exists
+    const savedPosition = trackPositions.get(track.filename);
+    if (savedPosition && savedPosition > 0) {
+      // Wait for metadata to load, then seek
+      audioElement.addEventListener('loadedmetadata', function seek() {
+        if (audioElement) {
+          audioElement.currentTime = savedPosition;
+          currentTime = savedPosition;
+        }
+        audioElement.removeEventListener('loadedmetadata', seek);
+      }, { once: true });
+    } else {
+      currentTime = 0;
+    }
+
+    await audioElement.play();
+    status = 'playing';
+  } catch (err: any) {
+    console.error('Play error:', err);
+    if (err.name === 'NotAllowedError') {
+      status = 'paused';
+    } else {
+      status = 'error';
+      errorMessage = err.message;
     }
   }
+}
 
-  function seekTo(position: number) {
-    if (!audioElement || !duration) return;
-    audioElement.currentTime = (position / 100) * duration;
-  }
-
-  function setVolume(val: number) {
-    volume = Math.max(0, Math.min(1, val));
-    if (audioElement) {
-      audioElement.volume = volume;
+async function togglePlayPause() {
+  if (!audioElement) return;
+  
+  // If no current track, try to play the first one in the queue
+  if (!currentTrack) {
+    if (tracks.length > 0) {
+      await playTrack(tracks[0]);
     }
+    return;
   }
-
-  function toggleMute() {
-    isMuted = !isMuted;
-    if (audioElement) {
-      audioElement.muted = isMuted;
+  
+  // If there's an error, retry
+  if (status === 'error') {
+    await playTrack(currentTrack);
+    return;
+  }
+  
+  // Normal play/pause toggle
+  if (audioElement.paused) {
+    try {
+      await audioElement.play();
+    } catch (err) {
+      console.error('Toggle play failed:', err);
     }
+  } else {
+    audioElement.pause();
   }
-
+}
   function playNext() {
     if (!currentTrack || tracks.length === 0) return;
-    const idx = tracks.findIndex((t) => t.filename === currentTrack.filename);
-    
-    // Only play next if we aren't at the end of the queue
-    if (idx < tracks.length - 1) {
-      const nextIdx = idx + 1;
-      playTrack(tracks[nextIdx]);
-    } else {
-      // Optional: We've reached the end of the queue. 
-      // You can either stop, or loop back to start. Let's loop back:
-      playTrack(tracks[0]); 
-    }
+    const idx = tracks.findIndex(t => t.filename === currentTrack!.filename);
+    if (idx < tracks.length - 1) playTrack(tracks[idx + 1]);
   }
 
   function playPrev() {
     if (!currentTrack || tracks.length === 0) return;
-    const idx = tracks.findIndex((t) => t.filename === currentTrack.filename);
-    
-    // Only play prev if we aren't at the beginning
-    if (idx > 0) {
-      const prevIdx = idx - 1;
-      playTrack(tracks[prevIdx]);
-    } else {
-      // At the beginning, just restart the current song or stay put
-      if (audioElement) audioElement.currentTime = 0;
+    const idx = tracks.findIndex(t => t.filename === currentTrack!.filename);
+    if (idx > 0) playTrack(tracks[idx - 1]);
+    else if (audioElement) audioElement.currentTime = 0;
+  }
+
+  function jump(seconds: number) {
+    if (audioElement) audioElement.currentTime = Math.max(0, audioElement.currentTime + seconds);
+  }
+
+  function removeFromQueue(filename: string) {
+    const wasCurrent = currentTrack?.filename === filename;
+    tracks = tracks.filter(t => t.filename !== filename);
+    if (wasCurrent) {
+      if (tracks.length === 0) {
+        // Stop the audio completely
+        if (audioElement) {
+          audioElement.pause();
+          audioElement.currentTime = 0;
+          audioElement.removeAttribute('src');
+          audioElement.load();
+        }
+        currentTrack = null;
+        status = 'idle';
+        currentTime = 0;
+        duration = 0;
+      } else {
+        playNext();
+      }
     }
   }
 
-  async function downloadTrack(track: Track) {
-    try {
-      const ticket = await fetchPresignedUrl(track.filename);
-      const a = document.createElement('a');
-      a.href = ticket.url;
-      a.download = track.metadata?.title ?? track.filename;
-      a.target = '_blank';
-      a.rel = 'noopener';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    } catch (err: any) {
-      errorMessage = `Download failed: ${err.message}`;
-    }
+  function downloadTrack(track: Track) {
+    fetchPresignedUrl(track.filename).then(t => window.open(t.url, '_blank'));
   }
 
-  // ──────────────────────────────────────────────
-  // Helpers
-  // ──────────────────────────────────────────────
-  function formatTime(seconds: number): string {
-    if (!isFinite(seconds) || seconds < 0) return '0:00';
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s.toString().padStart(2, '0')}`;
+  async function fetchPresignedUrl(filename: string) {
+  const res = await fetch(`${apiBase}/api/download?file=${encodeURIComponent(filename)}`);
+  if (!res.ok) throw new Error(`Failed to get URL: ${res.status}`);
+  
+  // The API returns JSON like: {"url": "https://..."}
+  // We need to extract just the URL from it
+  const contentType = res.headers.get('content-type') ?? '';
+  let url: string;
+  
+  if (contentType.includes('application/json')) {
+    const data = await res.json();
+    url = data.url;
+  } else {
+    url = (await res.text()).trim();
+  }
+  
+  return { url, expiresAt: Date.now() + 3600 * 1000 };
+}
+
+  function setPlaybackRate(rate: number) {
+    if (!currentTrack) return;
+    const updated = { ...currentTrack, playbackRate: rate };
+    currentTrack = updated;
+    const idx = tracks.findIndex(t => t.filename === updated.filename);
+    if (idx !== -1) tracks[idx] = updated;
+    if (audioElement) audioElement.playbackRate = rate;
   }
 
-  function statusIcon(): string {
-    switch (status) {
-      case 'loading':
-      case 'buffering':
-        return '⏳';
-      case 'playing':
-        return '▶';
-      case 'paused':
-        return '⏸';
-      case 'error':
-        return '⚠';
-      default:
-        return '⏹';
-    }
+  function toggleMute() {
+    isMuted = !isMuted;
+    if (audioElement) audioElement.muted = isMuted;
   }
 
-  // ──────────────────────────────────────────────
-  // Lifecycle & Event Listeners
-  // ──────────────────────────────────────────────
+  // ─── Seek Bar ───
+  function calcProgress(e: PointerEvent): number {
+    if (!seekBarElement) return 0;
+    const rect = seekBarElement.getBoundingClientRect();
+    return Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+  }
+
+  function onSeekDown(e: PointerEvent) {
+    if (!seekBarElement) return;
+    isDragging = true;
+    seekBarElement.setPointerCapture(e.pointerId);
+    dragProgress = calcProgress(e);
+  }
+
+  function onSeekMove(e: PointerEvent) {
+    if (isDragging) dragProgress = calcProgress(e);
+  }
+
+  function onSeekUp() {
+    if (!isDragging || !audioElement || !duration) return;
+    isDragging = false;
+    audioElement.currentTime = (dragProgress / 100) * duration;
+  }
+
+  // ─── Lifecycle ───
   onMount(() => {
-    // Sync the initial prop value once on mount to bypass the Svelte 5 linter warning
-    isPlaylistOpen = showTracklist ?? true;
-    
-    // Listen for individual play requests from CatalogViewer island
-    const handlePlay = (e: Event) => {
-      playTrack((e as CustomEvent).detail);
-    };
+    if (audioElement) {
+      audioElement.volume = volume;
+      audioElement.addEventListener('timeupdate', () => {
+        if (audioElement && currentTrack) {
+          currentTime = audioElement.currentTime;
+          // Save position for the current track
+          trackPositions.set(currentTrack.filename, audioElement.currentTime);
+        }
+      });
+
+      audioElement.addEventListener('durationchange', () => {
+        if (audioElement && isFinite(audioElement.duration)) duration = audioElement.duration;
+      });
+      audioElement.addEventListener('play', () => status = 'playing');
+      audioElement.addEventListener('pause', () => { if (status !== 'loading') status = 'paused'; });
+      audioElement.addEventListener('ended', playNext);
+      audioElement.addEventListener('error', () => { status = 'error'; errorMessage = 'Playback error'; });
+    }
+
+    // External event listeners for QueueDrawer and TrackList
+    const handlePlay = (e: Event) => playTrack((e as CustomEvent).detail);
+    const handleRemove = (e: Event) => removeFromQueue((e as CustomEvent).detail.filename);
+    const handleDownload = (e: Event) => downloadTrack((e as CustomEvent).detail);
 
     window.addEventListener('play-track', handlePlay);
+    window.addEventListener('remove-from-queue', handleRemove);
+    window.addEventListener('download-track', handleDownload);
 
     return () => {
       window.removeEventListener('play-track', handlePlay);
-      
-      // Cleanup audio on component unmount
-      clearRefreshTimer();
-      if (retryTimer !== null) clearTimeout(retryTimer);
-      if (audioElement) {
-        audioElement.pause();
-        audioElement.src = '';
-      }
+      window.removeEventListener('remove-from-queue', handleRemove);
+      window.removeEventListener('download-track', handleDownload);
     };
-  });
-
-  $effect(() => {
-    if (audioElement) {
-      audioElement.volume = volume;
-      audioElement.muted = isMuted;
-      audioElement.playbackRate = playbackRate;
-    }
-  });
-
-  $effect(() => {
-    if (autoplay && tracks.length > 0 && status === 'idle' && !currentTrack) {
-      playTrack(tracks[0]);
-    }
   });
 </script>
 
-<!-- ────────────────────────────────────────────── -->
-<!-- Template -->
-<!-- ────────────────────────────────────────────── -->
-<!-- Hidden audio engine -->
-<!-- MUST be at the root level so it never unmounts when minimizing -->
-<audio
-  bind:this={audioElement}
-  crossorigin="anonymous"
-  preload="auto"
-></audio>
+<audio bind:this={audioElement} preload="auto"></audio>
 
-{#if children}
-  {@const controls = {
-    playTrack,
-    togglePlayPause,
-    playNext,
-    playPrev,
-    seekTo,
-    setVolume,
-    toggleMute,
-    downloadTrack,
-  }}
-  {@const state = {
-    currentTrack,
-    status,
-    currentTime,
-    duration,
-    volume,
-    isMuted,
-    progress,
-    buffered,
-    errorMessage,
-    statusLabel,
-    displayTitle,
-    displayArtist,
-  }}
-  {@const admin = isAdmin}
-  {@const trackList = tracks}
+<!-- DESKTOP LAYOUT -->
+{#if tracks.length > 0}
+  <div class="hidden md:flex fixed bottom-0 left-0 right-0 h-24 bg-[#0e0e0e] border-t border-neutral-800 items-center px-6 z-40">
+    
+    <div class="flex-1 min-w-0 flex flex-col justify-center">
+      {#if currentTrack}
+        <div class="text-sm font-semibold truncate text-white">{currentTrack.title ?? currentTrack.filename}</div>
+        <div class="text-xs text-neutral-400 truncate">{currentTrack.speaker ?? 'Unknown Speaker'}</div>
+      {:else}
+        <div class="text-sm text-neutral-500">No track selected</div>
+      {/if}
+    </div>
 
-  {@render children({ controls, state, admin, trackList })}
-{:else}
-  {#if tracks.length > 0}
-  
-    <!-- ══════════════════════════════════════════════ -->
-    <!-- MINIMIZED VIEW (The "Pill" Player) -->
-    <!-- ══════════════════════════════════════════════ -->
-    {#if isMinimized}
-        <div class="bg-[#181818] border border-[#333] rounded-full px-4 py-2 flex items-center gap-3 max-w-[480px] shadow-lg">
-            <!-- Play/Pause -->
-            <button
-                class="bg-transparent border-none text-white cursor-pointer text-lg p-0 transition hover:scale-110"
-                onclick={togglePlayPause}
-                aria-label={status === 'playing' ? 'Pause' : 'Play'}
-            >
-                {#if status === 'loading' || status === 'buffering'}
-                    <span class="inline-block w-4 h-4 border-2 border-transparent border-t-current rounded-full animate-spin"></span>
-                {:else if status === 'playing'}
-                    ⏸
-                {:else}
-                    ▶
-                {/if}
-            </button>
+    <div class="flex-1 max-w-2xl flex flex-col items-center gap-2">
+      <div class="flex items-center gap-4">
+        <button onclick={playPrev} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10 disabled:opacity-30" aria-label="Previous" disabled={!currentTrack}>
+          <SkipBack size={20} />
+        </button>
+        <button onclick={() => jump(-15)} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10 disabled:opacity-30" aria-label="Back 15s" disabled={!currentTrack}>
+          <Rewind size={20} />
+        </button>
+        <button onclick={togglePlayPause} class="bg-white text-black rounded-full w-11 h-11 flex items-center justify-center hover:scale-105 transition disabled:opacity-30 shadow-lg" aria-label="Play/Pause" disabled={!currentTrack}>
+          {#if status === 'playing'}<Pause size={22} fill="currentColor" />{:else}<Play size={22} fill="currentColor" class="ml-0.5" />{/if}
+        </button>
+        <button onclick={() => jump(30)} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10 disabled:opacity-30" aria-label="Forward 30s" disabled={!currentTrack}>
+          <FastForward size={20} />
+        </button>
+        <button onclick={playNext} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10 disabled:opacity-30" aria-label="Next" disabled={!currentTrack}>
+          <SkipForward size={20} />
+        </button>
+      </div>
+      <div class="w-full flex items-center gap-3">
+        <span class="text-[11px] text-neutral-400 tabular-nums w-10 text-right">{formatTime(displayTime)}</span>
+        <div 
+          use:bindSeekBar
+          class="flex-1 h-1 bg-neutral-700 rounded-full relative cursor-pointer group"
+          role="slider" 
+          tabindex="0"
+          aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(progress)}
+          onpointerdown={onSeekDown} onpointermove={onSeekMove} onpointerup={onSeekUp} onpointercancel={onSeekUp}
+        >
+          <div class="absolute top-0 left-0 h-full bg-white rounded-full" style="width: {progress}%"></div>
+          <div class="absolute top-1/2 w-3 h-3 bg-white rounded-full -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100" style="left: {progress}%"></div>
+        </div>
+        <span class="text-[11px] text-neutral-400 tabular-nums w-10">{formatTime(duration)}</span>
+      </div>
+    </div>
 
-            <!-- Track Info -->
-            <div class="flex-1 min-w-0 truncate text-sm text-neutral-200">
-                <span class="font-semibold">{displayTitle}</span>
-                <span class="text-[#888] mx-1">—</span>
-                <span class="text-[#888]">{displayArtist}</span>
-            </div>
+    <div class="flex-1 flex items-center justify-end gap-3">
+      <button onclick={() => setPlaybackRate(currentTrack?.playbackRate === 1.0 ? 1.25 : 1.0)} class="text-xs text-neutral-300 hover:text-white px-2 py-1 rounded hover:bg-white/10" disabled={!currentTrack}>
+        {(currentTrack?.playbackRate ?? 1.0).toFixed(2)}x
+      </button>
+      <div class="flex items-center gap-2">
+        <button onclick={toggleMute} class="text-neutral-300 hover:text-white" aria-label="Mute">
+          {#if isMuted || volume === 0}<VolumeX size={18} />{:else}<Volume2 size={18} />{/if}
+        </button>
+        <input type="range" min="0" max="1" step="0.01" value={volume} oninput={(e) => { volume = parseFloat(e.currentTarget.value); if (audioElement) audioElement.volume = volume; }} class="w-20 accent-white" />
+      </div>
+      <button onclick={() => isPlaylistOpen.update(v => !v)} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10" aria-label="Toggle queue">
+        <ListMusic size={20} />
+      </button>
+      {#if isAdmin && currentTrack}
+        <button onclick={() => downloadTrack(currentTrack!)} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10" aria-label="Download">
+          <Download size={18} />
+        </button>
+      {/if}
+    </div>
+  </div>
 
-            <!-- Speed Badge (if active) -->
-            {#if currentTrack?.playbackRate && currentTrack.playbackRate !== 1.0}
-                <span class="text-[9px] bg-[#1db954]/20 text-[#1db954] px-1.5 py-0.5 rounded flex-shrink-0">
-                    {currentTrack.playbackRate}x
-                </span>
-            {/if}
-
-            <!-- Expand Button -->
-            <button
-                class="shrink-0 bg-transparent border-none text-[#888] cursor-pointer text-lg p-1.5 rounded-full transition hover:bg-white/10 hover:text-white"
-                onclick={() => isMinimized = false}
-                aria-label="Expand player"
-                title="Expand player"
-            >
-                ⬆
-            </button>
+  <!-- MOBILE LAYOUT -->
+  <div class="md:hidden">
+    {#if !isMobileExpanded}
+      <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md h-14 bg-[#181818] border border-neutral-800 rounded-full px-4 flex items-center gap-3 z-50 shadow-2xl">
+        <button onclick={togglePlayPause} class="text-white p-1" aria-label="Play/Pause" disabled={!currentTrack}>
+          {#if status === 'playing'}<Pause size={20} fill="currentColor" />{:else}<Play size={20} fill="currentColor" class="ml-0.5" />{/if}
+        </button>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate text-white">{currentTrack?.title ?? 'No track'}</div>
+          <div class="text-xs text-neutral-400 truncate">{currentTrack?.speaker ?? ''}</div>
+        </div>
+        <button onclick={() => isMobileExpanded = true} class="text-neutral-300 hover:text-white p-2" aria-label="Expand player">
+          <Maximize2 size={18} />
+        </button>
+      </div>
+    {:else}
+      <div class="fixed inset-0 bg-[#0e0e0e] z-50 flex flex-col p-6">
+        <div class="flex items-center justify-between mb-8">
+          <button onclick={() => isMobileExpanded = false} class="text-neutral-300 hover:text-white p-2" aria-label="Minimize">
+            <Minimize2 size={24} />
+          </button>
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-neutral-400">Now Playing</h2>
+          <button onclick={() => isPlaylistOpen.update(v => !v)} class="text-neutral-300 hover:text-white p-2" aria-label="Queue">
+            <ListMusic size={24} />
+          </button>
         </div>
 
-    <!-- ══════════════════════════════════════════════ -->
-    <!-- FULL VIEW (The Standard Player) -->
-    <!-- ══════════════════════════════════════════════ -->
-    {:else}
-        <div
-            class="
-                bg-[#0f0f0f] border border-[#222] rounded-xl p-5
-                max-w-[480px] font-sans text-neutral-200
-                {status === 'error' ? '!border-[#c0392b]' : ''}
-            "
-        >
-            <!-- ── Track Info ── -->
-            <div class="flex items-center gap-3 mb-4">
-                <span class="text-xl shrink-0">{statusIcon()}</span>
-                <div class="flex flex-col min-w-0 flex-1">
-                    <div class="flex items-center gap-2">
-                        <span class="text-base font-semibold truncate">{displayTitle}</span>
-                        {#if currentTrack?.playbackRate && currentTrack.playbackRate !== 1.0}
-                        <span class="text-[9px] bg-[#1db954]/20 text-[#1db954] px-1.5 py-0.5 rounded flex-shrink-0">
-                            {currentTrack.playbackRate}x
-                        </span>
-                        {/if}
-                    </div>
-                    <span class="text-sm text-[#888] truncate">{displayArtist}</span>
-                </div>
+        <div class="text-center mb-12 px-4">
+          <h1 class="text-2xl font-bold text-white leading-tight mb-2">
+            {currentTrack?.title ?? 'No track selected'}
+          </h1>
+          <p class="text-base text-neutral-400">{currentTrack?.speaker ?? ''}</p>
+        </div>
 
-                <!-- Action Buttons (Top Right) -->
-                {#if currentTrack}
-                    <div class="flex items-center gap-1">
-                        <!-- Playlist Toggle -->
-                        <button
-                            class="shrink-0 bg-transparent border-none text-[#888] cursor-pointer text-lg p-1.5 rounded-full transition hover:bg-white/10 hover:text-white"
-                            onclick={() => isPlaylistOpen = !isPlaylistOpen}
-                            aria-label="Toggle playlist"
-                            title={isPlaylistOpen ? "Hide playlist" : "Show playlist"}
-                        >
-                            🎵
-                        </button>
-                        <!-- Minimize -->
-                        <button
-                            class="shrink-0 bg-transparent border-none text-[#888] cursor-pointer text-lg p-1.5 rounded-full transition hover:bg-white/10 hover:text-white"
-                            onclick={() => isMinimized = true}
-                            aria-label="Minimize player"
-                            title="Minimize player"
-                        >
-                            ⬇
-                        </button>
-                        <!-- Remove Track -->
-                        <button
-                            class="shrink-0 bg-transparent border-none text-[#888] cursor-pointer text-lg p-1.5 rounded-full transition hover:bg-white/10 hover:text-red-400"
-                            onclick={() => removeFromQueue(currentTrack.filename)}
-                            aria-label="Remove current track"
-                            title="Remove from queue"
-                        >
-                            ✕
-                        </button>
-                    </div>
-                {/if}
+        <div class="mb-8 px-2">
+          <div 
+            use:bindSeekBar
+            class="h-2 bg-neutral-700 rounded-full relative cursor-pointer"
+            role="slider"
+            aria-label="Seek"
+            aria-valuemin="0"
+            aria-valuemax={duration || 0}
+            aria-valuenow={currentTime}
+            tabindex="0"
+            onpointerdown={onSeekDown} 
+            onpointermove={onSeekMove} 
+            onpointerup={onSeekUp} 
+            onpointercancel={onSeekUp}
+          >
+            <div class="absolute top-0 left-0 h-full bg-white rounded-full" style="width: {progress}%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-neutral-400 mt-2 tabular-nums">
+            <span>{formatTime(displayTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-center gap-6 mb-8">
+          <button onclick={() => jump(-15)} class="text-white p-3" aria-label="Back 15s" disabled={!currentTrack}>
+            <div class="flex flex-col items-center">
+              <Rewind size={28} />
+              <span class="text-[10px] mt-0.5">15</span>
             </div>
-            
-            <!-- REMOVED STRAY </div> HERE -->
-
-            <!-- ── Progress / Seek Bar ── -->
-            <div class="flex items-center gap-2 mb-4">
-                <span class="text-xs text-[#888] min-w-[36px] text-center tabular-nums">
-                    {formatTime(displayTime)}
-                </span>
-                <div
-                    bind:this={seekBarElement}
-                    class="seek-rail flex-1 h-1.5 bg-[#333] rounded-full relative cursor-pointer"
-                    role="slider"
-                    aria-label="Seek"
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={Math.round(progress)}
-                    tabindex="0"
-                    onpointerdown={handleSeekPointerDown}
-                    onpointermove={handleSeekPointerMove}
-                    onpointerup={handleSeekPointerUp}
-                    onpointercancel={handleSeekPointerUp}
-                    onkeydown={(e) => {
-                        if (e.key === 'ArrowRight') seekTo(Math.min(progress + 5, 100));
-                        if (e.key === 'ArrowLeft') seekTo(Math.max(progress - 5, 0));
-                    }}
-                >
-                    <div
-                        class="absolute top-0 left-0 h-full bg-[#444] rounded-full transition-[width] duration-300"
-                        style="width: {duration > 0 ? (buffered / duration) * 100 : 0}%"
-                    ></div>
-                    <div
-                        class="absolute top-0 left-0 h-full bg-[#1db954] rounded-full transition-[width] {isDragging ? 'duration-0' : 'duration-100'}"
-                        style="width: {progress}%"
-                    ></div>
-                    <div
-                        class="absolute top-1/2 bg-white rounded-full -translate-x-1/2 -translate-y-1/2 shadow transition-[left,width,height] {isDragging ? 'duration-0' : 'duration-100'} {isDragging ? 'w-4 h-4' : 'w-3 h-3'}"
-                        style="left: {progress}%"
-                    ></div>
-                </div>
-                <!-- MOVED DURATION SPAN OUT OF seek-rail div -->
-                <span class="text-xs text-[#888] min-w-[36px] text-center tabular-nums">
-                    {formatTime(duration)}
-                </span>
+          </button>
+          <button onclick={playPrev} class="text-white p-3" aria-label="Previous" disabled={!currentTrack}>
+            <SkipBack size={32} />
+          </button>
+          <button onclick={togglePlayPause} class="bg-white text-black rounded-full w-20 h-20 flex items-center justify-center shadow-xl" aria-label="Play/Pause" disabled={!currentTrack}>
+            {#if status === 'playing'}<Pause size={36} fill="currentColor" />{:else}<Play size={36} fill="currentColor" class="ml-1" />{/if}
+          </button>
+          <button onclick={playNext} class="text-white p-3" aria-label="Next" disabled={!currentTrack}>
+            <SkipForward size={32} />
+          </button>
+          <button onclick={() => jump(30)} class="text-white p-3" aria-label="Forward 30s" disabled={!currentTrack}>
+            <div class="flex flex-col items-center">
+              <FastForward size={28} />
+              <span class="text-[10px] mt-0.5">30</span>
             </div>
+          </button>
+        </div>
 
-            <!-- ── Main Controls ── -->
-            <div class="grid grid-cols-3 items-center mb-3">
-                <div class="flex items-center justify-start">
-                    <div class="flex items-center gap-1 bg-[#1a1a1a] border border-[#333] rounded-lg px-1.5 py-1 select-none">
-                        <button class="bg-transparent border-none text-white cursor-pointer text-sm w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition disabled:opacity-30 disabled:cursor-default" onclick={decrementSpeed} disabled={(currentTrack?.playbackRate || 1.0) <= MIN_SPEED} aria-label="Decrease speed">−</button>
-                        <div class="flex items-center gap-1 text-white px-1">
-                            <span class="text-sm">🐇</span>
-                            <span class="text-[11px] font-semibold min-w-[30px] text-center tabular-nums">{(currentTrack?.playbackRate || 1.0).toFixed(1)}x</span>
-                        </div>
-                        <button class="bg-transparent border-none text-white cursor-pointer text-sm w-6 h-6 flex items-center justify-center rounded hover:bg-white/10 transition disabled:opacity-30 disabled:cursor-default" onclick={incrementSpeed} disabled={(currentTrack?.playbackRate || 1.0) >= MAX_SPEED} aria-label="Increase speed">+</button>
-                    </div>
-                </div> <!-- ADDED MISSING CLOSING DIV for Left Column -->
-
-                <div class="flex items-center justify-center gap-4">
-                    <button class="bg-transparent border-none text-neutral-200 cursor-pointer text-xl p-1.5 rounded-full transition hover:bg-white/10 active:scale-[0.92] flex items-center justify-center w-10 h-10 disabled:opacity-30 disabled:cursor-default" onclick={playPrev} aria-label="Previous track" disabled={tracks.length === 0}>⏮</button>
-                    <button class="border-none cursor-pointer text-3xl p-2 rounded-full transition hover:active:scale-[0.92] flex items-center justify-center w-14 h-14 bg-[#1db954] text-black hover:bg-[#1ed760] disabled:opacity-30 disabled:cursor-default shadow-lg shadow-[#1db954]/25" onclick={togglePlayPause} aria-label={status === 'playing' ? 'Pause' : 'Play'} disabled={tracks.length === 0 && status === 'idle'}>
-                        {#if status === 'loading' || status === 'buffering'}
-                            <span class="inline-block w-6 h-6 border-2 border-transparent border-t-current rounded-full animate-spin"></span>
-                        {:else if status === 'playing'}⏸{:else}▶{/if}
-                    </button>
-                    <button class="bg-transparent border-none text-neutral-200 cursor-pointer text-xl p-1.5 rounded-full transition hover:bg-white/10 active:scale-[0.92] flex items-center justify-center w-10 h-10 disabled:opacity-30 disabled:cursor-default" onclick={playNext} aria-label="Next track" disabled={tracks.length === 0}>⏭</button>
-                </div>
-
-                <div class="flex items-center justify-end gap-1">
-                    <button class="bg-transparent border-none text-neutral-200 cursor-pointer text-xl p-1.5 rounded-full transition hover:bg-white/10 flex items-center justify-center w-10 h-10" onclick={toggleMute} aria-label={isMuted ? 'Unmute' : 'Mute'}>
-                        {isMuted ? '🔇' : volume > 0.5 ? '🔊' : '🔉'}
-                    </button>
-                    <input type="range" min="0" max="1" step="0.01" bind:value={volume} oninput={(e) => setVolume(parseFloat(e.currentTarget.value))} aria-label="Volume" class="w-[70px] accent-[#1db954]" />
-                </div>
-            </div>
-
-            <!-- ── Error / Buffering Banners ── -->
-            {#if status === 'error'}
-                <div class="flex items-center justify-between bg-[#c0392b]/15 border border-[#c0392b] rounded-md px-3 py-2 text-sm mb-3">
-                    <span>{errorMessage}</span>
-                    <button class="bg-[#c0392b] border-none text-white px-2.5 py-1 rounded cursor-pointer text-xs hover:bg-[#e74c3c] transition" onclick={() => currentTrack && playTrack(currentTrack)}>Retry</button>
-                </div>
-            {:else if status === 'buffering'}
-                <div class="bg-white/5 rounded px-3 py-1.5 text-sm text-[#888] text-center mb-3">Buffering…</div>
-            {/if}
-
-            <!-- ── Admin Section ── -->
-            {#if isAdmin}
-                <div class="flex items-center gap-2.5 border-t border-[#222] pt-3 mb-3">
-                    <span class="bg-[#f39c12] text-black text-[0.65rem] font-bold uppercase px-1.5 py-0.5 rounded tracking-wide">Admin</span>
-                    {#if currentTrack}
-                        <button class="bg-white/8 border border-[#333] text-[#ccc] px-2.5 py-1 rounded text-xs cursor-pointer hover:bg-white/15 transition" onclick={() => downloadTrack(currentTrack)}>⬇ Download</button>
-                        <a class="bg-white/8 border border-[#333] text-[#ccc] px-2.5 py-1 rounded text-xs cursor-pointer hover:bg-white/15 transition no-underline" href="/admin/edit?id={currentTrack.id}" target="_blank" rel="noopener">✏ Edit Metadata</a>
-                    {/if}
-                </div>
-            {/if}
-
-            <!-- ── Track List ── -->
-            {#if isPlaylistOpen}
-                {#if tracks.length > 0}
-                    <div class="tracklist max-h-60 overflow-y-auto border-t border-[#222] pt-2">
-                        {#each tracks as track, i (track.id)}            
-                            <!-- Changed outer element to <div> to avoid nesting <button> inside <button> -->
-                            <div
-                                class="group flex items-center gap-2.5 w-full bg-transparent border-none px-1.5 py-2 rounded-md cursor-pointer text-sm text-left transition hover:bg-white/5 {currentTrack?.id === track.id ? 'text-[#1db954] bg-[#1db954]/8' : 'text-[#bbb]'}"
-                                role="button"
-                                tabindex="0"
-                                onclick={() => playTrack(track)}
-                                onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playTrack(track); } }}
-                            >
-                                <span class="text-xs min-w-[20px] text-right {currentTrack?.id === track.id ? 'text-[#1db954]' : 'text-[#666]'}">{i + 1}</span>
-                                
-                                <span class="flex-1 truncate flex items-center gap-2">
-                                    {track.metadata?.title ?? track.filename}
-                                    {#if track.playbackRate && track.playbackRate !== 1.0}
-                                    <span class="text-[9px] bg-[#1db954]/20 text-[#1db954] px-1.5 py-0.5 rounded flex-shrink-0">{track.playbackRate}x</span>
-                                    {/if}
-                                </span>
-                                
-                                <span class="flex items-center gap-1.5 text-[#666] text-xs min-w-[60px] justify-end">
-                                    <span class="truncate">{track.metadata?.artist ?? ''}</span>
-                                        <!-- These inner buttons are now valid! -->
-                                        <button 
-                                            class="bg-transparent border-none text-[#888] cursor-pointer text-sm p-0.5 rounded hover:text-red-400 transition opacity-0 group-hover:opacity-100" 
-                                            onclick={(e) => { e.stopPropagation(); removeFromQueue(track.filename); }} 
-                                            aria-label="Remove from queue"
-                                        >✕</button>
-                                    
-                                    {#if isAdmin}
-                                        <button 
-                                            class="bg-transparent border-none text-[#888] cursor-pointer text-sm p-0.5 rounded hover:text-white transition opacity-0 group-hover:opacity-100" 
-                                            onclick={(e) => { e.stopPropagation(); downloadTrack(track); }}
-                                        >⬇</button>
-                                    {/if}
-                                </span>
-                            </div>
-                        {/each}
-                    </div>
-                {:else}
-                    <div class="text-center text-[#555] text-sm py-6">No tracks available</div>
-                {/if}
-            {/if}
-        </div> <!-- Close Full View Container -->
-    {/if}   <!-- Close isMinimized / {:else} block -->
-  {/if}    <!-- Close tracks.length > 0 -->
-{/if}     <!-- Close if children / {:else} block -->
-
-
-<!-- ────────────────────────────────────────────── -->
-<!-- Minimal styles — scrollbar only -->
-<!-- ────────────────────────────────────────────── -->
-<style>
-  .tracklist::-webkit-scrollbar {
-    width: 4px;
-  }
-  .tracklist::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .tracklist::-webkit-scrollbar-thumb {
-    background: #333;
-    border-radius: 2px;
-  }
-</style>
+        <div class="mt-auto space-y-4 pb-4">
+          <div class="flex items-center justify-center gap-3">
+            {#each [0.75, 1.0, 1.25, 1.5, 2.0] as rate}
+              <button 
+                onclick={() => setPlaybackRate(rate)}
+                class="px-3 py-1.5 rounded-full text-xs font-medium transition {currentTrack?.playbackRate === rate ? 'bg-white text-black' : 'bg-neutral-800 text-neutral-300'}"
+              >
+                {rate}x
+              </button>
+            {/each}
+          </div>
+          <div class="flex items-center justify-center gap-3">
+            <button onclick={toggleMute} class="text-white p-2" aria-label="Mute">
+              {#if isMuted || volume === 0}<VolumeX size={20} />{:else}<Volume2 size={20} />{/if}
+            </button>
+            <input type="range" min="0" max="1" step="0.01" value={volume} oninput={(e) => { volume = parseFloat(e.currentTarget.value); if (audioElement) audioElement.volume = volume; }} class="flex-1 accent-white" />
+          </div>
+        </div>
+      </div>
+    {/if}
+  </div>
+{/if}

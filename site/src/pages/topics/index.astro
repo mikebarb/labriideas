@@ -14,6 +14,6 @@ const hierarchy: Record<string, Record<string, Array<{ subtopic: string; categor
 <LabriLayout title="Topics">
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-8 text-center">Ideas Library Topics</h1>
-    <TopicsTree data={hierarchy} client:load />
+    <TopicsTree client:load />
   </div>
 </LabriLayout>
