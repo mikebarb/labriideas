@@ -6,7 +6,6 @@ export const navItems = [
   { 
     id: 'about', 
     label: 'ABOUT', 
-    href: '/about', 
     dropdown: [
       { label: 'Using the ideas library', href: '/about/using' },
       { label: 'History of L\'Abri', href: '/about/history' }
@@ -15,13 +14,13 @@ export const navItems = [
   { 
     id: 'learn', 
     label: 'LEARN', 
-    href: '/learn',
     dropdown: [
       { label: 'Topics', href: '/topics/' },
       { label: 'Playlists', href: '/playlists/' },
       { label: 'Featured Lectures', href: '/featured/' },
       { label: 'Schaeffer Collection', href: '/schaeffer/' },
-      { label: 'Search', href: '/search/' },
+      { label: 'Search', href: '/search/search' },
+      { label: 'Search-claire', href: '/search/search2/' },
       { label: 'Search-ranked', href: '/search/search-ranked/' },
       { label: 'Search-scoped', href: '/search/search-scoped/' }
     ]

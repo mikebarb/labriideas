@@ -50,13 +50,11 @@
     openSections = {};
   }
 
-  const selectCategory = (item: LeafItem) => {
-    window.open(
-      `/topics/${item.category}?label=${encodeURIComponent(item.subtopic)}`,
-      '_blank',
-      'noopener,noreferrer'
-    );
-  };
+  // NEW: Pure URL generator (no side effects)
+  function getTopicUrl(item: LeafItem): string {
+    return `/topics/${item.category}?label=${encodeURIComponent(item.subtopic)}`;
+  }
+
 </script>
 
 <div class="max-w-2xl mx-auto py-8 px-4">
@@ -93,9 +91,9 @@
         onclick={() => toggle(majorTheme)}
       >
         {#if openSections[majorTheme]}
-          <ChevronDown size={20} class="text-orange-600 flex-shrink-0" />
+          <ChevronDown size={20} class="text-orange-600 shrink-0" />
         {:else}
-          <ChevronRight size={20} class="text-gray-600 flex-shrink-0" />
+          <ChevronRight size={20} class="text-gray-600 shrink-0" />
         {/if}
         <h2 class="text-2xl font-bold text-gray-900">
           {majorTheme}
@@ -124,14 +122,14 @@
                 <ul class="ml-6 border-l border-gray-200 pl-3 py-1">
                   {#each leaves as item}
                     <li>
-                      <button 
-                        class="flex items-center gap-3 py-1.5 px-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-gray-50 rounded w-full text-left transition-colors"
-                        onclick={() => selectCategory(item)}
+                      <a
+                        class="flex items-center gap-3 py-1.5 px-2 text-sm text-gray-600 hover:text-orange-600 hover:bg-gray-50 rounded w-full text-left transition-colors no-underline"
+                        href={getTopicUrl(item)}
                         title={`Open track list for: ${item.subtopic}`}
                       >
-                        <Search size={14} class="opacity-50 flex-shrink-0" />
+                        <Search size={14} class="opacity-50 shrink-0" />
                         <span>{item.subtopic}</span>
-                      </button>
+                    </a>
                     </li>
                   {/each}
                 </ul>
