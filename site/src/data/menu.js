@@ -19,13 +19,20 @@ export const navItems = [
       { label: 'Playlists', href: '/playlists/' },
       { label: 'Featured Lectures', href: '/featured/' },
       { label: 'Schaeffer Collection', href: '/schaeffer/' },
-      { label: 'Search', href: '/search/search' },
-      { label: 'Search-claire', href: '/search/search2/' },
+      { label: 'Search', href: '/search/search2/' },
+      { label: 'Search-base', href: '/search/search' },
       { label: 'Search-ranked', href: '/search/search-ranked/' },
       { label: 'Search-scoped', href: '/search/search-scoped/' }
     ]
   },
-  { id: 'contact', label: 'CONTACT', href: '/contact' },
+  { id: 'contact', 
+    label: 'CONTACT', 
+    dropdown: [
+      { label: 'Contact L\'Abri', href: '/contact/contact' },
+      { label: 'Giving', href: '/contact/giving' },
+      { label: 'Report An Error', href: '/contact/Report An Error' }
+    ]
+  },
   { id: 'external', label: 'L\'ABRI.ORG', href: 'https://labri.org' },
   { id: 'dev', label: 'DEV', href: '/admin' }
 ];

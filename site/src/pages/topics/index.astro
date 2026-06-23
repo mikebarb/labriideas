@@ -2,6 +2,7 @@
 import LabriLayout from '../../layouts/LabriLayout.astro';
 import TopicsTree from '../../components/TopicsTree.svelte';
 import menuData from '../../data/menu.json';
+import Hero from '../../components/Hero.svelte';
 
 // Get the Topics hierarchy from menu.json
 const topicsMenu: any = menuData.subMenus.find((s: any) => s.subMenu === 'Topics');
@@ -12,8 +13,13 @@ const hierarchy: Record<string, Record<string, Array<{ subtopic: string; categor
 ---
 
 <LabriLayout title="Topics">
-  <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-8 text-center">Ideas Library Topics</h1>
+  <Hero
+    title="Browse <strong>Topics</strong>"
+    backgroundImage={import.meta.env.BASE_URL + "images/using-the-ideas-library-bg.avif"}
+    height="h-[350px]"
+    showBrushStroke={false}
+  />
+  <div class="max-w-2xl mx-auto px-4 py-8">
     <TopicsTree client:load />
   </div>
 </LabriLayout>

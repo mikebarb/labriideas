@@ -1,0 +1,556 @@
+┌──────────────────────────────────────────────────┐
+│ User flow A: /topics/                            │
+│   → TopicsTree (collapsible hierarchy)           │
+│   → leaf click → /topics/{category}?label=...    │
+└──────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────┐
+│ User flow B: /topics/{category} (dynamic route?) │
+│   → Reads category + ?label= from URL            │
+│   → Renders TrackList in TOPICS MODE             │
+│   → User clicks Play → custom event → Player     │
+└──────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────┐
+│ User flow C: Playlists page                      │
+│   → Uses TrackList in PLAYLIST MODE              │
+└──────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────┐
+│ User flow D: Featured / Schaeffer                │
+│   → Uses TrackList in SPEAKER MODE               │
+└──────────────────────────────────────────────────┘
+
+
+# Topics Page — Architecture & Logic
+
+## Overview
+
+The Topics page is the primary navigation surface for the L'Abri Ideas Library. It allows users to browse the lecture catalogue by **major theme → minor theme → subtopic**, and then drill into a filtered track list for any chosen subtopic.
+
+## Route Map
+
+| Route | File | Purpose |
+|---|---|---|
+| `/topics/` | `src/pages/topics/index.astro` | Browse-page landing: hero + collapsible hierarchy |
+| `/topics/[slug]` | `src/pages/topics/[slug].astro` | Dynamic category page: shows tracks for a specific subtopic |
+
+## User Flow
+
+```
+UUser visits /topics/
+       ↓
+Renders hero (Hero.svelte, no brushstroke, 350px)
+       ↓
+Renders collapsible hierarchy (TopicsTree.svelte)
+       ↓
+User expands/collapses sections
+       ↓
+User clicks a leaf (subtopic)
+       ↓
+Browser navigates to /topics/{category}?label={subtopic}
+       ↓
+[slug].astro renders with breadcrumb + heading
+       ↓
+TrackList.svelte loads in TOPICS MODE
+       ↓
+User clicks "Play" on a track
+       ↓
+Custom event 'play-track' dispatched to window
+       ↓
+Player.svelte (persistent footer) receives event and starts playback
+```
+
+## Component Responsibilities
+
+### `src/pages/topics/index.astro`
+
+- Sets page `<title>` to "Topics"
+- Imports `menu.json` (for typing/structure only — actual data reading is done by `TopicsTree`)
+- Renders the shared `Hero` component (350px, no brushstroke)
+- Renders `TopicsTree` as a Svelte island with `client:load` (hydrated on page load so accordion state is interactive)
+
+### `src/components/TopicsTree.svelte`
+
+- **Data source:** Reads `hierarchy` directly from `src/data/menu.json` (Topics subMenu)
+- **State:** Uses Svelte 5 runes (`$state`) to track which major/minor sections are expanded
+- **Three-level structure:**
+  1. **Major Theme** (e.g. "Theology & Worldview")
+  2. **Minor Theme** (e.g. "L'Abri", "Doctrine", "Bible")
+  3. **Subtopic / Leaf** (e.g. "Introduction to L'Abri")
+- **Global controls:** "Expand All" and "Collapse All" buttons
+- **URL generation:** Each leaf links to `/topics/{item.category}?label={item.subtopic}`
+- **Type safety:** Throws a build-time error if `menu.json` is malformed or the Topics subMenu is missing
+
+### `src/pages/topics/[slug].astro`
+
+- Uses Astro's `getStaticPaths()` to generate one static page per unique category at build time
+- **Data flow:**
+  1. Reads `hierarchy` from `menu.json`
+  2. Flattens the three-level structure into a `category → firstSubtopic` map
+  3. Returns one route per category
+- **Page content:** Breadcrumb, heading (the subtopic label), category name, and the `TrackList` component
+- **Svelte island:** `TrackList` is loaded with `client:load` so the async catalog fetch happens after hydration
+
+### `src/components/TrackList.svelte`
+
+A reusable component used in three modes:
+
+| Mode | Prop | Behaviour |
+|---|---|---|
+| **PLAYLIST MODE** | `tracks: [{displayTitle, filename}]` | Renders the exact tracks passed in, looking up full metadata from the catalog |
+| **TOPICS MODE** | `topic: 'category-name'` | Filters the catalog where `category` matches |
+| **SPEAKER MODE** | `speaker: 'Name'` | Filters the catalog where `speaker` matches |
+
+- **Data source:** Async fetch via `getCatalog()` from `src/lib/catalogStore.js`
+- **Playback integration:** Each track has a "Play" button that dispatches a `play-track` custom event on `window`. The persistent `Player` component (in `LabriLayout.astro`) listens for this event and handles audio playback, queueing, and UI updates.
+- **State management:** Loading, empty, and loaded states are all handled inline.
+
+## Data Flow Diagram
+
+```
+────────────────────┐
+│  menu.json         │
+│  (single source    │
+│   of truth for     │
+│   topic hierarchy) │
+└─────────┬──────────┘
+│
+├──→ TopicsTree.svelte (reads hierarchy, renders UI)
+│
+└──→ [slug].astro getStaticPaths() (reads hierarchy, generates routes)
+↓
+TrackList.svelte (reads catalog from store)
+↓
+User clicks Play
+↓
+window event ‘play-track’
+↓
+Player.svelte (handles audio)
+```
+
+
+## Key Design Decisions
+
+1. **menu.json as single source of truth** — The topic hierarchy lives in one place. Both the browse page and the dynamic route pages derive from it, so adding/removing/renaming topics requires only one edit.
+
+2. **Svelte islands over full SPA** — Only the interactive components (`TopicsTree`, `TrackList`) are hydrated with `client:load`. The rest of the page is static HTML, keeping the bundle small and the initial render fast.
+
+3. **Hero consistency** — All content-heavy pages (Topics, Featured, Playlists, Schaeffer) use the same `Hero` component with `showBrushStroke={false}` and a per-page height. The BrushStroke decorative effect remains exclusive to the homepage, where it was carefully aligned with the title text.
+
+4. **Custom event for player control** — TrackList doesn't import or know about the Player component. It dispatches a `play-track` event on `window`, and Player listens for it. This decouples the two components and lets other parts of the app (e.g. a "Play all" button in a playlist) trigger playback the same way.
+
+5. **Static site generation for category pages** — `[slug].astro` uses `getStaticPaths()` to pre-render one HTML file per category at build time. This keeps the user experience fast (no client-side routing, no loading spinners) and SEO-friendly.
+
+## Maintenance Notes
+
+- **To add a new subtopic:** Edit `src/data/menu.json` (Topics.hierarchy). The browse page and any matching category page will update on next build.
+- **To add a new major or minor theme:** Same — edit `menu.json` only.
+- **To change the hero image or height:** Edit `src/pages/topics/index.astro`. The hero is the only page-specific piece; the rest of the page is data-driven.
+- **To add a new mode to TrackList** (e.g. album mode): Add a new `if/else if` branch in the `onMount` block, plus a new optional prop in the `Props` interface. No changes needed to the page that uses it.
+
+
+# Playlists Page — Architecture & Logic
+
+## Overview
+
+The Playlists page groups lectures into themed collections curated by the L'Abri team. Each playlist is a static page that renders a track list in PLAYLIST MODE, with full playback handled by the persistent player.
+
+## Route Map
+
+| Route | File | Purpose |
+|---|---|---|
+| `/playlists/` | `src/pages/playlists/index.astro` | Browse-page landing: hero + grid of album cards |
+| `/playlists/[album]/` | `src/pages/playlists/[album].astro` | Dynamic album page: shows tracks for a specific playlist (not modified in this pass) |
+
+## User Flow
+
+```
+User visits /playlists/
+       ↓
+Renders hero (Hero.svelte, no brushstroke, 300px, subtitle shown)
+       ↓
+Renders responsive grid of album cards
+       ↓
+User clicks a card
+       ↓
+Browser navigates to /playlists/{id}/
+       ↓
+[album].astro renders album title, description, and TrackList
+       ↓
+TrackList loads in PLAYLIST MODE (with the album's tracks)
+       ↓
+User clicks "Play" on a track
+       ↓
+Custom event 'play-track' dispatched to window
+       ↓
+Player (persistent footer) receives event and starts playback
+```
+
+## Component Responsibilities
+
+### `src/pages/playlists/index.astro`
+
+- Sets page `<title>` to "Playlists"
+- Imports `menu.json` and reads the `Playlists.albums` array (with defensive fallback for older menu structures)
+- Renders the shared `Hero` component (300px, no brushstroke) with title and subtitle
+- Renders a responsive grid (1 / 2 / 3 columns by breakpoint) of album cards
+- Each card is a full-card link to `/playlists/{album.id}/` using the album's `backgroundImage` and a dark overlay
+
+### `src/components/Hero.svelte` (used here)
+
+- Renders the page title and optional subtitle
+- Per the agreed design: this page uses `showBrushStroke={false}` and `height="h-[300px]"`
+- The subtitle appears below the title in a smaller, lighter font
+
+### `src/pages/playlists/[album].astro` (NOT modified in this pass)
+
+- Static dynamic route — one HTML file per album, generated at build time
+- Reads the full album object from `Astro.props` (passed via `getStaticPaths()`)
+- Renders album title, description, and `<TrackList client:load />` in PLAYLIST MODE
+- The TrackList receives `album.tracks` directly (array of `{displayTitle, filename}`)
+
+## Data Flow Diagram
+
+```
+┌────────────────────┐
+│  menu.json         │
+│  (Playlists        │
+│   .albums array)   │
+└─────────┬──────────┘
+          │
+          ├──→ index.astro (reads albums, renders grid)
+          │
+          └──→ [album].astro getStaticPaths() (generates one route per album)
+                                                ↓
+                                       TrackList (PLAYLIST MODE)
+                                                ↓
+                                       User clicks Play
+                                                ↓
+                                       window event 'play-track'
+                                                ↓
+                                       Player (persistent footer)
+```
+
+## Key Design Decisions
+
+1. **menu.json as single source of truth** — Album metadata, track lists, and background images all live in `menu.json`. Adding or modifying a playlist requires only one file edit.
+
+2. **Defensive data reading** — The index page handles both the new (`subMenus` structure) and old (flat) `menu.json` shapes, so a partial migration doesn't break the build.
+
+3. **Card-as-link design** — The entire album card is a single `<a>` element, not a card-with-button-inside. This gives a much larger click target, better for mobile users, and avoids nested interactive elements (a common accessibility issue).
+
+4. **Hero subtitle for context** — The "Selected lectures grouped by theme." text is shown as a hero subtitle rather than a separate paragraph below. This keeps the visual hierarchy tight and frees the body for the album grid.
+
+5. **Album detail page is intentionally not modified here** — There are other plans for that page (potentially richer visuals, related playlists, speaker info, etc.) which will be addressed in a separate pass.
+
+## Maintenance Notes
+
+- **To add a new album:** Edit `src/data/menu.json` (add an entry to the `Playlists.albums` array). The index page grid and the matching `[album].astro` route will both update on next build.
+- **To remove an album:** Delete the entry from `menu.json`. The static page will not be generated.
+- **To change the hero:** Edit `src/pages/playlists/index.astro`. The hero is the only page-specific piece.
+- **To change the grid layout:** The responsive grid classes (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`) are in `src/pages/playlists/index.astro`. Adjust as needed.
+
+
+# Featured Lectures Page — Architecture & Logic
+
+## Overview
+
+The Featured Lectures page highlights a curated selection of notable talks from the L'Abri Ideas Library. Unlike Topics and Playlists pages (which use `<TrackList>` to build a playable queue), the Featured page plays a single track directly by dispatching a `play-track` event to the persistent Player component. There is no "queue" or track list UI — clicking a card immediately starts playback.
+
+## Route Map
+
+| Route | File | Purpose |
+|---|---|---|
+| `/featured/` | `src/pages/featured/index.astro` | Browse-page landing: hero + grid of featured lecture cards |
+
+## User Flow
+
+```
+User visits /featured/
+       ↓
+Renders hero (Hero.svelte, no brushstroke, 300px)
+       ↓
+Renders responsive grid of featured lecture cards
+       ↓
+User clicks a card
+       ↓
+Inline <script> builds a Track object from data attributes
+       ↓
+window dispatches 'play-track' CustomEvent with track details
+       ↓
+Player (persistent footer) receives event and starts playback
+       ↓
+(There is no queue — clicking another card replaces the current track)
+```
+
+## Component Responsibilities
+
+### `src/pages/featured/index.astro`
+
+- Sets page `<title>` to "Featured Lectures"
+- Reads `featuredLectures` from `menu.json` (with defensive fallback for old menu shapes)
+- Renders the shared `Hero` component (300px, no brushstroke) with `sectionTitle` and `sectionSubtitle`
+- Renders a responsive grid (1 / 2 / 3 columns by breakpoint) of lecture cards
+- Each card is a `<button>` (not `<a>` or `<TrackList>`) — because clicking triggers direct playback, not navigation
+
+### The inline `<script>` (playback handler)
+
+- Attaches a single `document` click event listener
+- Uses `event.target.closest('[data-featured-id]')` to handle clicks anywhere inside a card
+- Extracts track metadata from HTML data attributes (`data-filename`, `data-title`, `data-speaker`)
+- Builds a Track object matching the Player component's expected shape
+- Dispatches `play-track` CustomEvent on `window`
+
+This is the same event that `<TrackList>` dispatches. The Player component is agnostic about the source — it just listens for the event and handles playback.
+
+## Data Source
+
+The `menu.json` file contains:
+
+```json
+{
+  "featuredLectures": {
+    "sectionTitle": "Featured Lectures",
+    "sectionSubtitle": "Selected talks from the library",
+    "items": [
+      {
+        "id": "lecture-1",
+        "title": "What is a Personal Relationship with God?",
+        "speaker": "Speaker Name",
+        "filename": "path/to/lecture.mp3",
+        "image": "/images/featured/lecture-1.jpg"
+      }
+    ]
+  }
+}
+```
+
+## Data Flow Diagram
+
+```
+┌────────────────────┐
+│  menu.json         │
+│  (featuredLectures) │
+└─────────┬──────────┘
+          │
+          └──→ index.astro (reads items, renders grid)
+                │
+                ├──→ Card buttons (data attributes)
+                │
+                └──→ User clicks card
+                      │
+                      └──→ Inline <script>
+                            │
+                            └──→ window 'play-track' CustomEvent
+                                  │
+                                  └──→ Player (persistent footer)
+```
+
+## Key Design Decisions
+
+1. **Direct playback, not queue-based** — Featured lectures are single talks meant to be listened to immediately. There's no "add to queue" or "view track list" for this page. Clicking a card plays that lecture.
+
+2. **Button element, not link** — Cards are `<button>` elements rather than `<a>` elements because they don't navigate to a new route. Using `data-*` attributes avoids the need for a `<TrackList>` component while keeping the markup clean.
+
+3. **Single event listener** — Instead of attaching a click handler to each card (which would create N listeners), the script attaches one listener to the document. The `closest()` method efficiently finds the right card.
+
+4. **No TrackList component needed** — Unlike Topics (which uses `<TrackList>` in TOPICS MODE) and Playlists (which uses it in PLAYLIST MODE), Featured doesn't need a track listing UI. The card grid is simpler and directly dispatch the play event.
+
+5. **Defensive data reading** — The page handles both new and old `menu.json` shapes, allowing a partial migration.
+
+## Maintenance Notes
+
+- **To add a featured lecture:** Add an entry to `menu.json` (`featuredLectures.items`). The grid updates on next build.
+- **To remove a featured lecture:** Delete its entry from `menu.json`.
+- **To change the hero:** Edit `src/pages/featured/index.astro` (title, subtitle, image, height).
+- **To change the grid layout:** The responsive grid classes (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`) are in the index file.
+- **To change how playback works** (e.g. add a queue): Modify the inline `<script>` block to build a queue instead of playing one track at a time.
+
+# Schaeffer Collection Page — Architecture & Logic
+
+## Overview
+
+The Schaeffer Collection page is a dedicated archive of lectures by Francis Schaeffer and Edith Schaeffer, foundational figures in L'Abri's history. Unlike Topics and Playlists (which use `<TrackList>`), the collection page uses a custom `<SchaefferGrid>` component that displays speakers as columns with their lecture lists inline.
+
+## Route Map
+
+| Route | File | Purpose |
+|---|---|---|
+| `/schaeffer/` | `src/pages/schaeffer/index.astro` | Collection landing: hero + two-column grid of speakers |
+| `/schaeffer/[slug]` | `src/pages/schaeffer/[slug].astro` | Individual speaker page: full track list for that person |
+
+## User Flow
+
+```
+User visits /schaeffer/
+       ↓
+Renders custom hero (blurred background image, centered title + subtitle)
+       ↓
+Renders two-column grid of speakers (Francis, Edith, etc.)
+       ↓
+User clicks a lecture button in a speaker's column
+       ↓
+SchaefferGrid.svelte's playTrack() builds Track object
+       ↓
+window dispatches 'play-track' CustomEvent
+       ↓
+Player (persistent footer) starts playback
+       ↓
+OR — User clicks "Listen to More →" link
+       ↓
+External link opens in new tab (e.g. to a podcast site)
+```
+
+OR:
+
+```
+User clicks a speaker name (via the "more lectures" path)
+       ↓
+Browser navigates to /schaeffer/{slug}
+       ↓
+[slug].astro renders breadcrumb, speaker name, and TrackList
+       ↓
+TrackList loads in SPEAKER MODE
+       ↓
+User clicks "Play" on a track
+       ↓
+window dispatches 'play-track' CustomEvent
+       ↓
+Player (persistent footer) starts playback
+```
+
+## Component Responsibilities
+
+### `src/pages/schaeffer/index.astro`
+
+- Sets page `<title>` to the section title (e.g. "The Schaeffer Collection")
+- Reads `schaefferCollection` from `menu.json` with defensive fallback
+- Renders a **custom hero** (not the shared `<Hero>` component) with:
+  - A blurred background image (`filter: blur(8px)`)
+  - A dark overlay (`bg-black/50`)
+  - A centered title (`h-80 md:h-96`, about 320–384px tall)
+  - An optional subtitle below the title
+- Renders `<SchaefferGrid>` with the `people` data, hydrated as a Svelte island (`client:load`)
+
+### `src/components/SchaefferGrid.svelte`
+
+- Receives `people: Record<string, Person>` as a prop
+- Converts the keyed object to an array using `$derived(Object.values(people))`
+- Renders a responsive two-column grid (1 column on mobile, 2 on tablet+)
+- Each speaker column contains:
+  - `<h2>` with the speaker's name
+  - A vertical list of lecture buttons
+  - An optional "Listen to More →" link (only if `person.moreLink` is defined)
+- Each lecture button is a `<button>` that:
+  - Triggers `playTrack()` on click
+  - Builds a Track object matching the Player's expectations
+  - Dispatches `play-track` on `window`
+
+### `src/pages/schaeffer/[slug].astro`
+
+- Dynamic route — one static HTML page per person (e.g. `/schaeffer/francis`, `/schaeffer/edith`)
+- `getStaticPaths()` reads `menu.json` and generates one route per person slug
+- Renders a breadcrumb (Schaeffer Collection / Speaker Name)
+- Renders the speaker's name as `<h1>`
+- Renders `<TrackList speaker={person.speakerName} client:load />` in **SPEAKER MODE**
+- 404 redirect if the person object is missing
+
+### `src/components/TrackList.svelte` (used by `[slug].astro`)
+
+- Loaded in SPEAKER MODE for this flow
+- Filters the catalog where `speaker` matches `person.speakerName`
+- Same playback mechanism as Topics and Playlists (dispatches `play-track` on Play button click)
+
+## Data Source
+
+The `menu.json` file contains:
+
+```json
+{
+  "schaefferCollection": {
+    "sectionTitle": "The Schaeffer Collection",
+    "sectionSubtitle": "Lectures and sermons from the founders of L'Abri",
+    "sectionImage": "/images/schaeffer-hero.jpg",
+    "people": {
+      "francis": {
+        "speakerName": "Francis Schaeffer",
+        "items": [
+          {
+            "id": "francis-lecture-1",
+            "title": "The Age of Fragmentation",
+            "filename": "path/to/lecture.mp3"
+          }
+        ],
+        "moreLink": "https://example.com/francis-more"
+      },
+      "edith": {
+        "speakerName": "Edith Schaeffer",
+        "items": [],
+        "moreLink": null
+      }
+    }
+  }
+}
+```
+
+## Data Flow Diagram
+
+```
+┌─────────────────────────┐
+│  menu.json              │
+│  (schaefferCollection   │
+│   .people, .section*)   │
+└──────────┬──────────────┘
+           │
+           ├──→ index.astro
+           │     │
+           │     ├──→ Custom hero (image, title, subtitle)
+           │     │
+           │     └──→ SchaefferGrid.svelte (Svelte island)
+           │           │
+           │           └──→ User clicks lecture button
+           │                 │
+           │                 └──→ playTrack() → window 'play-track' event
+           │                       │
+           │                       └──→ Player (persistent footer)
+           │
+           └──→ [slug].astro (via getStaticPaths)
+                 │
+                 └──→ TrackList (SPEAKER MODE)
+                       │
+                       └──→ User clicks Play
+                             │
+                             └──→ window 'play-track' event
+                                   │
+                                   └──→ Player (persistent footer)
+```
+
+## Key Design Decisions
+
+1. **Custom hero, not the shared component** — The page uses its own hero with a blurred background image rather than the shared `<Hero>` component. This is a deliberate visual choice to soften the strong image of the Schaeffers. (Note: this is inconsistent with the rest of the site, where the shared `<Hero>` is used everywhere. This is a candidate for future refactoring.)
+
+2. **Two playback mechanisms, two pages** — The index page uses `<SchaefferGrid>` with its own inline playback handler (one click → one track). The `[slug]` page uses `<TrackList>` in SPEAKER MODE (shows the full list, supports queueing). Both eventually dispatch the same `play-track` event, so the Player doesn't care which page triggered it.
+
+3. **Two-column grid for speakers** — The collection has historically had two main speakers (Francis and Edith). The two-column layout reflects this naturally. If more speakers are added in future, the grid will wrap automatically.
+
+4. **Optional "Listen to More" link** — Each person can have an external `moreLink` (e.g. a podcast, a third-party archive). If absent, no link is rendered. This gives flexibility per speaker without requiring all entries to have one.
+
+5. **Defensive data reading** — Both the index and `[slug]` pages handle missing or malformed `schaefferCollection` data with fallbacks. If the data is missing entirely, the page still renders with placeholder values rather than crashing.
+
+## Maintenance Notes
+
+- **To add a new lecture:** Add an entry to `menu.json` under `schaefferCollection.people.{slug}.items`.
+- **To add a new speaker:** Add a new key under `schaefferCollection.people` with the speaker's name, items, and optional moreLink.
+- **To change the hero:** Edit `src/pages/schaeffer/index.astro`. The hero is custom (not shared), so changes are local to this page.
+- **To change the grid layout:** The grid classes (`grid-cols-1 md:grid-cols-2`) are in `src/components/SchaefferGrid.svelte`.
+- **To change how playback works:** The `playTrack()` function is in `src/components/SchaefferGrid.svelte`.
+
+## Known Inconsistencies (for future refactoring)
+
+| Issue | Impact | Suggested fix |
+|---|---|---|
+| Custom hero on this page only | Page looks visually different from the rest of the site | Migrate to the shared `<Hero>` component when a properly-sized landscape image is available |
+| Inline `playTrack()` instead of using `<TrackList>` | Two playback mechanisms to maintain | Refactor `<SchaefferGrid>` to use `<TrackList>` in PLAYLIST MODE with per-track override titles |
+| Defensive `: any` casts | Less type safety | Add proper TypeScript interfaces for the `schaefferCollection` shape |
+

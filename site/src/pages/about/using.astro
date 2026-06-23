@@ -1,0 +1,75 @@
+---
+import LabriLayout from '../../layouts/LabriLayout.astro';
+import Hero from '../../components/Hero.svelte';
+---
+
+<LabriLayout title="Using the Ideas Library">
+  <Hero 
+    title="Using the<br>Ideas Library"
+    backgroundImage={import.meta.env.BASE_URL + "images/using-the-ideas-library-bg.avif"}
+    height="h-[350px]"
+    {showBrushStroke}={false}
+  />
+
+  <!-- INTRO TEXT SECTION -->
+  <section class="max-w-3xl mx-auto px-4 pb-12 text-left">
+    <h2 class="text-2xl font-bold mb-6 text-center">WELCOME TO THE IDEAS LIBRARY</h2>
+    <p class="text-gray-700 leading-relaxed text-lg">
+      <!-- EDIT: replace this text with the actual welcome content -->
+      Welcome to the L'Abri Ideas Library, the official collection of L'Abri lectures online. 
+      The library contains over 2,500 lectures presenting Christian ideas that engage contemporary 
+      issues, the history of thought, religious topics, Christian doctrine, personal questions and more. 
+      We hope it helps you find both new questions and new answers.
+    </p>
+    <br>
+    <p class="text-gray-700 leading-relaxed text-lg">
+      To begin, <a href="/featured" class="underline decoration-1 hover:text-orange-600 transition-colors">listen to a few core lectures</a>, 
+      or simply scroll down to <a href="/search" class="underline decoration-1 hover:text-orange-600 transition-colors">search</a> 
+      the library, <a href="/topics" class="underline decoration-1 hover:text-orange-600 transition-colors">browse topics</a>, 
+      see <a href="/featured" class="underline decoration-1 hover:text-orange-600 transition-colors">featured lectures</a>, 
+      or peruse our ever-growing selection of <a href="/playlists" class="underline decoration-1 hover:text-orange-600 transition-colors">playlists</a>.
+    </p>
+  </section>
+
+  <!-- GETTING STARTED SECTION -->
+  <section class="max-w-3xl mx-auto px-4 pb-12 text-left">
+    <h3 class="text-xl font-bold mb-4">Getting Started</h3>
+    <ul class="space-y-3">
+      <li>
+        <!-- EDIT: replace href and text with actual lecture links -->
+        <a href="/featured" class="underline decoration-1 hover:text-orange-600 transition-colors text-lg">
+          Featured Lectures — start with our curated selections
+        </a>
+      </li>
+      <li>
+        <a href="/playlists" class="underline decoration-1 hover:text-orange-600 transition-colors text-lg">
+          Playlists — thematic collections of lectures
+        </a>
+      </li>
+      <li>
+        <a href="/topics" class="underline decoration-1 hover:text-orange-600 transition-colors text-lg">
+          Browse by Topic — explore by subject area
+        </a>
+      </li>
+      <li>
+        <a href="/search" class="underline decoration-1 hover:text-orange-600 transition-colors text-lg">
+          Search — find specific lectures or speakers
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <!-- GET INVOLVED SECTION -->
+  <section class="max-w-3xl mx-auto px-4 pb-20 text-left">
+    <h3 class="text-xl font-bold mb-4">Get Involved</h3>
+    <p class="text-gray-700 leading-relaxed text-lg">
+      The L'Abri Ideas Library is made possible by the support of listeners like you. 
+      <a href="/contact/giving" class="underline decoration-1 hover:text-orange-600 transition-colors">Give here</a> to support the library.
+    </p>
+    <br>
+    <p class="text-gray-700 leading-relaxed text-lg">
+      To learn more about L'Abri, visit 
+      <a href="https://labri.org" class="underline decoration-1 hover:text-orange-600 transition-colors">labri.org</a>.
+    </p>
+  </section>
+</LabriLayout>

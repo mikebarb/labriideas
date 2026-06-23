@@ -1,0 +1,87 @@
+---
+import LabriLayout from '../../layouts/LabriLayout.astro';
+import Hero from '../../components/Hero.svelte';
+---
+
+<LabriLayout title="Giving">
+  <Hero 
+    title="Giving"
+    backgroundImage={import.meta.env.BASE_URL + "images/using-the-ideas-library-bg.avif"}
+    height="h-[400px]"
+    showBrushStroke={false}
+  />
+
+  <!-- INTRO TEXT SECTION -->
+  <section class="max-w-3xl mx-auto px-4 pb-12 text-left">
+    <h2 class="text-2xl font-bold mb-6 text-center">SUPPORT THE IDEAS LIBRARY</h2>
+    <p class="text-gray-700 leading-relaxed text-lg">
+      <!-- EDIT: replace this text with the actual giving/donation content -->
+      The L'Abri Ideas Library is made available free of charge thanks to the generous support 
+      of listeners and friends around the world. Your gift helps us maintain and grow this 
+      collection of over 2,500 lectures.
+    </p>
+    <br>
+    <p class="text-gray-700 leading-relaxed text-lg">
+      Donations can be made securely through PayPal. All gifts are tax-deductible where applicable.
+    </p>
+  </section>
+
+  <!-- DONATION SECTION -->
+  <!-- EDIT: replace the PayPal button with your actual donation integration -->
+  <section class="max-w-3xl mx-auto px-4 pb-20 text-center">
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-8">
+      <h3 class="text-xl font-bold mb-4">Make a Donation</h3>
+      <p class="text-gray-700 text-sm mb-6">
+        Your support helps keep the Ideas Library free for everyone.
+      </p>
+      <!-- Placeholder for PayPal button or donation form 
+      <a 
+        href="https://www.paypal.com/donate" 
+        class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded transition-colors"
+      >
+        Donate via PayPal
+      </a>
+      -->
+      
+      <p class="text-gray-500 text-xs mt-4">
+        <!-- EDIT: replace with actual link -->
+        <a href="https://labri.org/giving" class="underline decoration-1 hover:text-orange-600">Other ways to give →</a>
+      </p>
+    </div>
+  </section>
+  
+  <section>
+    <div id="comp-k2d8hi4p" class="W4V2qg comp-k2d8hi4p wixui-image cs40a3">
+        <a data-testid="linkElement" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=37LAMMDKCPE2L&amp;source=url" target="_blank" class="apPOZK">
+            <img fetchpriority="high" sizes="296px" srcSet="https://static.wixstatic.com/media/0fae2f_e6a4199e3ca44a07b138b3f9f3efadbf~mv2.png/v1/fill/w_296,h_290,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/791945_preview_preview.png 1x, https://static.wixstatic.com/media/0fae2f_e6a4199e3ca44a07b138b3f9f3efadbf~mv2.png/v1/fill/w_560,h_549,al_c,lg_1,q_85,enc_avif,quality_auto/791945_preview_preview.png 2x" id="img_comp-k2d8hi4p" src="https://static.wixstatic.com/media/0fae2f_e6a4199e3ca44a07b138b3f9f3efadbf~mv2.png/v1/fill/w_296,h_290,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/791945_preview_preview.png" alt="791945_preview_preview.png" style="object-fit:cover" class="gRkIq0 sFiSiq" width="296" height="290"/>
+        </a>
+    </div>
+  </section>
+  
+  <!-- PayPal donation button (image linking to PayPal) -->
+  <section>
+      <!--
+      <a 
+        href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=37LAMMDKCPE2L&source=url"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-block hover:opacity-80 transition-opacity"
+      >
+        <img 
+          src={import.meta.env.BASE_URL + "images/donate-button.png"}
+          alt="Donate to L'Abri Ideas Library via PayPal"
+          width="296"
+          height="290"
+          class="mx-auto"
+        />
+      </a>
+      -->
+      <!--  
+      <p class="text-gray-500 text-xs mt-4">
+        <a href="https://labri.org/giving" class="underline decoration-1 hover:text-orange-600">Other ways to give →</a>
+      </p>
+      -->
+  </section>
+
+
+</LabriLayout>

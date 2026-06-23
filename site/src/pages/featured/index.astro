@@ -2,6 +2,7 @@
 // src/pages/featured/index.astro
 import Layout from '../../layouts/LabriLayout.astro';
 import menuData from '../../data/menu.json';
+import Hero from '../../components/Hero.svelte';
 
 // Pull the featured lectures data (with defensive fallback)
 const featuredData = menuData.featuredLectures ?? { 
@@ -13,10 +14,15 @@ const { sectionTitle, sectionSubtitle, items } = featuredData;
 ---
 
 <Layout title="Featured Lectures">
-  <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6 text-gray-900">{sectionTitle}</h1>
-    {sectionSubtitle && <p class="text-gray-600 mb-8">{sectionSubtitle}</p>}
+  <Hero
+    title={sectionTitle}
+    subtitle={sectionSubtitle || undefined}
+    backgroundImage={import.meta.env.BASE_URL + "images/using-the-ideas-library-bg.avif"}
+    height="h-[300px]"
+    showBrushStroke={false}
+  />
 
+  <div class="container mx-auto px-4 py-8">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {items.map(item => (
         <button 
