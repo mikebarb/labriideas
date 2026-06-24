@@ -63,10 +63,10 @@
           </span>
           
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium truncate">
+            <div class="text-sm font-medium wrap-break-words">
               {track.title ?? track.filename}
             </div>
-            <div class="text-xs text-neutral-400 truncate">
+            <div class="text-xs text-neutral-400 wrap-break-words">
               {track.speaker ?? 'Unknown Speaker'}
             </div>
           </div>

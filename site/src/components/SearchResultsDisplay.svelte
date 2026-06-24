@@ -25,7 +25,7 @@
     </div>
   {:else}
     <p class="text-sm text-gray-500 mb-4">
-      {tracks.length} {tracks.length === 1 ? 'track' : 'tracks'} foundxxx
+      {tracks.length} {tracks.length === 1 ? 'track' : 'tracks'} found
     </p>
     <TrackCardGroup items={tracks} />
   {/if}

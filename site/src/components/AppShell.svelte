@@ -18,7 +18,6 @@
   <!-- Main Content: Reactive margin and padding -->
   <main 
     class="flex-1 overflow-auto transition-all duration-300 {mainPaddingBottom}"
-    class:mr-80={$isPlaylistOpen}
   >
     {@render children()}
   </main>

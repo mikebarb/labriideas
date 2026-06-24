@@ -75,8 +75,8 @@
   // ─── Playback Functions ───
 async function playTrack(track: Track) {
   if (!audioElement) return;
-  
-  // CASE 1: Clicking the currently playing/loaded track → toggle play/pause
+
+  // CASE 1: Same track → toggle play/pause
   if (currentTrack?.filename === track.filename && audioElement.src) {
     if (audioElement.paused) {
       await audioElement.play();
@@ -87,46 +87,50 @@ async function playTrack(track: Track) {
     }
     return;
   }
-  
-  // CASE 2: Clicking a different track → load from start
-  if (!tracks.find(t => t.filename === track.filename)) {
-    tracks = [...tracks, { ...track, playbackRate: 1.0 }];
-  }
-  
-  // Remember the position of the track we're leaving
+
+  // CASE 2: Different track
+
+  // Save current track's position (synchronous, no race here)
   if (currentTrack && currentTrack.filename !== track.filename) {
     trackPositions.set(currentTrack.filename, currentTime);
   }
 
-  currentTrack = { ...track, playbackRate: track.playbackRate ?? 1.0 };
+  if (!tracks.find(t => t.filename === track.filename)) {
+    tracks = [...tracks, { ...track, playbackRate: 1.0 }];
+  }
+
   status = 'loading';
-  //currentTime = 0;
+  currentTime = 0;
   errorMessage = '';
   duration = 0;
-  
+  const newFilename = track.filename;
+
   try {
-    const ticket = await fetchPresignedUrl(track.filename);
+    // Fetch the URL first (old track still playing)
+    const ticket = await fetchPresignedUrl(newFilename);
+
+    // NOW pause and swap the source atomically
     audioElement.pause();
-    audioElement.src = '';
-    audioElement.load();
     audioElement.src = ticket.url;
     audioElement.load();
-    audioElement.playbackRate = currentTrack.playbackRate || 1.0;
+    audioElement.playbackRate = track.playbackRate ?? 1.0;
 
-    // Restore the saved position if it exists
-    const savedPosition = trackPositions.get(track.filename);
+    // Schedule position restoration after metadata loads
+    const savedPosition = trackPositions.get(newFilename);
     if (savedPosition && savedPosition > 0) {
-      // Wait for metadata to load, then seek
-      audioElement.addEventListener('loadedmetadata', function seek() {
-        if (audioElement) {
-          audioElement.currentTime = savedPosition;
+      const el = audioElement;  // capture in local const
+      const seek = () => {
+        if (el && currentTrack?.filename === newFilename) {
+          el.currentTime = savedPosition;
           currentTime = savedPosition;
         }
-        audioElement.removeEventListener('loadedmetadata', seek);
-      }, { once: true });
-    } else {
-      currentTime = 0;
+        el?.removeEventListener('loadedmetadata', seek);
+      };
+      el.addEventListener('loadedmetadata', seek, { once: true });
     }
+
+    // Update currentTrack now that everything is set up
+    currentTrack = { ...track, playbackRate: track.playbackRate ?? 1.0 };
 
     await audioElement.play();
     status = 'playing';
@@ -140,6 +144,7 @@ async function playTrack(track: Track) {
     }
   }
 }
+
 
 async function togglePlayPause() {
   if (!audioElement) return;
@@ -275,9 +280,11 @@ async function togglePlayPause() {
       audioElement.volume = volume;
       audioElement.addEventListener('timeupdate', () => {
         if (audioElement && currentTrack) {
-          currentTime = audioElement.currentTime;
-          // Save position for the current track
-          trackPositions.set(currentTrack.filename, audioElement.currentTime);
+          if (status === 'playing' || status === 'paused') {
+            currentTime = audioElement.currentTime;
+            // Save position for the current track
+            trackPositions.set(currentTrack.filename, audioElement.currentTime);
+          }
         }
       });
 
