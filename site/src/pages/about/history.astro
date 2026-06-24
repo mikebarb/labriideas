@@ -5,55 +5,35 @@ import Hero from '../../components/Hero.svelte';
 
 <LabriLayout title="About L'Abri">
   <Hero 
-    title="About L'Abri"
-    backgroundImage={import.meta.env.BASE_URL + "images/using-the-ideas-library-bg.avif"}
-    height="h-[350px]"
+    title="ABOUT"
+    subtitle="L'ABRI"
+    backgroundImage={import.meta.env.BASE_URL + "images/history.avif"}
+    height="h-[400px]"
     showBrushStroke={false}
+    color="white"
   />
 
   <!-- INTRO TEXT SECTION -->
-  <section class="max-w-3xl mx-auto px-4 pb-12 text-left">
-    <h2 class="text-2xl font-bold mb-6 text-center">What is L'Abri</h2>
-    <p class="text-gray-700 leading-relaxed text-lg">
-      <!-- EDIT: replace this text with the actual history content -->
-      The L'Abri communities are study centers in Europe, Asia and America where individuals
-      have the opportunity to seek answers to honest questions about God and the significance
-      of human life. L'Abri believes that Christianity speaks to all aspects of life.
+  <section class="max-w-5xl mx-auto px-4 py-12 text-left">
+    <h3>What is L'Abri</h2>
+    <p>
+      The L'Abri communities are study centers in Europe, Asia and America where individuals have the opportunity to seek answers to honest questions about God and the significance of human life. L'Abri believes that Christianity speaks to all aspects of life.
     </p>
-    <p class="text-gray-700 leading-relaxed text-lg">
-      L’Abri is a “shelter” from the relentless pace and pressures of 21st century life for
-      genuine questions and honest reflection on the truthfulness of Christianity and its
-      bearing on reality. Those of us who work at L’Abri believe the Bible to be true, and
-      believe that becoming (and remaining) a Christian involves identifying, owning and 
-      addressing our doubts, questions and disillusionments as we move through life’s ups 
-      and downs. We believe that questions and doubts about God should be discussed 
-      thoughtfully and personally, and that answers—or at least clearer, more well-informed 
-      thinking—can be gained.
+    <p>
+      L’Abri is a “shelter” from the relentless pace and pressures of 21st century life for genuine questions and honest reflection on the truthfulness of Christianity and its bearing on reality. Those of us who work at L’Abri believe the Bible to be true, and believe that becoming (and remaining) a Christian involves identifying, owning and addressing our doubts, questions and disillusionments as we move through life’s ups and downs. We believe that questions and doubts about God should be discussed thoughtfully and personally, and that answers—or at least clearer, more well-informed thinking—can be gained.      </p>
+    <p>
+      At L’Abri, we do not think doubts and questions are opposed to faith; rather, addressing our doubts and questions make for a robust and resilient faith. L’Abri offers time and space to do just this.
     </p>
+
   </section>
 
-  <section class="max-w-3xl mx-auto px-4 pb-12 text-left">
-    <h2 class="text-2xl font-bold mb-6 text-center">A Short History of L'Abri</h2>
-    <p class="text-gray-700 leading-relaxed text-lg">
-      <!-- EDIT: replace this text with the actual history content -->
+  <section class="max-w-5xl mx-auto px-4 pb-12 text-left">
+    <h3>A Short History of L'Abri</h2>
+    <p>
       L’Abri Fellowship was born in the Swiss Alps in 1955 when Francis and Edith Schaeffer began opening their home to their children’s friends who were curious about Christianity. In the years that followed, hundreds of travelers seeking honest engagement with their honest questions about God, the Bible, and the Christian life found their way to the Schaeffer’s open door. At first and at its heart, L’Abri is a work of hospitality to the whole person, for the sake of the whole person. As Edith Schaeffer put it, “We are as concerned for living as we are for thinking and from the beginning the concern has been that the truth is as much exhibited in everyday life as it is defended in discussion. We do not do this perfectly of course but depend on the Lord to bring forth a measure of reality in our daily life.” Aptly named “L’Abri” (French for ‘shelter’), the work of providing a haven from the hurried, harried and dehumanizing pace and pressures of 21st century life has grown to include ten branches or resources centers on six continents.
     </p>
-  </section>
-
-  <!-- MORE INFORMATION SECTION -->
-  <section class="max-w-3xl mx-auto px-4 pb-20 text-left">
-    <h3 class="text-xl font-bold mb-4">Learn More</h3>
-    <p class="text-gray-700 leading-relaxed text-lg">
-      <!-- EDIT: replace with actual links -->
-      For more on the L’Abri story including the origins of the Southborough branch, 
-      listen to The L’Abri Story: From Switzerland to Southborough by Mardi Keyes. 
-      For a detailed recounting of the early L’Abri story, read L’Abri by Edith Schaeffer. 
-      To learn about international L’Abri, please visit www.labri.org. 
-    </p>
-    <br>
-    <p class="text-gray-700 leading-relaxed text-lg">
-      You can also explore lectures about <a href="/topics" class="underline decoration-1 hover:text-orange-600 transition-colors">L'Abri's history and core ideas</a> 
-      in the library.
+    <p >
+      For more on the L’Abri story including the origins of the Southborough branch, listen to <a class="underline" href="https://labrisouthborough.podbean.com/e/the-labri-story-from-switzerland-to-southborough/">The L’Abri Story: From Switzerland to Southborough</a> by Mardi Keyes. For a detailed recounting of the early L’Abri story, read <a class="underline" href="https://www.amazon.com/LAbri-New-Expanded-Edith-Schaeffer/dp/0891076689">L’Abri</a> by Edith Schaeffer. To learn about international L’Abri, please visit <a class="underline" href="http://www.labri.org/">www.labri.org</a>. 
     </p>
   </section>
 </LabriLayout>
