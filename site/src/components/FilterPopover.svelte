@@ -61,7 +61,7 @@
   <button
   type="button"
   onclick={() => (open = !open)}
-  class="border px-3 py-1.5 rounded text-sm font-medium bg-white hover:bg-gray-50 flex items-center gap-2 min-w-32 justify-between"
+  class="border px-3 py-1.5 rounded text-sm font-medium bg-white hover:bg-gray-50 flex items-center gap-2 min-w-26 justify-between"
 >
   <!-- LEFT SIDE: Clear (X) and Label -->
   <span class="flex items-center gap-2 truncate">

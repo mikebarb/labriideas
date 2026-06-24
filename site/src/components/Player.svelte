@@ -377,11 +377,11 @@ async function togglePlayPause() {
       <button onclick={() => isPlaylistOpen.update(v => !v)} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10" aria-label="Toggle queue">
         <ListMusic size={20} />
       </button>
-      {#if isAdmin && currentTrack}
+      <!-- {#if isAdmin && currentTrack}
         <button onclick={() => downloadTrack(currentTrack!)} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10" aria-label="Download">
           <Download size={18} />
         </button>
-      {/if}
+      {/if} -->
     </div>
   </div>
 
