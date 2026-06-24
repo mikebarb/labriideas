@@ -2,6 +2,7 @@
 <script lang="ts">
   import { getCatalog } from '../lib/catalogStore.js';
   import { onMount } from 'svelte';
+  import TrackCardGroup from './TrackCardGroup.svelte';
 
   interface Props {
     tracks?: Array<{ displayTitle: string; filename: string }>;
@@ -52,11 +53,6 @@
       isLoading = false;
     }
   });
-
-  function playThisTrack(track: any) {
-    const cleanTrack = $state.snapshot(track);
-    window.dispatchEvent(new CustomEvent('play-track', { detail: cleanTrack }));
-  }
 </script>
 
 {#if isLoading}
@@ -64,23 +60,5 @@
 {:else if playableTracks.length === 0}
   <p class="text-gray-400 italic py-4">No tracks found.</p>
 {:else}
-  <ul class="space-y-2">
-    {#each playableTracks as track (track.filename)}
-      <li class="flex items-center justify-between p-3 bg-white/5 rounded hover:bg-white/10 transition">
-        <span class="truncate text-sm text-gray-200">
-          {track.displayTitle ?? track.title ?? track.filename}
-          {#if track.speaker}
-            <span class="text-gray-500 ml-2">— {track.speaker}</span>
-          {/if}
-        </span>
-        <button
-          type="button"
-          onclick={() => playThisTrack(track)}
-          class="bg-green-600 hover:bg-green-500 text-black px-3 py-1 rounded text-sm font-semibold transition shrink-0 ml-3"
-        >
-          Play
-        </button>
-      </li>
-    {/each}
-  </ul>
+  <TrackCardGroup items={playableTracks} />
 {/if}

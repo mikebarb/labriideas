@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { buildTrack } from '../lib/buildTrack.js';
+
   interface Person {
     speakerName: string;
     items: Array<{
@@ -20,27 +22,13 @@
 
   // Click handler for playing tracks
   function playTrack(item: { id: string; title: string; filename: string }, speaker: string) {
-    const track = {
-      id: item.id,
-      filename: item.filename,
-      hash: '',
-      metadata: {
-        title: item.title,
-        artist: speaker,
-        speaker: speaker
-      },
-      title: item.title,
-      artist: speaker,
-      speaker: speaker,
-      playbackRate: 1.0
-    };
-    
+    const track = buildTrack({ ...item, speaker });
     window.dispatchEvent(new CustomEvent('play-track', { detail: track }));
   }
 </script>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-  {#each peopleList as person}
+  {#each Object.entries(people) as [slug, person]}
     <div class="space-y-4">
       <h2 class="text-2xl font-bold text-gray-900">{person.speakerName}</h2>
       
@@ -58,9 +46,7 @@
 
       {#if person.moreLink}
         <a 
-          href={person.moreLink}
-          target="_blank"
-          rel="noopener noreferrer"
+          href={`/schaeffer/${slug}/`}
           class="inline-block bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-2 rounded-md transition"
         >
           Listen to More →

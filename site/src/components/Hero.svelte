@@ -5,6 +5,7 @@
   export let showBrushStroke = true;
   export let height = "h-[400px]";
   export let subtitle = "";
+  export let blurBackground = false;
 </script>
 
 <div class="relative w-full {height} flex items-center justify-center overflow-hidden">
@@ -12,6 +13,7 @@
     src={backgroundImage} 
     alt="L'Abri Library Bookshelf" 
     class="absolute inset-0 w-full h-full object-cover"
+    class:blur-md={blurBackground}
   />
   
   <!-- Dark overlay to ensure text legibility -->
