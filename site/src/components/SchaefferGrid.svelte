@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { PersonStanding } from 'lucide-svelte';
   import { buildTrack } from '../lib/buildTrack.js';
 
   interface Person {
     speakerName: string;
+    intro: string;
     items: Array<{
       id: string;
       title: string;
@@ -30,6 +32,9 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
   {#each Object.entries(people) as [slug, person]}
     <div class="space-y-4">
+      <p>
+        {person.intro}
+      </p>
       <h2 class="text-2xl font-bold text-gray-900">{person.speakerName}</h2>
       
       <div class="space-y-2">

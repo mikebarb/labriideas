@@ -183,3 +183,78 @@ Player calls playTrack(event.detail)
 - **To change the seek bar behavior:** Modify `onSeekDown`, `onSeekMove`, `onSeekUp`.
 - **To add new playback controls:** Add buttons in the template and corresponding functions in the script section.
 - **To change the mobile layout:** Modify the `{#if !isMobileExpanded}` and `{:else}` blocks in the template.
+
+## Inline Play Links: Playing Tracks from Static Content
+
+### Overview
+
+Any Astro page can include clickable text links that play a track in the audio player. The link only needs a `data-play-filename` attribute containing the track's filename. A shared Svelte component looks up the filename in the catalog and dispatches the play event to the Player.
+
+### Architecture
+```
+User clicks "The Five Themes..." link in Astro page
+       ↓
+Astro's script catches the click (event delegation)
+       ↓
+It reads data-play-filename attribute from the link
+       ↓
+Dispatches 'play-track-by-filename' CustomEvent with the filename
+       ↓
+PlayTrackDispatcher.svelte receives the event
+       ↓
+Looks up the track in its loaded catalog (getCatalog)
+       ↓
+Calls buildTrack() to construct the Track object
+       ↓
+Dispatches 'play-track' CustomEvent with the Track
+       ↓
+Player.svelte receives the event and plays the track
+```
+
+### Files Involved
+
+| File | Purpose |
+|---|---|
+| `src/lib/playTrack.ts` | Utility functions for dispatching play events |
+| `src/components/PlayTrackDispatcher.svelte` | Invisible Svelte island that loads the catalog and resolves filenames |
+| Any Astro page | Contains the clickable link and a small script block |
+
+### The Library: `src/lib/playTrack.ts`
+
+```ts
+import { buildTrack } from './buildTrack.js';
+import type { Track } from './types.js';
+
+/**
+ * Dispatch a play-track event with a fully built Track object.
+ * Use this when you already have a Track ready to play.
+ */
+export function dispatchPlayTrack(track: Track): void {
+  window.dispatchEvent(new CustomEvent('play-track', { detail: track }));
+}
+
+/**
+ * Dispatch a request to play a track by its filename.
+ * A Svelte component with catalog access will handle the lookup.
+ */
+export function requestPlayByFilename(filename: string): void {
+  window.dispatchEvent(new CustomEvent('play-track-by-filename', { detail: filename }));
+}
+
+The Dispatcher Component: src/components/PlayTrackDispatcher.svelte
+This component renders nothing. It loads the catalog once on mount and listens for play-track-by-filename events. When it receives one, it looks up the filename in the catalog, builds a Track object using buildTrack(), and dispatches the real play-track event.
+
+Usage in an Astro Page
+Step 1: Import the dispatcher and add it to the page.
+Step 2: Create clickable links using data-play-filename
+
+Adding the Feature to Any Page
+Import PlayTrackDispatcher.svelte in the Astro frontmatter
+Add <PlayTrackDispatcher client:load /> anywhere in the template (it renders nothing)
+Add the <script> block that wires up data-play-filename clicks
+Add data-play-filename="your-file.mp3" to any <a> tag
+
+Requirements
+The filename must match a track’s filename field in the catalog
+The catalog is loaded by PlayTrackDispatcher on mount — the page must be navigated to (not server-rendered without hydration)
+Only one PlayTrackDispatcher per page is needed, regardless of how many links exist

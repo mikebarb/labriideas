@@ -16,8 +16,8 @@ export const navItems = [
     label: 'LEARN', 
     dropdown: [
       { label: 'Topics', href: '/topics/' },
+      { label: 'Featured', href: '/featured/' },
       { label: 'Playlists', href: '/playlists/' },
-      { label: 'Featured Lectures', href: '/featured/' },
       { label: 'Schaeffer Collection', href: '/schaeffer/' },
       { label: 'Search', href: '/search/search2/' },
       { label: 'Search-base', href: '/search/search' },

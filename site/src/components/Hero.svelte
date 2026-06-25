@@ -21,7 +21,7 @@
 
  <!-- Container for the overlay effect -->
   <!-- Added inline-flex so the container shrinks to fit the text width -->
-  <div class="relative z-10 inline-flex items-center justify-center p-8 md:p-12 overflow-visible">
+  <div class="relative z-10 inline-flex flex-col items-center justify-center p-8 md:p-12 overflow-visible">
 
     {#if showBrushStroke}
       <!-- The Brushstroke (absolute) -->

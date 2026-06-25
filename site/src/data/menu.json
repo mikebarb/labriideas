@@ -23,6 +23,46 @@
             { "displayTitle": "An Historical Defense of the Exodus - Part 1", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
             { "displayTitle": "An Historical Defense of the Exodus - Part 2", "filename": "An Historical Defense of the Exodus & Conquest (Part 2) - Sandra Richter___99.mp3" }
           ]
+        },
+        {
+          "id": "men-women-bible",
+          "title": "Men, Women, and the Bible",
+          "description": "For many today, the Bible's view of gender is a hot-button issue. Collected here are lectures on some of the most controversial passages on the genders as well as an overall framework for answering questions that often come up.",
+          "backgroundImage": "/images/playlists/men-women-bible-bg.avif",
+          "tracks": [
+            { "displayTitle": "Is God Angry", "filename": "Are We Better Than God^ part 3_ Is God Angry^ - Wade Bradshaw___130.mp3" },
+            { "displayTitle": "An Historical Defense of the Exodus - Part 1", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
+            { "displayTitle": "An Historical Defense of the Exodus - Part 2", "filename": "An Historical Defense of the Exodus & Conquest (Part 2) - Sandra Richter___99.mp3" }
+          ]
+        },
+        {
+          "id": "navigating-relationships",
+          "title": "Navigating Relationships",
+          "description": "What does it mean to be alone? To be with others? To be a friend? To be married? These lectures talk about the many questions that come up as we dance the steps of relationship.",
+          "backgroundImage": "/images/playlists/navigating-relationships-bg.avif",
+          "tracks": [
+            { "displayTitle": "Is God Angry", "filename": "Are We Better Than God^ part 3_ Is God Angry^ - Wade Bradshaw___130.mp3" },
+            { "displayTitle": "An Historical Defense of the Exodus - Part 1", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
+            { "displayTitle": "An Historical Defense of the Exodus - Part 2", "filename": "An Historical Defense of the Exodus & Conquest (Part 2) - Sandra Richter___99.mp3" }
+          ]
+        },
+        {
+          "id": "literature-poetry",
+          "title": "Literature and Poetry",
+          "description": "If Christ is Lord of all of life, the domain of the written word should be the concern of Christ's followers. Here is a collection of lectures on Flannery O'Connor, T. S. Eliot, Tolkien, Rowling, and more.",
+          "backgroundImage": "/images/playlists/navigating-relationships-bg.avif",
+          "tracks": [
+            { "displayTitle": "Is God Angry", "filename": "Are We Better Than God^ part 3_ Is God Angry^ - Wade Bradshaw___130.mp3" },
+            { "displayTitle": "An Historical Defense of the Exodus - Part 1", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
+            { "displayTitle": "An Historical Defense of the Exodus - Part 2", "filename": "An Historical Defense of the Exodus & Conquest (Part 2) - Sandra Richter___99.mp3" }
+          ]
+        },
+        {
+          "id": "suggest-playlist",
+          "title": "Suggest a Playlist",
+          "description": "Do you want to put your own playlist together? Send us your lecture list.",
+          "backgroundImage": "/images/playlists/navigating-relationships-bg.avif",
+          "linkToForm": "https://labriideaslibrary.typeform.com/to/ppsjl6"
         }
       ]
     },
@@ -152,18 +192,74 @@
     "sectionImage": "",
     "items": [
       {
-        "id": "themes",
-        "title": "The Five Themes of L'Abri",
-        "speaker": "Dick Keyes",
-        "image": "/images/featured/themes.jpg",
+        "id": "1",
+        "title": "What is a \"Personal Relationship with God\"?",
+        "speaker": "Jim Paul",
+        "image": "/images/playlists/jim_paul.avif",
         "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
       },
       {
-        "id": "intro-schaeffer",
-        "title": "An Introduction to Francis Schaeffer",
-        "speaker": "Jerram Barrs",
-        "image": "/images/featured/schaeffer.jpg",
-        "filename": "Intro to Schaeffer - Jerram Barrs___12.mp3"
+        "id": "2",
+        "title": "Community As A Subversion of Modernity",
+        "speaker": "Andrew Fellows",
+        "image": "/images/playlists/andrew_fellows.avif",
+        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+      },
+      {
+        "id": "3",
+        "title": "How We Got The Bible",
+        "speaker": "Andy Patton",
+        "image": "/images/playlists/andy_patton.avif",
+        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+      },
+      {
+        "id": "4",
+        "title": "Les Miserables",
+        "speaker": "John Hodges",
+        "image": "/images/playlists/john_hodges.avif",
+        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+      },
+      {
+        "id": "5",
+        "title": "Imagination, Habit, & Hope in a Pornified Society",
+        "speaker": "Josuha Chestnut",
+        "image": "/images/playlists/josuha_chestnut.avif",
+        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+      },
+      {
+        "id": "6",
+        "title": "Did Yahweh Evolve?",
+        "speaker": "Sandra Richter",
+        "image": "/images/playlists/sandra_richter.avif",
+        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+      },
+      {
+        "id": "7",
+        "title": "On Saving Leonardo From the Clutches of Secularism",
+        "speaker": "Nancy Pearcey",
+        "image": "/images/playlists/nancy_pearcey.avif",
+        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+      },
+      {
+        "id": "8",
+        "title": "22 Things I Have Learned In Life",
+        "speaker": "Donald Drew",
+        "image": "/images/playlists/donald_drew.avif",
+        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+      },
+      {
+        "id": "9",
+        "title": "Compreehensive Spirituality",
+        "speaker": "Ellis Potter",
+        "image": "/images/playlists/ellis_potter.avif",
+        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+      },
+      {
+        "id": "10",
+        "title": "On the Origins of the Gospels",
+        "speaker": "Dirk Jongkind",
+        "image": "/images/playlists/dirk_jongkind.avif",
+        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
       }
     ]
   },
@@ -174,6 +270,7 @@
     "people": {
       "francis": {
         "speakerName": "Francis Schaeffer",
+        "intro": "To get started with Francis Schaeffer's lectures, listen to these:",
         "items": [
           {
             "id": "francis-1",
@@ -185,10 +282,12 @@
             "title": "Art in the Bible",
             "filename": "Art_in_the_Bible___12.mp3"
           }
-        ]
+        ],
+        "moreLink": "x"
       },
       "edith": {
         "speakerName": "Edith Schaeffer",
+        "intro": "To get started with Edith Schaeffer's lectures, here are a few recommendations:",
         "items": [
           {
             "id": "edith-1",
@@ -200,7 +299,8 @@
             "title": "Study on Prayer",
             "filename": "Study_on_Prayer___15.mp3"
           }
-        ]
+        ],
+        "moreLink": "x"
       }
     }
   }

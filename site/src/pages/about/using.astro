@@ -1,6 +1,7 @@
 ---
 import LabriLayout from '../../layouts/LabriLayout.astro';
 import Hero from '../../components/Hero.svelte';
+import PlayTrackDispatcher from '../../components/PlayTrackDispatcher.svelte';
 ---
 
 <LabriLayout title="Using the Ideas Library">
@@ -11,65 +12,149 @@ import Hero from '../../components/Hero.svelte';
     {showBrushStroke}={false}
   />
 
-  <!-- INTRO TEXT SECTION -->
   <section class="max-w-3xl mx-auto px-4 pb-12 text-left">
-    <h2 class="text-2xl font-bold mb-6 text-center">WELCOME TO THE IDEAS LIBRARY</h2>
     <p class="text-gray-700 leading-relaxed text-lg">
-      <!-- EDIT: replace this text with the actual welcome content -->
-      Welcome to the L'Abri Ideas Library, the official collection of L'Abri lectures online. 
-      The library contains over 2,500 lectures presenting Christian ideas that engage contemporary 
-      issues, the history of thought, religious topics, Christian doctrine, personal questions and more. 
-      We hope it helps you find both new questions and new answers.
+      For decades the branches of L'Abri have been recording lectures and making them 
+      available for the use of anyone who is interested. On the Ideas Library you will 
+      find over 2,500 lectures presenting Christian ideas that engage contemporary issues, 
+      the history of thought, religious topics, Christian doctrine, personal questions 
+      and more. The L'Abri Ideas Library is the official collection of L'Abri lectures 
+      online and we hope it helps you find both new questions and new answers.
     </p>
     <br>
+    <h3 class="text-xl font-bold mb-4">Where to begin</h3>
     <p class="text-gray-700 leading-relaxed text-lg">
-      To begin, <a href="/featured" class="underline decoration-1 hover:text-orange-600 transition-colors">listen to a few core lectures</a>, 
-      or simply scroll down to <a href="/search" class="underline decoration-1 hover:text-orange-600 transition-colors">search</a> 
-      the library, <a href="/topics" class="underline decoration-1 hover:text-orange-600 transition-colors">browse topics</a>, 
-      see <a href="/featured" class="underline decoration-1 hover:text-orange-600 transition-colors">featured lectures</a>, 
-      or peruse our ever-growing selection of <a href="/playlists" class="underline decoration-1 hover:text-orange-600 transition-colors">playlists</a>.
+      If you are new to L'Abri and would like an introduction, here is a list of 
+      lectures we would recommend:
     </p>
-  </section>
-
-  <!-- GETTING STARTED SECTION -->
-  <section class="max-w-3xl mx-auto px-4 pb-12 text-left">
-    <h3 class="text-xl font-bold mb-4">Getting Started</h3>
+    <br>
     <ul class="space-y-3">
       <li>
-        <!-- EDIT: replace href and text with actual lecture links -->
-        <a href="/featured" class="underline decoration-1 hover:text-orange-600 transition-colors text-lg">
-          Featured Lectures — start with our curated selections
+        <a 
+          href="#" 
+          data-play-filename="(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3"
+          class="underline decoration-1 hover:text-orange-600 transition-colors cursor-pointer"
+        >
+          The Five Themes of L'Abri Revisited - Ben Keyes - filename
+      </a>
+
+      </li>
+
+      <li>
+        <a 
+          href="#" 
+          data-play-filename="(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3"
+          class="underline decoration-1 hover:text-orange-600 transition-colors cursor-pointer"
+        >
+          The Importance of Asking Questions - Ellis Potter
+      </a>
+      </li>
+    </ul>
+    <br>
+    Lectures on each of these themes:
+    <ul class="space-y-3">
+      <li>
+        <a 
+          href="#" 
+          data-play-filename="(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3"
+          class="underline decoration-1 hover:text-orange-600 transition-colors cursor-pointer"
+        >
+          The Truth of Christianity - Jock McGregor ? filename
+      </a>
+      </li>
+      <li>
+        <a 
+          href="#" 
+          data-play-filename="(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3"
+          class="underline decoration-1 hover:text-orange-600 transition-colors cursor-pointer"
+        >  The Reality of the Supernatural - Wim Rietkerk ? filename
         </a>
       </li>
       <li>
-        <a href="/playlists" class="underline decoration-1 hover:text-orange-600 transition-colors text-lg">
-          Playlists — thematic collections of lectures
+        <a 
+          href="#" 
+          data-play-filename="(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3"
+          class="underline decoration-1 hover:text-orange-600 transition-colors cursor-pointer"
+        >   The Humanness of Spiritual Experience: The Recovery of the Image of God - Ranald Macaulay ? filename
         </a>
       </li>
       <li>
-        <a href="/topics" class="underline decoration-1 hover:text-orange-600 transition-colors text-lg">
-          Browse by Topic — explore by subject area
+        <a 
+          href="#" 
+          data-play-filename="(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3"
+          class="underline decoration-1 hover:text-orange-600 transition-colors cursor-pointer"
+        >   Living in the Shadow of the Fall - Dick Keyes ? filename
         </a>
       </li>
       <li>
-        <a href="/search" class="underline decoration-1 hover:text-orange-600 transition-colors text-lg">
-          Search — find specific lectures or speakers
+        <a 
+          href="#" 
+          data-play-filename="(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3"
+          class="underline decoration-1 hover:text-orange-600 transition-colors cursor-pointer"
+        >   The Lordship of Christ Over All of Life - Dick Keyes ? filename
         </a>
       </li>
     </ul>
+
+    <h3 class="text-xl font-bold mb-4">Getting Involved</h3>
+    <p class="text-gray-700 leading-relaxed text-lg">
+      If you find any errors on the site or would like to 
+      contribute a playlist or lecture description, just 
+      fill out one of the online forms below:
+    </p>
+    <ul>
+      <li>
+        <a 
+          class="underline decoration-1 hover:text-orange-600 transition-colors cursor-pointer"
+          href="https://labriideaslibrary.typeform.com/to/dkyVPC"
+          target="_blank" class="wixui-rich-text__text"
+        >
+          I would like to write a lecture description.
+        </a>
+      </li>
+      <li>
+        <a 
+          class="underline decoration-1 hover:text-orange-600 transition-colors cursor-pointer"
+          href="https://labriideaslibrary.typeform.com/to/ppsjl6" 
+          target="_blank" 
+          class="wixui-rich-text__text">
+            I would like to suggest a collection of lectures to feature 
+            as a playlist.
+        </a>
+      </li>
+      <li>
+        <a 
+          class="underline decoration-1 hover:text-orange-600 transition-colors cursor-pointer"
+          href="https://labriideaslibrary.typeform.com/to/cYY0DA"
+          target="_blank" class="wixui-rich-text__text"
+        >
+          I would like to report an error on the site.&nbsp;
+        </a>
+      </li>
+
+
+    </ul>
+
+
   </section>
 
-  <!-- GET INVOLVED SECTION -->
-  <section class="max-w-3xl mx-auto px-4 pb-20 text-left">
-    <h3 class="text-xl font-bold mb-4">Get Involved</h3>
-    <p class="text-gray-700 leading-relaxed text-lg">
-      The L'Abri Ideas Library is made possible by the support of listeners like you. 
-      <a href="/contact/giving" class="underline decoration-1 hover:text-orange-600 transition-colors">Give here</a> to support the library.
-    </p>
-    <br>
-    <p class="text-gray-700 leading-relaxed text-lg">
-      To learn more about L'Abri, visit 
-      <a href="https://labri.org" class="underline decoration-1 hover:text-orange-600 transition-colors">labri.org</a>.
-    </p>
-  </section>
 </LabriLayout>
+
+<!-- Dispatcher: handles data-play-filename clicks anywhere on this page -->
+<PlayTrackDispatcher client:load />
+
+<script>
+  // Wire up inline play links via event delegation
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const link = target.closest('[data-play-filename]');
+    if (!link) return;
+    
+    e.preventDefault();
+    
+    const filename = link.getAttribute('data-play-filename');
+    if (!filename) return;
+    
+    window.dispatchEvent(new CustomEvent('play-track-by-filename', { detail: filename }));
+  });
+</script>
