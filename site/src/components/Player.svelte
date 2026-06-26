@@ -6,7 +6,8 @@
     Volume2, VolumeX, ListMusic, Minimize2, Maximize2, Download 
   } from 'lucide-svelte';
   import { 
-    isPlaylistOpen, trackList, currentTrackStore, statusStore, isAdminStore 
+    isPlaylistOpen, trackList, currentTrackStore, statusStore, isAdminStore,
+    currentTimeStore, durationStore
   } from '../lib/playerStore.js';
   import type { Track } from '../lib/types.js';
 
@@ -19,8 +20,10 @@
   let { apiBase = '', showTracklist = true, isAdmin = false }: Props = $props();
 
   // ─── State ───
-  let tracks = $state<Track[]>([]);
-  let currentTrack = $state<Track | null>(null);
+  // The tracks array is the source of truth. Each track holds its own
+  // runtime state (position, duration, url, urlExpiresAt).
+  let tracks: Track[] = $state([]);
+  let currentTrack: Track | null = $state(null);
   let status = $state<'idle' | 'loading' | 'playing' | 'paused' | 'buffering' | 'error'>('idle');
   let currentTime = $state(0);
   let duration = $state(0);
@@ -28,7 +31,6 @@
   let isMuted = $state(false);
   let errorMessage = $state('');
   let isMobileExpanded = $state(false);
-  let trackPositions = $state(new Map<string, number>());  // Remember playback position for each track
 
   let audioElement: HTMLAudioElement | null = $state(null);
   let seekBarElement: HTMLElement | null = $state(null);
@@ -40,6 +42,8 @@
   $effect(() => { currentTrackStore.set(currentTrack); });
   $effect(() => { statusStore.set(status); });
   $effect(() => { isAdminStore.set(isAdmin); });
+  $effect(() => { currentTimeStore.set(currentTime); });
+  $effect(() => { durationStore.set(duration); });
 
   // ─── Derived ───
   let progress = $derived(
@@ -66,114 +70,138 @@
     };
   }
 
-  //async function fetchPresignedUrl(filename: string) {
-  //  const res = await fetch(`${apiBase}/api/download?file=${encodeURIComponent(filename)}`);
-  //  if (!res.ok) throw new Error('Failed to get URL');
-  //  return { url: await res.text(), expiresAt: Date.now() + 3600 * 1000 };
-  //}
-
   // ─── Playback Functions ───
-async function playTrack(track: Track) {
-  if (!audioElement) return;
-
-  // CASE 1: Same track → toggle play/pause
-  if (currentTrack?.filename === track.filename && audioElement.src) {
-    if (audioElement.paused) {
+  
+  /**
+   * Toggle play/pause on the current track.
+   */
+  async function togglePlayPause(): Promise<void> {
+    if (!audioElement) return;
+    
+    // If no current track, try to play the first one in the queue
+    if (!currentTrack) {
+      if (tracks.length > 0) {
+        await playTrack(tracks[0]);
+      }
+      return;
+    }
+    
+    // If there's an error, retry by reloading
+    if (status === 'error') {
+      await loadTrack(currentTrack);
       await audioElement.play();
       status = 'playing';
+      return;
+    }
+    
+    // Normal play/pause toggle
+    if (audioElement.paused) {
+      try {
+        await audioElement.play();
+      } catch (err) {
+        console.error('Toggle play failed:', err);
+      }
     } else {
       audioElement.pause();
-      status = 'paused';
     }
-    return;
   }
 
-  // CASE 2: Different track
+  /**
+   * Load a track's metadata (URL, duration) into its object.
+   * Uses cached URL if still valid.
+   */
+  async function loadTrack(track: Track): Promise<void> {
+    if (!audioElement) return;
 
-  // Save current track's position (synchronous, no race here)
-  if (currentTrack && currentTrack.filename !== track.filename) {
-    trackPositions.set(currentTrack.filename, currentTime);
-  }
+    status = 'loading';
+    errorMessage = '';
 
-  if (!tracks.find(t => t.filename === track.filename)) {
-    tracks = [...tracks, { ...track, playbackRate: 1.0 }];
-  }
+    // Use cached URL if valid, otherwise fetch new one
+    if (!track.url || !track.urlExpiresAt || track.urlExpiresAt < Date.now()) {
+      try {
+        const ticket = await fetchPresignedUrl(track.filename);
+        track.url = ticket.url;
+        track.urlExpiresAt = ticket.expiresAt;
+      } catch (err: any) {
+        console.error('Failed to fetch URL:', err);
+        status = 'error';
+        errorMessage = err.message;
+        throw err;
+      }
+    }
 
-  status = 'loading';
-  currentTime = 0;
-  errorMessage = '';
-  duration = 0;
-  const newFilename = track.filename;
-
-  try {
-    // Fetch the URL first (old track still playing)
-    const ticket = await fetchPresignedUrl(newFilename);
-
-    // NOW pause and swap the source atomically
-    audioElement.pause();
-    audioElement.src = ticket.url;
+    audioElement.src = track.url;
     audioElement.load();
     audioElement.playbackRate = track.playbackRate ?? 1.0;
 
-    // Schedule position restoration after metadata loads
-    const savedPosition = trackPositions.get(newFilename);
-    if (savedPosition && savedPosition > 0) {
-      const el = audioElement;  // capture in local const
-      const seek = () => {
-        if (el && currentTrack?.filename === newFilename) {
-          el.currentTime = savedPosition;
-          currentTime = savedPosition;
+    // Capture duration on metadata load
+    await new Promise<void>((resolve) => {
+      const onMeta = () => {
+        if (audioElement && isFinite(audioElement.duration) && audioElement.duration > 0) {
+          track.duration = audioElement.duration;
+          duration = audioElement.duration;
         }
-        el?.removeEventListener('loadedmetadata', seek);
+        audioElement?.removeEventListener('loadedmetadata', onMeta);
+        resolve();
       };
-      el.addEventListener('loadedmetadata', seek, { once: true });
+      audioElement?.addEventListener('loadedmetadata', onMeta);
+    });
+  }
+
+  /**
+   * Main entry point. Handles:
+   *   - Same track → toggle play/pause
+   *   - New track → load + play
+   *   - Switching tracks → save old position, load new, restore position
+   */
+  async function playTrack(track: Track): Promise<void> {
+    if (!audioElement) return;
+
+    // CASE 1: Same track → toggle
+    if (currentTrack?.filename === track.filename) {
+      await togglePlayPause();
+      return;
     }
 
-    // Update currentTrack now that everything is set up
-    currentTrack = { ...track, playbackRate: track.playbackRate ?? 1.0 };
-
-    await audioElement.play();
-    status = 'playing';
-  } catch (err: any) {
-    console.error('Play error:', err);
-    if (err.name === 'NotAllowedError') {
-      status = 'paused';
-    } else {
-      status = 'error';
-      errorMessage = err.message;
+    // CASE 2: Different track
+    // Save current track's position before switching (synchronous)
+    if (currentTrack && audioElement.src) {
+      currentTrack.position = audioElement.currentTime;
     }
-  }
-}
 
-
-async function togglePlayPause() {
-  if (!audioElement) return;
-  
-  // If no current track, try to play the first one in the queue
-  if (!currentTrack) {
-    if (tracks.length > 0) {
-      await playTrack(tracks[0]);
+    // Add to queue if not already there
+    if (!tracks.find(t => t.filename === track.filename)) {
+      tracks = [...tracks, track];
     }
-    return;
-  }
-  
-  // If there's an error, retry
-  if (status === 'error') {
-    await playTrack(currentTrack);
-    return;
-  }
-  
-  // Normal play/pause toggle
-  if (audioElement.paused) {
+
+    currentTime = 0;
+    duration = 0;
+    errorMessage = '';
+
     try {
+      await loadTrack(track);
+      
+      // Restore position if any
+      const savedPos = track.position ?? 0;
+      if (savedPos > 0) {
+        audioElement.currentTime = savedPos;
+        currentTime = savedPos;
+      }
+      
+      currentTrack = track;
       await audioElement.play();
-    } catch (err) {
-      console.error('Toggle play failed:', err);
+      status = 'playing';
+    } catch (err: any) {
+      console.error('Play error:', err);
+      if (err.name === 'NotAllowedError') {
+        status = 'paused';
+      } else {
+        status = 'error';
+        errorMessage = err.message;
+      }
     }
-  } else {
-    audioElement.pause();
   }
-}
+
   function playNext() {
     if (!currentTrack || tracks.length === 0) return;
     const idx = tracks.findIndex(t => t.filename === currentTrack!.filename);
@@ -193,10 +221,11 @@ async function togglePlayPause() {
 
   function removeFromQueue(filename: string) {
     const wasCurrent = currentTrack?.filename === filename;
+    // Filter out the track — its position, duration, url all go with it
     tracks = tracks.filter(t => t.filename !== filename);
+    
     if (wasCurrent) {
       if (tracks.length === 0) {
-        // Stop the audio completely
         if (audioElement) {
           audioElement.pause();
           audioElement.currentTime = 0;
@@ -208,7 +237,9 @@ async function togglePlayPause() {
         currentTime = 0;
         duration = 0;
       } else {
-        playNext();
+        // Play next without restoring position (fresh start)
+        const nextTrack = tracks[0];
+        playTrack(nextTrack);
       }
     }
   }
@@ -218,30 +249,27 @@ async function togglePlayPause() {
   }
 
   async function fetchPresignedUrl(filename: string) {
-  const res = await fetch(`${apiBase}/api/download?file=${encodeURIComponent(filename)}`);
-  if (!res.ok) throw new Error(`Failed to get URL: ${res.status}`);
-  
-  // The API returns JSON like: {"url": "https://..."}
-  // We need to extract just the URL from it
-  const contentType = res.headers.get('content-type') ?? '';
-  let url: string;
-  
-  if (contentType.includes('application/json')) {
-    const data = await res.json();
-    url = data.url;
-  } else {
-    url = (await res.text()).trim();
+    const res = await fetch(`${apiBase}/api/download?file=${encodeURIComponent(filename)}`);
+    if (!res.ok) throw new Error(`Failed to get URL: ${res.status}`);
+    
+    const contentType = res.headers.get('content-type') ?? '';
+    let url: string;
+    
+    if (contentType.includes('application/json')) {
+      const data = await res.json();
+      url = data.url;
+    } else {
+      url = (await res.text()).trim();
+    }
+    
+    return { url, expiresAt: Date.now() + 3600 * 1000 };
   }
-  
-  return { url, expiresAt: Date.now() + 3600 * 1000 };
-}
 
   function setPlaybackRate(rate: number) {
     if (!currentTrack) return;
-    const updated = { ...currentTrack, playbackRate: rate };
-    currentTrack = updated;
-    const idx = tracks.findIndex(t => t.filename === updated.filename);
-    if (idx !== -1) tracks[idx] = updated;
+    currentTrack.playbackRate = rate;
+    const idx = tracks.findIndex(t => t.filename === currentTrack!.filename);
+    if (idx !== -1) tracks[idx] = currentTrack;
     if (audioElement) audioElement.playbackRate = rate;
   }
 
@@ -282,14 +310,17 @@ async function togglePlayPause() {
         if (audioElement && currentTrack) {
           if (status === 'playing' || status === 'paused') {
             currentTime = audioElement.currentTime;
-            // Save position for the current track
-            trackPositions.set(currentTrack.filename, audioElement.currentTime);
+            // Save position on the track object itself
+            currentTrack.position = audioElement.currentTime;
           }
         }
       });
 
       audioElement.addEventListener('durationchange', () => {
-        if (audioElement && isFinite(audioElement.duration)) duration = audioElement.duration;
+        if (audioElement && currentTrack && isFinite(audioElement.duration)) {
+          duration = audioElement.duration;
+          currentTrack.duration = audioElement.duration;
+        }
       });
       audioElement.addEventListener('play', () => status = 'playing');
       audioElement.addEventListener('pause', () => { if (status !== 'loading') status = 'paused'; });

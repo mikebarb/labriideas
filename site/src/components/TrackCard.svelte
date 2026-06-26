@@ -52,8 +52,8 @@
       onclick={handleHeaderClick}
       aria-expanded={expanded}
     >
-      <p class="font-medium text-gray-900 truncate">{item.title ?? item.filename}</p>
-      <p class="text-sm text-gray-500 truncate">{item.speaker}</p>
+      <p class="font-medium text-gray-900 break-words">{item.title ?? item.filename}</p>
+      <p class="text-sm text-gray-500 break-words">{item.speaker}</p>
     </button>
 
     <!-- Play button (right, always visible) -->

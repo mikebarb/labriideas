@@ -2,12 +2,11 @@
 <script lang="ts">
   import { Play, Pause, X, Download, Music } from 'lucide-svelte';
   import { 
-    isPlaylistOpen, trackList, currentTrackStore, statusStore, isAdminStore 
+    isPlaylistOpen, trackList, currentTrackStore, statusStore, isAdminStore,
+    currentTimeStore, durationStore
   } from '../lib/playerStore.js';
   import type { Track } from '../lib/types.js';
 
-  // We need playTrack and removeFromQueue from the Player.
-  // Since the Player listens for 'play-track' events, we can dispatch those.
   function playTrack(track: Track) {
     window.dispatchEvent(new CustomEvent('play-track', { detail: track }));
   }
@@ -22,6 +21,24 @@
 
   function closeDrawer() {
     isPlaylistOpen.set(false);
+  }
+
+  /**
+   * Get the progress (0-100) for a given track.
+   * - Currently playing track: live currentTime/duration
+   * - Other tracks with saved position: track.position / track.duration
+   * - Tracks never played or duration unknown: 0
+   */
+  function getProgress(track: Track): number {
+    const isCurrent = $currentTrackStore?.filename === track.filename;
+    
+    if (isCurrent && $durationStore > 0) {
+      return ($currentTimeStore / $durationStore) * 100;
+    }
+    
+    if (!track.duration || track.duration <= 0) return 0;
+    
+    return Math.min(100, ((track.position ?? 0) / (track.duration ?? 1)) * 100);  
   }
 </script>
 
@@ -46,16 +63,18 @@
       </div>
     {:else}
       {#each $trackList as track, i (track.filename)}
+        {@const isCurrent = $currentTrackStore?.filename === track.filename}
+        {@const progress = getProgress(track)}
         <div 
           class="group flex items-center gap-3 p-2 rounded-md cursor-pointer transition hover:bg-white/5
-                 {$currentTrackStore?.filename === track.filename ? 'bg-white/10' : ''}"
+                 {isCurrent ? 'bg-white/10' : ''}"
           role="button"
           tabindex="0"
           onclick={() => playTrack(track)}
           onkeydown={(e) => { if (e.key === 'Enter') playTrack(track); }}
         >
           <span class="text-xs text-neutral-500 w-5 text-right">
-            {#if $currentTrackStore?.filename === track.filename && $statusStore === 'playing'}
+            {#if isCurrent && $statusStore === 'playing'}
               <Pause size={12} class="text-[#1db954]" />
             {:else}
               {i + 1}
@@ -69,6 +88,16 @@
             <div class="text-xs text-neutral-400 wrap-break-words">
               {track.speaker ?? 'Unknown Speaker'}
             </div>
+            
+            <!-- Progress bar: shown if track has progress -->
+            {#if progress > 0}
+              <div class="mt-1.5 h-0.5 bg-neutral-800 rounded-full overflow-hidden">
+                <div 
+                  class="h-full {isCurrent ? 'bg-[#1db954]' : 'bg-neutral-500'} transition-all duration-300"
+                  style="width: {progress}%"
+                ></div>
+              </div>
+            {/if}
           </div>
 
           <button 

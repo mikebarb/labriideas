@@ -1,6 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
-
+@import "tailwindcss";
 
 @layer base {
   h1 {
@@ -32,8 +31,6 @@
     text-decoration-line: underline;
   } */
 }
-
-text-gray-700 leading-relaxed text-lg
 
 /* This replaces the old tailwind.config.mjs file */
 @theme {

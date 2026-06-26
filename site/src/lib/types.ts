@@ -1,17 +1,34 @@
 // src/lib/types.ts
 
+/**
+ * A Track represents both the immutable catalog metadata and the
+ * mutable runtime state for an audio track.
+ * 
+ * Runtime fields (position, duration, url, urlExpiresAt) are populated
+ * by the Player component after the track is first loaded.
+ */
 export interface Track {
   filename: string;            // The unique absolute reference
   title?: string;              // Optional display title
   speaker?: string;            // Optional speaker name
   category?: string | string[]; // Can be one category or a list
   keywords?: string[];         // Optional array of tags
-  duration?: string;           // Optional duration string
   localPreviewUrl?: string;
   hash?: string;
-  metadata?: Record<string, any>;
+  metadata: {
+    title: string;
+    artist: string;
+    speaker: string;
+  };
   playbackRate?: number;        // <-- ADD: optional, defaults to 1.0
+  // Mutable runtime state (populated by Player)
+  position?: number;      // last known playback position in seconds
+  duration?: number;      // track duration in seconds (0 until metadata loads)
+  url?: string;           // presigned S3 URL ('' until first load)
+  urlExpiresAt?: number;  // timestamp when URL expires (0 until first load)
 }
+// Previous value
+//metadata?: Record<string, any>;
 
 export interface SearchParams {
   title: string;

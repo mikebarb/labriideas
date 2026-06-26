@@ -41,6 +41,8 @@ Ensure you have installed:
 1.  Navigate to your frontend directory (e.g., `cd site`).
 2.  Install dependencies: `npm install`.
 3.  Install library to calculate MD5 in the browser: `npm install spark-md5`.
+3.  Install library manage drag and drop in the browser: `npm install svelte-dnd-action`.
+
 
 ## 4. Operational Commands
 Open two terminal instances within VS Code:

@@ -20,6 +20,7 @@
     "lucide-svelte": "^1.0.1",
     "spark-md5": "^3.0.2",
     "svelte": "^5.55.7",
+    "svelte-dnd-action": "^0.9.70",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3"
   },

@@ -23,6 +23,11 @@
   // Track open state for BOTH minor themes (under majors) and the major themes themselves
   let openSections: Record<string, boolean> = $state({});
 
+  // Open all major themes on initial load
+  for (const majorTheme of Object.keys(hierarchy)) {
+    openSections[majorTheme] = true;
+  }
+
   function toggle(id: string) {
     openSections[id] = !openSections[id];
   }
