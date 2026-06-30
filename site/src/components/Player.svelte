@@ -322,9 +322,31 @@
     commitQueue(); // ← structural: order changed
   }
 
-  function downloadTrack(track: Track) {
-    fetchPresignedUrl(track.filename).then(t => window.open(t.url, '_blank'));
+  async function downloadTrack(track: Track): Promise<void> {
+  try {
+    const ticket = await fetchPresignedUrl(track.filename);
+    
+    // Fetch the audio file as a blob
+    const response = await fetch(ticket.url);
+    if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+    
+    const blob = await response.blob();
+    
+    // Create a blob URL and trigger download
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = track.filename;  // Suggests filename to browser
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    // Clean up the blob URL
+    URL.revokeObjectURL(blobUrl);
+  } catch (err: any) {
+    console.error('Download failed:', err);
   }
+}
 
   async function fetchPresignedUrl(filename: string) {
     const res = await fetch(`${apiBase}/api/download?file=${encodeURIComponent(filename)}`);
@@ -612,7 +634,14 @@
             <Minimize2 size={24} />
           </button>
           <h2 class="text-sm font-semibold uppercase tracking-wider text-neutral-400">Now Playing</h2>
-          <button onclick={() => isPlaylistOpen.update(v => !v)} class="text-neutral-300 hover:text-white p-2" aria-label="Queue">
+          <button 
+            onclick={() => {
+              isMobileExpanded = false;              // Minimize the expanded player
+              isPlaylistOpen.set(true);              // Open the queue drawer
+            }} 
+            class="text-neutral-300 hover:text-white p-2" 
+            aria-label="Queue"
+          >
             <ListMusic size={24} />
           </button>
         </div>
