@@ -37,13 +37,40 @@
   let isDragging = $state(false);
   let dragProgress = $state(0);
 
-  // ─── Sync local state to shared stores ───
-  $effect(() => { trackList.set(tracks); });
+  // ─── Store mirroring ───
+  // IMPORTANT: We DO NOT use $effect to mirror tracks → trackList. That
+  // would fire on every nested mutation (e.g. position updates during
+  // playback, ~5x/sec) and force the QueueDrawer to re-render constantly.
+  //
+  // Instead, the `commitQueue()` helper is called EXPLICITLY at the
+  // moments when the queue's *structure* or *frozen per-track progress*
+  // changes:
+  //   - Adding a track (playTrack on a new track)
+  //   - Removing a track
+  //   - Reordering (drag-and-drop, future)
+  //   - Switching tracks (the outgoing track's position becomes frozen)
+  //   - Pausing (current track's position becomes frozen)
+  //   - Track ending (its position is finalized)
+  //   - Playback rate change (label display)
+  //   - pagehide / beforeunload (crash recovery — flush current position)
+  //
+  // Live playback state (currentTime) is mirrored to currentTimeStore /
+  // statusStore / currentTrackStore via $effect — those are read by the
+  // player's own seek bar and by QueueDrawer for the *current-track
+  // indicator* (which row is active), not for any per-tick progress.
   $effect(() => { currentTrackStore.set(currentTrack); });
   $effect(() => { statusStore.set(status); });
   $effect(() => { isAdminStore.set(isAdmin); });
   $effect(() => { currentTimeStore.set(currentTime); });
   $effect(() => { durationStore.set(duration); });
+
+  /**
+   * Publish the current `tracks` snapshot to the shared store.
+   * Call this only at structural/frozen events (see comment block above).
+   */
+  function commitQueue(): void {
+    trackList.set(tracks);
+  }
 
   // ─── Derived ───
   let progress = $derived(
@@ -68,6 +95,27 @@
         if (seekBarElement === node) seekBarElement = null;
       }
     };
+  }
+
+  /**
+   * Update the position slot of the currently playing track in `tracks`,
+   * without firing the store. The position is kept fresh in memory so
+   * `playTrack` can resume correctly on switch. The store is only
+   * notified when the position becomes "frozen" (pause / switch / end /
+   * crash recovery) via commitQueue().
+   */
+  function updateCurrentTrackPosition(pos: number): void {
+    if (!currentTrack) return;
+    currentTrack.position = pos;
+    // Mirror the new position onto the slot in `tracks` so it stays
+    // consistent with currentTrack's reference. We use a spread to
+    // create a new object — this keeps immutability explicit and avoids
+    // any stale-reference surprises if something reads `tracks[idx]`
+    // between this mutation and a subsequent commitQueue().
+    const idx = tracks.findIndex(t => t.filename === currentTrack!.filename);
+    if (idx !== -1) {
+      tracks[idx] = { ...tracks[idx], position: pos };
+    }
   }
 
   // ─── Playback Functions ───
@@ -152,7 +200,7 @@
    * Main entry point. Handles:
    *   - Same track → toggle play/pause
    *   - New track → load + play
-   *   - Switching tracks → save old position, load new, restore position
+   *   - Switching tracks → save old position (frozen), load new, restore position
    */
   async function playTrack(track: Track): Promise<void> {
     if (!audioElement) return;
@@ -164,14 +212,18 @@
     }
 
     // CASE 2: Different track
-    // Save current track's position before switching (synchronous)
+    // Finalize the outgoing track's progress — its position is now
+    // "frozen" as progress made so far, so the drawer can show it.
     if (currentTrack && audioElement.src) {
-      currentTrack.position = audioElement.currentTime;
+      const finalPos = audioElement.currentTime;
+      updateCurrentTrackPosition(finalPos);
+      commitQueue(); // ← structural: current-track changed
     }
 
     // Add to queue if not already there
     if (!tracks.find(t => t.filename === track.filename)) {
       tracks = [...tracks, track];
+      commitQueue(); // ← structural: queue grew
     }
 
     currentTime = 0;
@@ -223,6 +275,7 @@
     const wasCurrent = currentTrack?.filename === filename;
     // Filter out the track — its position, duration, url all go with it
     tracks = tracks.filter(t => t.filename !== filename);
+    commitQueue(); // ← structural: queue shrunk
     
     if (wasCurrent) {
       if (tracks.length === 0) {
@@ -242,6 +295,31 @@
         playTrack(nextTrack);
       }
     }
+  }
+
+  /**
+   * Reorder the queue. Triggered by QueueDrawer's drag-and-drop.
+   * No-op until DnD is wired up in a follow-up commit.
+   */
+  function reorderQueue(filename: string, newIndex: number): void {
+    const idx = tracks.findIndex(t => t.filename === filename);
+    if (idx === -1 || idx === newIndex) return;
+
+    // Splice is in-place; reassign `tracks` so Svelte's local $state
+    // reactivity fires for any Player-internal UI bound to it.
+    const [moved] = tracks.splice(idx, 1);
+    
+    // BUGFIX: If we removed an item BEFORE the insertion index, 
+    // the insertion index needs to shift down by 1 to account 
+    // for the array shrinking.
+    let adjustedNewIndex = newIndex;
+    if (idx < newIndex) {
+      adjustedNewIndex = newIndex - 1;
+    }
+    
+    tracks.splice(adjustedNewIndex, 0, moved);
+    tracks = [...tracks];
+    commitQueue(); // ← structural: order changed
   }
 
   function downloadTrack(track: Track) {
@@ -269,7 +347,12 @@
     if (!currentTrack) return;
     currentTrack.playbackRate = rate;
     const idx = tracks.findIndex(t => t.filename === currentTrack!.filename);
-    if (idx !== -1) tracks[idx] = currentTrack;
+    if (idx !== -1) {
+      // Spread to keep immutability explicit; rate is a "label" change
+      // visible in the drawer, so we commit.
+      tracks[idx] = { ...tracks[idx], playbackRate: rate };
+      commitQueue(); // ← structural: label changes
+    }
     if (audioElement) audioElement.playbackRate = rate;
   }
 
@@ -302,16 +385,63 @@
     audioElement.currentTime = (dragProgress / 100) * duration;
   }
 
+  // ─── Global Keyboard Reorder Listener ───
+  function handleGlobalReorder(e: KeyboardEvent) {
+    // We only care about Alt + Arrow keys
+    const moveUp = e.altKey && e.key === 'ArrowUp';
+    const moveDown = e.altKey && e.key === 'ArrowDown';
+    if (!moveUp && !moveDown) return;
+
+    // Check if the currently focused element is a drag handle belonging to a track
+    const target = e.target as HTMLElement;
+    const handle = target.closest('[data-reorder-handle]') as HTMLButtonElement | null;
+
+    // If the user isn't focused on a drag handle, do nothing
+    if (!handle) return;
+
+    e.preventDefault();
+
+    const filename = handle.getAttribute('data-filename');
+    const currentIndex = tracks.findIndex(t => t.filename === filename);
+
+    // Safety check
+    if (currentIndex === -1) return;
+
+    const targetIndex = moveUp ? currentIndex - 1 : currentIndex + 1;
+    
+    // Bounds check
+    if (targetIndex < 0 || targetIndex >= tracks.length) return;
+
+    // Prevent moving a track to its own index
+    if (targetIndex === currentIndex) return;
+
+    // Dispatch the same reorder event
+    window.dispatchEvent(new CustomEvent('reorder-queue', {
+      detail: {
+        filename: filename,
+        newIndex: targetIndex
+      }
+    }));
+  }
+
+
   // ─── Lifecycle ───
   onMount(() => {
     if (audioElement) {
       audioElement.volume = volume;
+
+      // Live playback tick — drives the player's own seek bar via the
+      // currentTimeStore mirror. We also keep the in-memory resume
+      // position fresh on the current track, but we deliberately do NOT
+      // call commitQueue() here. The drawer renders frozen per-track
+      // progress and a static placeholder for the current track; a
+      // position update mid-playback is not a structural event.
       audioElement.addEventListener('timeupdate', () => {
         if (audioElement && currentTrack) {
           if (status === 'playing' || status === 'paused') {
-            currentTime = audioElement.currentTime;
-            // Save position on the track object itself
-            currentTrack.position = audioElement.currentTime;
+            const t = audioElement.currentTime;
+            currentTime = t;
+            updateCurrentTrackPosition(t);
           }
         }
       });
@@ -320,11 +450,32 @@
         if (audioElement && currentTrack && isFinite(audioElement.duration)) {
           duration = audioElement.duration;
           currentTrack.duration = audioElement.duration;
+          // No commitQueue — duration isn't surfaced in the drawer.
         }
       });
+
       audioElement.addEventListener('play', () => status = 'playing');
-      audioElement.addEventListener('pause', () => { if (status !== 'loading') status = 'paused'; });
-      audioElement.addEventListener('ended', playNext);
+
+      // On pause, the current track's progress becomes "frozen" — this
+      // IS a structural event for the drawer's purposes, so commit.
+      audioElement.addEventListener('pause', () => {
+        if (status !== 'loading') status = 'paused';
+        if (currentTrack && audioElement) {
+          updateCurrentTrackPosition(audioElement.currentTime);
+          commitQueue(); // ← structural: position frozen at pause
+        }
+      });
+
+      audioElement.addEventListener('ended', () => {
+        // Track ended — finalize position to 0 (Spotify-style: ended
+        // tracks are "ready to replay from start", not 100% complete).
+        if (currentTrack) {
+          updateCurrentTrackPosition(0);
+          commitQueue(); // ← structural: position finalized at end
+        }
+        playNext();
+      });
+
       audioElement.addEventListener('error', () => { status = 'error'; errorMessage = 'Playback error'; });
     }
 
@@ -332,15 +483,38 @@
     const handlePlay = (e: Event) => playTrack((e as CustomEvent).detail);
     const handleRemove = (e: Event) => removeFromQueue((e as CustomEvent).detail.filename);
     const handleDownload = (e: Event) => downloadTrack((e as CustomEvent).detail);
+    const handleReorder = (e: Event) => {
+      const { filename, newIndex } = (e as CustomEvent).detail;
+      reorderQueue(filename, newIndex);
+    };
 
     window.addEventListener('play-track', handlePlay);
     window.addEventListener('remove-from-queue', handleRemove);
     window.addEventListener('download-track', handleDownload);
+    window.addEventListener('reorder-queue', handleReorder);
+
+     // Catch Alt + Arrow keys globally when a drag handle is focused
+    window.addEventListener('keydown', handleGlobalReorder);
+
+    // Crash recovery — flush current position into the store on tab
+    // close / navigation so a reload can resume correctly. pagehide is
+    // more reliable than beforeunload on mobile.
+    const flushPosition = () => {
+      if (!currentTrack || !audioElement) return;
+      updateCurrentTrackPosition(audioElement.currentTime);
+      commitQueue(); // ← crash-recovery flush
+    };
+    window.addEventListener('pagehide', flushPosition);
+    window.addEventListener('beforeunload', flushPosition);
 
     return () => {
       window.removeEventListener('play-track', handlePlay);
       window.removeEventListener('remove-from-queue', handleRemove);
       window.removeEventListener('download-track', handleDownload);
+      window.removeEventListener('reorder-queue', handleReorder);
+      window.removeEventListener('keydown', handleGlobalReorder);
+      window.removeEventListener('pagehide', flushPosition);
+      window.removeEventListener('beforeunload', flushPosition);
     };
   });
 </script>
