@@ -35,8 +35,14 @@ const { sectionTitle, sectionSubtitle, items } = featuredData;
           style={`background-image: url(${item.image})`}
         >
           <div class="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition p-4 flex flex-col justify-end">
-            <h2 class="text-white text-xl font-bold">{item.title}</h2>
-            <p class="text-gray-200 text-sm mt-1">{item.speaker}</p>
+            <h3 class:list={[
+              "text-gray-200 text-sm mt-1 bg-blue-500",
+              item.titleBgColor
+            ]}>{item.speaker}</h3>
+            <h3 class:list={[
+              "text-white text-xl font-bold bg-blue-500",
+              item.titleBgColor
+            ]}>{item.title}</h3>
           </div>
         </button>
       ))}
