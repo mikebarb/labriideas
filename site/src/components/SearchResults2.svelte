@@ -4,8 +4,17 @@
   import { getCatalog } from '../lib/catalogStore.js';
   import { rankedSearch } from '../lib/rankedEngine.js';
   import { sanitizeKeywords } from '../lib/dataUtils.js';
+  import { isAdminStore } from '../lib/playerStore.js';
   import SearchResultsDisplay from './SearchResultsDisplay.svelte';
   import type { Track } from '../lib/types';
+
+  interface Props {
+    // CHANGED: Added apiBase prop. This is passed down to TrackCard 
+    // so the download button can call the download library.
+    apiBase: string;
+  }
+
+  let { apiBase }: Props = $props();
 
   let allTracks: Track[] = $state([]);
   let filteredTracks: Track[] = $state([]);
@@ -64,6 +73,12 @@
 
     filteredTracks = results;
   }
-</script>
 
-<SearchResultsDisplay tracks={filteredTracks} />
+</script>
+<!--
+//  Pass apiBase and $isAdminStore to SearchResultsDisplay.
+//  $isAdminStore comes from the player store (set by Player.svelte 
+//  when the isAdmin prop is true). This means the download button 
+//  automatically appears/hides based on the admin status passed to Player.
+-->
+<SearchResultsDisplay tracks={filteredTracks} {apiBase} isAdmin={$isAdminStore} />

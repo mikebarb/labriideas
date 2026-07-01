@@ -7,14 +7,11 @@
   interface Props {
     //tracks: Track[];
     tracks: any[];   // still accepts the same prop name and type as before
+    apiBase: string;
+    isAdmin?: boolean;
   }
 
-  let { tracks }: Props = $props();
-  //let expandedFilename: string | null = $state(null);
-
-  //function toggle(filename: string): void {
-  //  expandedFilename = expandedFilename === filename ? null : filename;
-  //}
+   let { tracks, apiBase, isAdmin = false }: Props = $props();
 
 </script>
 
@@ -27,6 +24,6 @@
     <p class="text-sm text-gray-500 mb-4">
       {tracks.length} {tracks.length === 1 ? 'track' : 'tracks'} found
     </p>
-    <TrackCardGroup items={tracks} />
+   <TrackCardGroup items={tracks} {apiBase} {isAdmin} />
   {/if}
 </div>

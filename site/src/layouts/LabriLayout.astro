@@ -16,6 +16,7 @@ if (!topicsSubMenu || !topicsSubMenu.hierarchy) {
   throw new Error('Configuration error: "Topics" subMenu with hierarchy not found in menu.json');
 }
 const topicsHierarchy = topicsSubMenu.hierarchy;
+const apiBase = import.meta.env.PUBLIC_API_BASE_URL;
 
 interface Props {
 	title: string;
@@ -48,7 +49,7 @@ const showMegaMenu = isHome;
 			'pushes' content when the queue drawer is open.
 		-->
 		<div class="flex-1 min-h-0 overflow-hidden">
-			<AppShell client:load>
+			<AppShell client:load apiBase={import.meta.env.PUBLIC_API_BASE_URL}>
 		    	<slot />
 			</AppShell>
 		</div>

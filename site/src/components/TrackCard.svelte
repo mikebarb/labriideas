@@ -1,19 +1,28 @@
 <!-- src/components/TrackCard.svelte -->
 <script lang="ts">
-  import { buildTrack } from '../lib/buildTrack.js';
+  //import type { Track } from '../lib/types.ts';
+  import { buildTrack } from '../lib/buildTrack.ts';
   import { sanitizeKeywords } from '../lib/dataUtils.js';
+  import { downloadTrack } from '../lib/downloader.js';
+  import { Download } from 'lucide-svelte';
 
   interface Props {
     item: any;
     expanded?: boolean;
     ontoggle?: (filename: string) => void;
     children?: import('svelte').Snippet<[any]>;
+    apiBase?: string;
+    isAdmin?: boolean;
   }
 
-  let { item, expanded = false, ontoggle, children }: Props = $props();
+  let { item, expanded = false, ontoggle, children, apiBase = '', isAdmin = false }: Props = $props();
 
   const keywords = $derived(sanitizeKeywords(item.keywords ?? []));
   const categoryText = $derived(formatCategory(item.category));
+
+  // Download state — tracks which filename is currently downloading
+  // so we can show a spinner on the right card.
+  let downloadingFilename: string | null = $state(null);
 
   function handleHeaderClick() {
     ontoggle?.(item.filename);
@@ -23,6 +32,26 @@
     event.stopPropagation();
     const track = buildTrack(item);
     window.dispatchEvent(new CustomEvent('play-track', { detail: track }));
+  }
+
+  // CHANGED: Download handler — calls the library function with
+  // the track, apiBase, and lifecycle callbacks.
+  function handleDownload(event: MouseEvent) {
+    event.stopPropagation();
+    
+    // Prevent double-clicking the same file
+    if (downloadingFilename === item.filename) return;
+
+    const track = buildTrack(item);
+    downloadingFilename = track.filename;
+
+    downloadTrack(track, apiBase, {
+      onComplete: () => { downloadingFilename = null; },
+      onError: (err) => {
+        console.error('Download failed:', err);
+        downloadingFilename = null;
+      },
+    });
   }
 
   function formatCategory(category: string | string[] | undefined): string {
@@ -52,8 +81,8 @@
       onclick={handleHeaderClick}
       aria-expanded={expanded}
     >
-      <p class="font-medium text-gray-900 break-words">{item.title ?? item.filename}</p>
-      <p class="text-sm text-gray-500 break-words">{item.speaker}</p>
+      <p class="font-medium text-gray-900 wrap-break-words">{item.title ?? item.filename}</p>
+      <p class="text-sm text-gray-500 wrap-break-words">{item.speaker}</p>
     </button>
 
     <!-- Play button (right, always visible) -->
@@ -69,8 +98,7 @@
   <!-- Expanded content: keywords/category on left, snippet buttons on right -->
   {#if expanded}
     <div class="px-4 pb-4 border-t border-gray-200 pt-4 ml-7">
-      <div class="flex items-start justify-between gap-4">
-        
+      <div class="flex items-start justify-between gap-4">      
         <!-- Keywords and category (left) -->
         <div class="flex flex-col gap-2 flex-1 min-w-0">
           {#if categoryText}
@@ -88,14 +116,35 @@
             </div>
           {/if}
         </div>
-
-        <!-- Optional extra buttons (children snippet, right-aligned) -->
-        {#if children}
-          <div class="flex items-center gap-2 shrink-0">
+      
+        <!-- Action buttons (right-aligned) -->
+        <div class="flex items-center gap-2 shrink-0">
+          <!--
+            CHANGED: Built-in download button for admin users.
+            Renders a spinner while downloading, otherwise shows the
+            Download icon. Disabled state prevents double-clicks.
+          -->
+          {#if isAdmin}
+            <button
+              onclick={handleDownload}
+              disabled={downloadingFilename === item.filename}
+              class="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition
+                      disabled:opacity-50 disabled:cursor-wait"
+              aria-label="Download track"
+            >
+              {#if downloadingFilename === item.filename}
+                <div class="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+              {:else}
+                <Download size={16} />
+              {/if}
+            </button>
+          {/if}
+          <!-- Optional extra buttons (children snippet) -->
+          {#if children}
             {@render children(item)}
-          </div>
-        {/if}
+          {/if}
+        </div>
       </div>
-    </div>
+    </div>     
   {/if}
 </div>

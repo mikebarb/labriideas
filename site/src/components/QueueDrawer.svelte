@@ -7,6 +7,18 @@
   } from '../lib/playerStore.js';
   import type { Track } from '../lib/types.js';
 
+  // CHANGED: Import the download function from the new library location.
+  // Previously, downloads were triggered via a custom DOM event to Player.
+  // Now, we call the library function directly. This is cleaner because:
+  //   - QueueDrawer no longer needs to know about Player's internal API.
+  //   - The same download logic can be used in the search results.
+  import { downloadTrack } from '../lib/downloader';
+
+  interface Props {
+    apiBase: string;  // CHANGED: Added to enable downloads
+  }
+  let { apiBase }: Props = $props();
+
   // ─── Event dispatch (queue mutations go through Player) ───
   function playTrack(track: Track) {
     window.dispatchEvent(new CustomEvent('play-track', { detail: track }));
@@ -16,8 +28,27 @@
     window.dispatchEvent(new CustomEvent('remove-from-queue', { detail: { filename } }));
   }
 
-  function downloadTrack(track: Track) {
-    window.dispatchEvent(new CustomEvent('download-track', { detail: track }));
+  // CHANGED: Replaced event-dispatch pattern with direct library call.
+  // Previously, this dispatched a 'download-track' event to Player, which
+  // would handle the actual download. Now we call the library function 
+  // directly with a spinner state for user feedback.
+  let downloadingFilename: string | null = $state(null);
+
+  function handleDownload(track: Track) {
+    // Prevent multiple simultaneous downloads of the same file
+    if (downloadingFilename === track.filename) return;
+
+    downloadingFilename = track.filename;
+
+    downloadTrack(track, apiBase, {
+      onComplete: () => { 
+        downloadingFilename = null; 
+      },
+      onError: (err) => {
+        console.error('Download failed:', err);
+        downloadingFilename = null;
+      },
+    });
   }
 
   function closeDrawer() {
@@ -207,10 +238,10 @@
             </div>
             
             {#if progress.kind === 'placeholder'}
-              <div class="mt-1.5 flex items-center gap-[3px] h-2" aria-hidden="true">
+              <div class="mt-1.5 flex items-center gap-0.75 h-2" aria-hidden="true">
                 {#each Array(8) as _, barIdx}
                   <div
-                    class="w-[2px] h-full rounded-sm bg-neutral-500"
+                    class="w-0.5 h-full rounded-sm bg-neutral-500"
                     style="opacity: {0.4 + (barIdx % 3) * 0.2}"
                   ></div>
                 {/each}
@@ -249,16 +280,28 @@
             <X size={16} />
           </button>
 
-          {#if $isAdminStore}
-            <button 
-              class="text-neutral-400 hover:text-white p-1.5 rounded hover:bg-white/10 
-                     opacity-100 md:opacity-0 md:group-hover:opacity-100"
-              onclick={(e) => { e.stopPropagation(); downloadTrack(track); }}
-              aria-label="Download track"
-            >
-              <Download size={16} />
-            </button>
-          {/if}
+            {#if $isAdminStore}
+              <!--
+                - onclick calls handleDownload(track)
+                - button is disabled while downloading (prevents double-clicks).
+                - icon is swapped for a spinner during the download.
+                - cursor changes to 'wait' to indicate the button is busy.
+              -->
+              <button 
+                class="text-neutral-400 hover:text-white p-1.5 rounded hover:bg-white/10 
+                       opacity-100 md:opacity-0 md:group-hover:opacity-100
+                       disabled:opacity-100 disabled:cursor-wait"
+                onclick={(e) => { e.stopPropagation(); handleDownload(track); }}
+                disabled={downloadingFilename === track.filename}
+                aria-label="Download track"
+              >
+                {#if downloadingFilename === track.filename}
+                  <div class="w-4 h-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin"></div>
+                {:else}
+                  <Download size={16} />
+                {/if}
+              </button>
+            {/if}
         </div>
       {/each}
 

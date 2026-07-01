@@ -30,7 +30,7 @@ const albums = menuData.subMenus.find(s => s.subMenu === 'Playlists')?.albums ??
               class="block relative h-48 bg-cover bg-center group"
               style={`background-image: url(${album.backgroundImage})`}
             >
-              <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+              <div class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 to-transparent p-4">
                 <h2 class:list={[
                   "text-white text-xl font-bold",
                   album.titleBgColor

@@ -6,8 +6,9 @@
 
   interface Props {
     children: Snippet;
+    apiBase: string;
   }
-  let { children }: Props = $props();
+  let { children, apiBase }: Props = $props();
   
   // The player takes 96px (h-24) when showing, 0px when hidden
   let mainPaddingBottom = $derived($trackList.length > 0 ? 'pb-24' : 'pb-0');
@@ -38,7 +39,7 @@
     class:!w-80={$isPlaylistOpen}
     class:w-0={!$isPlaylistOpen}
   >
-    <QueueDrawer />
+    <QueueDrawer {apiBase} />
   </div>
 
   <!--
@@ -58,7 +59,7 @@
         </button>
       </div>
       <div class="flex-1 overflow-hidden">
-        <QueueDrawer />
+        <QueueDrawer {apiBase} />
       </div>
     </div>
   {/if}

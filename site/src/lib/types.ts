@@ -9,6 +9,7 @@
  */
 export interface Track {
   filename: string;            // The unique absolute reference
+  id?: string;                  // Optional dentifier for this track (filename or catalog ID)
   title?: string;              // Optional display title
   speaker?: string;            // Optional speaker name
   category?: string | string[]; // Can be one category or a list

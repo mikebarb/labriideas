@@ -3,13 +3,14 @@
   import { onMount } from 'svelte';
   import { 
     Play, Pause, SkipBack, SkipForward, Rewind, FastForward, 
-    Volume2, VolumeX, ListMusic, Minimize2, Maximize2, Download 
+    Volume2, VolumeX, ListMusic, Minimize2, Maximize2
   } from 'lucide-svelte';
   import { 
     isPlaylistOpen, trackList, currentTrackStore, statusStore, isAdminStore,
     currentTimeStore, durationStore
   } from '../lib/playerStore.js';
   import type { Track } from '../lib/types.js';
+  import { fetchPresignedUrl } from '../lib/downloader.js';
 
   // ─── Props ───
   interface Props {
@@ -167,7 +168,7 @@
     // Use cached URL if valid, otherwise fetch new one
     if (!track.url || !track.urlExpiresAt || track.urlExpiresAt < Date.now()) {
       try {
-        const ticket = await fetchPresignedUrl(track.filename);
+        const ticket = await fetchPresignedUrl(track.filename, apiBase);
         track.url = ticket.url;
         track.urlExpiresAt = ticket.expiresAt;
       } catch (err: any) {
@@ -322,49 +323,6 @@
     commitQueue(); // ← structural: order changed
   }
 
-  async function downloadTrack(track: Track): Promise<void> {
-  try {
-    const ticket = await fetchPresignedUrl(track.filename);
-    
-    // Fetch the audio file as a blob
-    const response = await fetch(ticket.url);
-    if (!response.ok) throw new Error(`Download failed: ${response.status}`);
-    
-    const blob = await response.blob();
-    
-    // Create a blob URL and trigger download
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = track.filename;  // Suggests filename to browser
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    // Clean up the blob URL
-    URL.revokeObjectURL(blobUrl);
-  } catch (err: any) {
-    console.error('Download failed:', err);
-  }
-}
-
-  async function fetchPresignedUrl(filename: string) {
-    const res = await fetch(`${apiBase}/api/download?file=${encodeURIComponent(filename)}`);
-    if (!res.ok) throw new Error(`Failed to get URL: ${res.status}`);
-    
-    const contentType = res.headers.get('content-type') ?? '';
-    let url: string;
-    
-    if (contentType.includes('application/json')) {
-      const data = await res.json();
-      url = data.url;
-    } else {
-      url = (await res.text()).trim();
-    }
-    
-    return { url, expiresAt: Date.now() + 3600 * 1000 };
-  }
-
   function setPlaybackRate(rate: number) {
     if (!currentTrack) return;
     currentTrack.playbackRate = rate;
@@ -504,7 +462,6 @@
     // External event listeners for QueueDrawer and TrackList
     const handlePlay = (e: Event) => playTrack((e as CustomEvent).detail);
     const handleRemove = (e: Event) => removeFromQueue((e as CustomEvent).detail.filename);
-    const handleDownload = (e: Event) => downloadTrack((e as CustomEvent).detail);
     const handleReorder = (e: Event) => {
       const { filename, newIndex } = (e as CustomEvent).detail;
       reorderQueue(filename, newIndex);
@@ -512,7 +469,6 @@
 
     window.addEventListener('play-track', handlePlay);
     window.addEventListener('remove-from-queue', handleRemove);
-    window.addEventListener('download-track', handleDownload);
     window.addEventListener('reorder-queue', handleReorder);
 
      // Catch Alt + Arrow keys globally when a drag handle is focused
@@ -532,7 +488,6 @@
     return () => {
       window.removeEventListener('play-track', handlePlay);
       window.removeEventListener('remove-from-queue', handleRemove);
-      window.removeEventListener('download-track', handleDownload);
       window.removeEventListener('reorder-queue', handleReorder);
       window.removeEventListener('keydown', handleGlobalReorder);
       window.removeEventListener('pagehide', flushPosition);
