@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { 
-    Play, Pause, SkipBack, SkipForward, Rewind, FastForward, 
+    Play, Pause, SkipBack, SkipForward, RotateCcw, RotateCw, 
     Volume2, VolumeX, ListMusic, Minimize2, Maximize2
   } from 'lucide-svelte';
   import { 
@@ -37,6 +37,10 @@
   let seekBarElement: HTMLElement | null = $state(null);
   let isDragging = $state(false);
   let dragProgress = $state(0);
+
+   // ─── Speed Control ───
+  let speedLongPressTimer: ReturnType<typeof setTimeout> | null = $state(null);
+  let isSpeedLongPressing = $state(false);
 
   // ─── Store mirroring ───
   // IMPORTANT: We DO NOT use $effect to mirror tracks → trackList. That
@@ -323,17 +327,65 @@
     commitQueue(); // ← structural: order changed
   }
 
+  // ─── Speed Control ───
+  // Changed from a toggle to +/- buttons with 0.1 increments.
+  // Middle button shows current speed; long-press to reset to 1.0x.
   function setPlaybackRate(rate: number) {
     if (!currentTrack) return;
+    // Clamp to reasonable bounds (0.25–3.0)
+    rate = Math.max(0.25, Math.min(3.0, rate));
+    // Round to nearest 0.1 to avoid floating point issues
+    rate = Math.round(rate * 10) / 10;
+    
     currentTrack.playbackRate = rate;
     const idx = tracks.findIndex(t => t.filename === currentTrack!.filename);
     if (idx !== -1) {
-      // Spread to keep immutability explicit; rate is a "label" change
-      // visible in the drawer, so we commit.
       tracks[idx] = { ...tracks[idx], playbackRate: rate };
-      commitQueue(); // ← structural: label changes
+      commitQueue();
     }
     if (audioElement) audioElement.playbackRate = rate;
+  }
+
+  function decreaseSpeed() {
+    if (!currentTrack) return;
+    const current = currentTrack.playbackRate ?? 1.0;
+    setPlaybackRate(current - 0.1);
+  }
+
+  function increaseSpeed() {
+    if (!currentTrack) return;
+    const current = currentTrack.playbackRate ?? 1.0;
+    setPlaybackRate(current + 0.1);
+  }
+
+  function resetSpeed() {
+    setPlaybackRate(1.0);
+  }
+
+  // ─── Long Press for Speed Reset ───
+  // Prevents accidental resets — user must hold ~500ms to reset.
+  function onSpeedPointerDown() {
+    if (!currentTrack) return;
+    isSpeedLongPressing = false;
+    speedLongPressTimer = setTimeout(() => {
+      isSpeedLongPressing = true;
+      resetSpeed();
+    }, 500);
+  }
+
+  function onSpeedPointerUp() {
+    if (speedLongPressTimer) {
+      clearTimeout(speedLongPressTimer);
+      speedLongPressTimer = null;
+    }
+    // No action on short click — only long press triggers reset
+  }
+
+  function onSpeedPointerCancel() {
+    if (speedLongPressTimer) {
+      clearTimeout(speedLongPressTimer);
+      speedLongPressTimer = null;
+    }
   }
 
   function toggleMute() {
@@ -517,13 +569,13 @@
           <SkipBack size={20} />
         </button>
         <button onclick={() => jump(-15)} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10 disabled:opacity-30" aria-label="Back 15s" disabled={!currentTrack}>
-          <Rewind size={20} />
+          <RotateCcw size={20} />
         </button>
         <button onclick={togglePlayPause} class="bg-white text-black rounded-full w-11 h-11 flex items-center justify-center hover:scale-105 transition disabled:opacity-30 shadow-lg" aria-label="Play/Pause" disabled={!currentTrack}>
           {#if status === 'playing'}<Pause size={22} fill="currentColor" />{:else}<Play size={22} fill="currentColor" class="ml-0.5" />{/if}
         </button>
         <button onclick={() => jump(30)} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10 disabled:opacity-30" aria-label="Forward 30s" disabled={!currentTrack}>
-          <FastForward size={20} />
+          <RotateCw size={20} />
         </button>
         <button onclick={playNext} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10 disabled:opacity-30" aria-label="Next" disabled={!currentTrack}>
           <SkipForward size={20} />
@@ -547,18 +599,48 @@
     </div>
 
     <div class="flex-1 flex items-center justify-end gap-3">
-      <button onclick={() => setPlaybackRate(currentTrack?.playbackRate === 1.0 ? 1.25 : 1.0)} class="text-xs text-neutral-300 hover:text-white px-2 py-1 rounded hover:bg-white/10" disabled={!currentTrack}>
-        {(currentTrack?.playbackRate ?? 1.0).toFixed(2)}x
-      </button>
-      <div class="flex items-center gap-2">
-        <button onclick={toggleMute} class="text-neutral-300 hover:text-white" aria-label="Mute">
-          {#if isMuted || volume === 0}<VolumeX size={18} />{:else}<Volume2 size={18} />{/if}
+      <!--
+        CHANGED: Speed control redesigned from a single toggle button
+        to a three-button cluster:
+          - = decreases speed by 0.1
+          [1.0x] = shows current speed; LONG-PRESS to reset to 1.0x
+          + = increases speed by 0.1
+        The long-press prevents accidental resets.
+      -->
+      <div class="flex items-center gap-1">
+        <button 
+          onclick={decreaseSpeed}
+          class="text-neutral-300 hover:text-white w-6 h-6 rounded hover:bg-white/10 disabled:opacity-30 flex items-center justify-center text-base leading-none"
+          aria-label="Decrease speed"
+          disabled={!currentTrack}
+        >
+          −
         </button>
-        <input type="range" min="0" max="1" step="0.01" value={volume} oninput={(e) => { volume = parseFloat(e.currentTarget.value); if (audioElement) audioElement.volume = volume; }} class="w-20 accent-white" />
+        <button
+          onpointerdown={onSpeedPointerDown}
+          onpointerup={onSpeedPointerUp}
+          onpointercancel={onSpeedPointerCancel}
+          ondragstart={(e) => e.preventDefault()}
+          class="text-xs text-neutral-300 hover:text-white min-w-12 px-2 py-1 rounded hover:bg-white/10 disabled:opacity-30 select-none"
+          aria-label="Current speed. Long press to reset to 1.0x"
+          disabled={!currentTrack}
+        >
+          {(currentTrack?.playbackRate ?? 1.0).toFixed(2)}x
+        </button>
+        <button
+          onclick={increaseSpeed}
+          class="text-neutral-300 hover:text-white w-6 h-6 rounded hover:bg-white/10 disabled:opacity-30 flex items-center justify-center text-base leading-none"
+          aria-label="Increase speed"
+          disabled={!currentTrack}
+        >
+          +
+        </button>
       </div>
+
       <button onclick={() => isPlaylistOpen.update(v => !v)} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10" aria-label="Toggle queue">
         <ListMusic size={20} />
       </button>
+
       <!-- {#if isAdmin && currentTrack}
         <button onclick={() => downloadTrack(currentTrack!)} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10" aria-label="Download">
           <Download size={18} />
@@ -634,7 +716,7 @@
         <div class="flex items-center justify-center gap-6 mb-8">
           <button onclick={() => jump(-15)} class="text-white p-3" aria-label="Back 15s" disabled={!currentTrack}>
             <div class="flex flex-col items-center">
-              <Rewind size={28} />
+              <RotateCcw size={28} />
               <span class="text-[10px] mt-0.5">15</span>
             </div>
           </button>
@@ -649,23 +731,47 @@
           </button>
           <button onclick={() => jump(30)} class="text-white p-3" aria-label="Forward 30s" disabled={!currentTrack}>
             <div class="flex flex-col items-center">
-              <FastForward size={28} />
+              <RotateCw size={28} />
               <span class="text-[10px] mt-0.5">30</span>
             </div>
           </button>
         </div>
 
         <div class="mt-auto space-y-4 pb-4">
-          <div class="flex items-center justify-center gap-3">
-            {#each [0.75, 1.0, 1.25, 1.5, 2.0] as rate}
-              <button 
-                onclick={() => setPlaybackRate(rate)}
-                class="px-3 py-1.5 rounded-full text-xs font-medium transition {currentTrack?.playbackRate === rate ? 'bg-white text-black' : 'bg-neutral-800 text-neutral-300'}"
-              >
-                {rate}x
-              </button>
-            {/each}
+          <!--
+            CHANGED: Mobile speed control — same three-button cluster
+            as desktop: − [1.0x] +. Middle button long-press resets.
+          -->
+          <div class="flex items-center justify-center gap-2">
+            <button
+              onclick={decreaseSpeed}
+              class="text-neutral-300 hover:text-white w-10 h-10 rounded-full hover:bg-white/10 disabled:opacity-30 flex items-center justify-center text-lg leading-none"
+              aria-label="Decrease speed"
+              disabled={!currentTrack}
+            >
+              −
+            </button>
+            <button
+              onpointerdown={onSpeedPointerDown}
+              onpointerup={onSpeedPointerUp}
+              onpointercancel={onSpeedPointerCancel}
+              ondragstart={(e) => e.preventDefault()}
+              class="text-sm text-neutral-300 hover:text-white min-w-16 px-4 py-2 rounded-full hover:bg-white/10 disabled:opacity-30 select-none"
+              aria-label="Current speed. Long press to reset to 1.0x"
+              disabled={!currentTrack}
+            >
+              {(currentTrack?.playbackRate ?? 1.0).toFixed(2)}x
+            </button>
+            <button
+              onclick={increaseSpeed}
+              class="text-neutral-300 hover:text-white w-10 h-10 rounded-full hover:bg-white/10 disabled:opacity-30 flex items-center justify-center text-lg leading-none"
+              aria-label="Increase speed"
+              disabled={!currentTrack}
+            >
+              +
+            </button>
           </div>
+
           <div class="flex items-center justify-center gap-3">
             <button onclick={toggleMute} class="text-white p-2" aria-label="Mute">
               {#if isMuted || volume === 0}<VolumeX size={20} />{:else}<Volume2 size={20} />{/if}
