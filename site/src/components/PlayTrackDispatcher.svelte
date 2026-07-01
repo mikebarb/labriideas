@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { getCatalog } from '../lib/catalogStore.js';
-  import { buildTrack } from '../lib/buildTrack.js';
-  import type { Track } from '../lib/types.js';
+  import { getCatalog } from '../lib/catalogStore.ts';
+  import { buildTrack } from '../lib/buildTrack.ts';
+  import type { Track } from '../lib/types.ts';
 
   let catalog: Track[] = $state([]);
 

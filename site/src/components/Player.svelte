@@ -9,8 +9,8 @@
     isPlaylistOpen, trackList, currentTrackStore, statusStore, isAdminStore,
     currentTimeStore, durationStore
   } from '../lib/playerStore.js';
-  import type { Track } from '../lib/types.js';
-  import { fetchPresignedUrl } from '../lib/downloader.js';
+  import type { Track } from '../lib/types.ts';
+  import { fetchPresignedUrl } from '../lib/downloader.ts';
 
   // ─── Props ───
   interface Props {

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { PersonStanding } from 'lucide-svelte';
-  import { buildTrack } from '../lib/buildTrack.js';
+  import { buildTrack } from '../lib/buildTrack.ts';
 
   interface Person {
     speakerName: string;

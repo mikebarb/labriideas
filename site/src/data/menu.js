@@ -20,7 +20,7 @@ export const navItems = [
       { label: 'Playlists', href: '/playlists/' },
       { label: 'Schaeffer Collection', href: '/schaeffer/' },
       { label: 'Search', href: '/search/search2/' },
-      { label: 'Search-base', href: '/search/search' },
+      { label: 'Search-base', href: '/search/search/' },
       { label: 'Search-ranked', href: '/search/search-ranked/' },
       { label: 'Search-scoped', href: '/search/search-scoped/' }
     ]
@@ -30,7 +30,7 @@ export const navItems = [
     dropdown: [
       { label: 'Contact L\'Abri', href: '/contact/contact' },
       { label: 'Giving', href: '/contact/giving' },
-      { label: 'Report An Error', href: '/contact/Report An Error' }
+      { label: 'Report An Error', href: 'https://labriideaslibrary.typeform.com/to/cYY0DA' }
     ]
   },
   { id: 'external', label: 'L\'ABRI.ORG', href: 'https://labri.org' },

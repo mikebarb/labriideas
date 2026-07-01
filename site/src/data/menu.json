@@ -55,7 +55,7 @@
           "title": "Literature and Poetry",
           "titleBgColor": "bg-amber-400",
           "description": "If Christ is Lord of all of life, the domain of the written word should be the concern of Christ's followers. Here is a collection of lectures on Flannery O'Connor, T. S. Eliot, Tolkien, Rowling, and more.",
-          "backgroundImage": "/images/playlists/navigating-relationships-bg.avif",
+          "backgroundImage": "/images/playlists/litature-bg.avif",
           "tracks": [
             { "displayTitle": "Is God Angry", "filename": "Are We Better Than God^ part 3_ Is God Angry^ - Wade Bradshaw___130.mp3" },
             { "displayTitle": "An Historical Defense of the Exodus - Part 1", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
@@ -67,7 +67,7 @@
           "title": "Suggest a Playlist",
           "titleBgColor": "bg-zinc-400",
           "description": "Do you want to put your own playlist together? Send us your lecture list.",
-          "backgroundImage": "/images/playlists/navigating-relationships-bg.avif",
+          "backgroundImage": "/images/playlists/suggest-bg.avif",
           "linkToForm": "https://labriideaslibrary.typeform.com/to/ppsjl6"
         }
       ]

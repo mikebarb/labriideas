@@ -222,8 +222,8 @@ Player.svelte receives the event and plays the track
 ### The Library: `src/lib/playTrack.ts`
 
 ```ts
-import { buildTrack } from './buildTrack.js';
-import type { Track } from './types.js';
+import { buildTrack } from './buildTrack.ts';
+import type { Track } from './types.ts';
 
 /**
  * Dispatch a play-track event with a fully built Track object.

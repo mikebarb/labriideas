@@ -53,7 +53,7 @@ There are three distinct playback operations:
 | `src/components/Player.svelte` | Main player component (UI + audio logic) |
 | `src/components/QueueDrawer.svelte` | Queue sidebar (shows progress bars) |
 | `src/lib/playerStore.ts` | Shared Svelte stores (track list, current track, status, time) |
-| `src/lib/buildTrack.js` | Builds a Track object from a catalog item |
+| `src/lib/buildTrack.ts` | Builds a Track object from a catalog item |
 | `src/lib/types.ts` | TypeScript interface for Track |
 
 ## Data Flow
@@ -99,7 +99,7 @@ Queue not empty? Play next track (fresh, no position restore).
 Progress Bar (QueueDrawer)
 Each track in the queue shows a progress bar. The logic reads from the track object:
 
-buildTrack.js
+buildTrack.ts
 Creates a Track object from a catalog item. Only populates immutable catalog fields; runtime fields are omitted (left undefined).
 
 Adding Tracks to the Queue

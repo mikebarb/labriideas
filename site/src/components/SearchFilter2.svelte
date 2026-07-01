@@ -49,6 +49,16 @@
     } catch (e) {
       console.error('Failed to load catalog', e);
     }
+    // ─── Read URL params on mount ───
+    // If the user arrived here from the nav bar search, the URL will
+    // have ?q=... We pre-fill the input and run the search.
+    const params = new URLSearchParams(window.location.search);
+    const urlQuery = params.get('q');
+    if (urlQuery) {
+      query = urlQuery;
+      // Run the search by publishing the state (this also re-syncs the URL)
+      publishState();
+    }
   });
 
   function publishState() {

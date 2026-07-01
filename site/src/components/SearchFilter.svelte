@@ -13,25 +13,25 @@
   let isFuzzy = $state(false);
   let allAvailableKeywords: string[] = $state([]);
 
-onMount(async () => {
-  // 1. Load catalog
-  const catalog = await getCatalog();
+  onMount(async () => {
+    // 1. Load catalog
+    const catalog = await getCatalog();
 
-  // 2. Build the keyword universe using the shared utility
-  allAvailableKeywords = extractAllKeywords(catalog);
-  
-  // 3. Read the current URL state
-  const params = new URLSearchParams(window.location.search);
-  titleQuery = params.get('title') || '';
-  speakerQuery = params.get('speaker') || '';
-  categoryQuery = params.get('category') || '';
-  isFuzzy = params.get('fuzzy') === 'true';
-  
-  const kwParam = params.get('keywords');
-  if (kwParam) {
-    keywords = kwParam.split(',').map(k => k.trim().toLowerCase()).filter(Boolean);
-  }
-});
+    // 2. Build the keyword universe using the shared utility
+    allAvailableKeywords = extractAllKeywords(catalog);
+    
+    // 3. Read the current URL state
+    const params = new URLSearchParams(window.location.search);
+    titleQuery = params.get('title') || '';
+    speakerQuery = params.get('speaker') || '';
+    categoryQuery = params.get('category') || '';
+    isFuzzy = params.get('fuzzy') === 'true';
+    
+    const kwParam = params.get('keywords');
+    if (kwParam) {
+      keywords = kwParam.split(',').map(k => k.trim().toLowerCase()).filter(Boolean);
+    }
+  });
 
   // New: Filter suggestions based on what the user types
   let keywordSuggestions = $derived(

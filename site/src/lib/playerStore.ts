@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import type { Track } from './types.js';
+import type { Track } from './types.ts';
 
 export const isPlaylistOpen = writable(false);
 export const trackList = writable<Track[]>([]);

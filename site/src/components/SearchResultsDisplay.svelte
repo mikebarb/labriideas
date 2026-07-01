@@ -1,7 +1,7 @@
 <!-- src/components/SearchResultsDisplay.svelte -->
 <script lang="ts">
-  import type { Track } from '../lib/types.js';
-  //import { sanitizeKeywords } from '../lib/dataUtils.js';
+  import type { Track } from '../lib/types.ts';
+  //import { sanitizeKeywords } from '../lib/dataUtils.ts';
   import TrackCardGroup from './TrackCardGroup.svelte';
 
   interface Props {

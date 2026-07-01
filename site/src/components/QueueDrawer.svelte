@@ -4,8 +4,8 @@
   import { 
     isPlaylistOpen, trackList, currentTrackStore, statusStore, isAdminStore,
     currentTimeStore, durationStore
-  } from '../lib/playerStore.js';
-  import type { Track } from '../lib/types.js';
+  } from '../lib/playerStore.ts';
+  import type { Track } from '../lib/types.ts';
 
   // CHANGED: Import the download function from the new library location.
   // Previously, downloads were triggered via a custom DOM event to Player.
