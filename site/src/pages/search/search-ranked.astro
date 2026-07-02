@@ -2,10 +2,12 @@
 // src/pages/search-ranked.astro
 import LabriLayout from '../../layouts/LabriLayout.astro';
 import RankedSearch from '../../components/RankedSearch.svelte';
+
+const apiBase = import.meta.env.PUBLIC_API_BASE_URL || '';
 ---
 
 <LabriLayout title="Spotlight Search (Ranked)">
   <div class="max-w-4xl mx-auto px-4 py-4">
-    <RankedSearch client:load />
+    <RankedSearch client:load apiBase={apiBase} />
   </div>
 </LabriLayout>

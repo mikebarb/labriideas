@@ -1,12 +1,15 @@
 <!-- src/components/SearchFilter2.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { getCatalog } from '../lib/catalogStore.js';
+  import { getCachedCatalog } from '../lib/catalogStore.js';
   import { sanitizeKeywords } from '../lib/dataUtils.js';  // ← ADD THIS
   import FilterPopover from './FilterPopover.svelte';
   import type { Track } from '../lib/types';
 
   let allTracks: Track[] = $state([]);
+  let isStale = $state(false);
+  let isLoading = $state(true);
+  
   let query: string = $state('');
   let selectedSpeakers: string[] = $state([]);
   let selectedCategories: string[] = $state([]);
@@ -43,22 +46,23 @@
     return Array.from(set).filter((k: string) => k.length >= 2).sort();
   });
 
-  onMount(async () => {
+  // loadCatalog function using getCachedCatalog
+  // Returns immediately if cache exists (decompressing on the fly),
+  // then triggers a background revalidation to check for updates.
+  async function loadCatalog() {
     try {
-      allTracks = await getCatalog();
+      const { tracks, isStale: stale } = await getCachedCatalog();
+      allTracks = tracks;
+      isStale = stale;
     } catch (e) {
       console.error('Failed to load catalog', e);
+    } finally {
+      isLoading = false;
     }
-    // ─── Read URL params on mount ───
-    // If the user arrived here from the nav bar search, the URL will
-    // have ?q=... We pre-fill the input and run the search.
-    const params = new URLSearchParams(window.location.search);
-    const urlQuery = params.get('q');
-    if (urlQuery) {
-      query = urlQuery;
-      // Run the search by publishing the state (this also re-syncs the URL)
-      publishState();
-    }
+  }
+
+  onMount(() => {
+    loadCatalog();
   });
 
   function publishState() {
@@ -114,45 +118,57 @@
 </script>
 
 <div class="space-y-3">
-  <input
-    type="text"
-    bind:value={query}
-    oninput={publishState}
-    placeholder="Search anything... (then refine below)"
-    class="w-full border-2 rounded p-2 text-base"
-  />
+  <!--
+    Loading state. The cached catalog decompresses in ~50ms,
+    but we show a brief indicator so users with no cache see feedback
+    during the initial fetch.
+  -->
+  {#if isLoading}
+    <div class="text-sm text-gray-500 italic">Loading catalog...</div>
+  {:else}
+    <input
+      type="text"
+      bind:value={query}
+      oninput={publishState}
+      placeholder="Search anything... (then refine below)"
+      class="w-full border-2 rounded p-2 text-base"
+    />
 
-  <div class="flex flex-wrap gap-2">
-    <FilterPopover
-      label="Speaker"
-      options={uniqueSpeakers}
-      selected={selectedSpeakers}
-      onToggle={toggleSpeaker}
-      color="bg-blue-100"
-    />
-    <FilterPopover
-      label="Category"
-      options={uniqueCategories}
-      selected={selectedCategories}
-      onToggle={toggleCategory}
-      color="bg-purple-100"
-    />
-    <FilterPopover
-      label="Keyword"
-      options={uniqueKeywords}
-      selected={selectedKeywords}
-      onToggle={toggleKeyword}
-      color="bg-orange-100"
-    />
-    
-    {#if query || selectedSpeakers.length || selectedCategories.length || selectedKeywords.length}
-      <button
-        type="button"
-        onclick={clearAll}
-        class="text-sm text-gray-500 hover:text-red-600 underline self-center"
-      >
-        Clear all
-      </button>
+    <div class="flex flex-wrap gap-2">
+      <FilterPopover
+        label="Speaker"
+        options={uniqueSpeakers}
+        selected={selectedSpeakers}
+        onToggle={toggleSpeaker}
+        color="bg-blue-100"
+      />
+      <FilterPopover
+        label="Category"
+        options={uniqueCategories}
+        selected={selectedCategories}
+        onToggle={toggleCategory}
+        color="bg-purple-100"
+      />
+      <FilterPopover
+        label="Keyword"
+        options={uniqueKeywords}
+        selected={selectedKeywords}
+        onToggle={toggleKeyword}
+        color="bg-orange-100"
+      />
+      
+      {#if query || selectedSpeakers.length || selectedCategories.length || selectedKeywords.length}
+        <button
+          type="button"
+          onclick={clearAll}
+          class="text-sm text-gray-500 hover:text-red-600 underline self-center"
+        >
+          Clear all
+        </button>
+      {/if}
+    </div>
+    {#if isStale}
+      <div class="text-xs text-gray-400">Updating catalog in background...</div>
     {/if}
-  </div>
+  {/if}
 </div>

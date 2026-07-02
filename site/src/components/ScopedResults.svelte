@@ -1,22 +1,30 @@
 <!-- src/components/ScopedResults.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { getCatalog } from '../lib/catalogStore.js';
+  import { getCachedCatalog } from '../lib/catalogStore.js';
   import { applyIntents, type SearchIntent } from '../lib/intentRouter.js';
   import SearchResultsDisplay from './SearchResultsDisplay.svelte';
   import type { Track } from '../lib/types';
 
+  interface Props {
+    apiBase: string;
+  }
+  let { apiBase }: Props = $props();
+
   let allTracks: Track[] = $state([]);
   let filteredTracks: Track[] = $state([]);
   let activeIntents: SearchIntent[] = $state([]);
-
+  let isLoading = $state(true);
+  
   onMount(async () => {
     try {
-      const catalog: Track[] = await getCatalog();
-      allTracks = catalog;
+      const { tracks } = await getCachedCatalog();
+      allTracks = tracks;
     } catch (err) {
       console.error('Failed to load catalog:', err);
       allTracks = [];
+    }finally {
+      isLoading = false;  // CHANGED: Set loading false
     }
 
     // Initial URL check
@@ -51,4 +59,8 @@
   }
 </script>
 
-<SearchResultsDisplay tracks={filteredTracks} />
+{#if isLoading}
+  <div class="text-sm text-gray-500 italic">Loading catalog...</div>
+{:else}
+  <SearchResultsDisplay tracks={filteredTracks} {apiBase} />
+{/if}

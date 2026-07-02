@@ -1,7 +1,7 @@
 <!-- src/components/SearchResults2.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { getCatalog } from '../lib/catalogStore.js';
+  import { getCachedCatalog } from '../lib/catalogStore.js';
   import { rankedSearch } from '../lib/rankedEngine.js';
   import { sanitizeKeywords } from '../lib/dataUtils.js';
   import { isAdminStore } from '../lib/playerStore.js';
@@ -17,20 +17,16 @@
   let { apiBase }: Props = $props();
 
   let allTracks: Track[] = $state([]);
+  let isLoading = $state(true);
+  let isStale = $state(false);
   let filteredTracks: Track[] = $state([]);
   let query: string = $state('');
   let selectedSpeakers: string[] = $state([]);
   let selectedCategories: string[] = $state([]);
   let selectedKeywords: string[] = $state([]);
 
-  onMount(async () => {
-    try {
-      allTracks = await getCatalog();
-    } catch (e) {
-      console.error('Failed to load catalog', e);
-    }
-    applyLogic();
-    window.addEventListener('search2-updated', handleUpdate as EventListener);
+  onMount(() => {
+    loadCatalog();
   });
 
   function handleUpdate(event: Event) {
@@ -40,6 +36,19 @@
     selectedCategories = e.detail.categories;
     selectedKeywords = e.detail.keywords;
     applyLogic();
+  }
+
+ async function loadCatalog() {
+    try {
+      const { tracks, isStale: stale } = await getCachedCatalog();
+      allTracks = tracks;
+      isStale = stale;
+    } catch (e) {
+      console.error('Failed to load catalog', e);
+    } finally {
+      isLoading = false;
+      applyLogic(); // Ensure we apply the filter logic after loading the catalog
+    }
   }
 
   function applyLogic() {
@@ -81,4 +90,10 @@
 //  when the isAdmin prop is true). This means the download button 
 //  automatically appears/hides based on the admin status passed to Player.
 -->
-<SearchResultsDisplay tracks={filteredTracks} {apiBase} isAdmin={$isAdminStore} />
+{#if isLoading}
+  <div class="text-center py-8">
+    <div class="text-sm text-gray-500 italic">Loading catalog...</div>
+  </div>
+{:else}
+  <SearchResultsDisplay tracks={filteredTracks} {apiBase} isAdmin={$isAdminStore} />
+{/if}

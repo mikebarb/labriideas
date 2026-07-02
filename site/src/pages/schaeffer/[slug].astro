@@ -20,6 +20,8 @@ const { person } = Astro.props;
 if (!person) {
   return Astro.redirect('/404');
 }
+
+const apiBase = import.meta.env.PUBLIC_API_BASE_URL;
 ---
 
 <LabriLayout title={person.speakerName}>
@@ -36,6 +38,6 @@ if (!person) {
     </p>
     
     <!-- Reuse TrackList, but filter by speaker instead of category -->
-    <TrackList speaker={person.speakerName} client:load />
+    <TrackList speaker={person.speakerName} {apiBase} client:load />
   </div>
 </LabriLayout>

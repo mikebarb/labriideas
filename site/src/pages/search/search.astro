@@ -3,6 +3,8 @@
 import LabriLayout from '../../layouts/LabriLayout.astro';
 import SearchFilter from '../../components/SearchFilter.svelte';
 import SearchResults from '../../components/SearchResults.svelte';
+
+const apiBase = import.meta.env.PUBLIC_API_BASE_URL;
 ---
 
 <LabriLayout title="Search Library">
@@ -16,7 +18,7 @@ import SearchResults from '../../components/SearchResults.svelte';
 
     <!-- The Results list -->
     <div class="pt-4">
-      <SearchResults client:load />
+      <SearchResults client:load {apiBase} />
     </div>
   </div>
 </LabriLayout>

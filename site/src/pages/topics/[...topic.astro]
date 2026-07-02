@@ -60,6 +60,8 @@ if (isMajor === false) {
 const subheaderHtml = isMajor 
   ? '<p class="text-gray-500 mb-8">Explore sub-categories below or browse all tracks.</p>' 
   : '';
+
+const apiBase = import.meta.env.PUBLIC_API_BASE_URL;
 ---
 
 <LabriLayout title={topicName}>
@@ -67,6 +69,6 @@ const subheaderHtml = isMajor
     <nav class="text-sm text-gray-500 mb-4" set:html={breadcrumbHtml}></nav>
     <h1 class="text-3xl font-bold mb-2">{topicName}</h1>
     <div set:html={subheaderHtml}></div>
-    <TrackList topic={filterTopic} client:load />
+    <TrackList topic={filterTopic} {apiBase} client:load />
   </div>
 </LabriLayout>

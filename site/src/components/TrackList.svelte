@@ -1,23 +1,23 @@
 <!-- src/components/TrackList.svelte -->
 <script lang="ts">
-  import { getCatalog } from '../lib/catalogStore.js';
+  import { getCachedCatalog } from '../lib/catalogStore.js'; 
   import { onMount } from 'svelte';
   import TrackCardGroup from './TrackCardGroup.svelte';
 
   interface Props {
+    apiBase: string;
     tracks?: Array<{ displayTitle: string; filename: string }>;
     topic?: string;
     speaker?: string;
   }
 
-  //let { tracks: trackRefs = [], topic = '' }: Props = $props();
-  let { tracks: trackRefs = [], topic = '', speaker = '' }: Props = $props();
+  let { apiBase, tracks: trackRefs = [], topic = '', speaker = '' }: Props = $props();
   let playableTracks: any[] = $state([]);
   let isLoading: boolean = $state(true);
 
   onMount(async () => {
     try {
-      const catalog = await getCatalog();
+      const { tracks: catalog } = await getCachedCatalog();
 
       if (trackRefs && trackRefs.length > 0) {
         // PLAYLIST MODE
@@ -60,5 +60,5 @@
 {:else if playableTracks.length === 0}
   <p class="text-gray-400 italic py-4">No tracks found.</p>
 {:else}
-  <TrackCardGroup items={playableTracks} />
+  <TrackCardGroup items={playableTracks } {apiBase}/>
 {/if}

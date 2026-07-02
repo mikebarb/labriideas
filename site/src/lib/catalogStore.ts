@@ -7,6 +7,19 @@ declare global {
   }
 }
 
+// ─── Online/Offline Revalidation ───
+// When the browser comes back online, check if we have a cached
+// catalog and trigger a revalidation. This ensures the catalog
+// is fresh after a period of being offline.
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    // Only revalidate if we have a cached catalog to revalidate
+    if (localStorage.getItem('catalog_data')) {
+      backgroundRevalidate();
+    }
+  });
+}
+
 // --- Your Exact Helper Functions ---
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
   const binaryString = window.atob(base64);
@@ -26,52 +39,64 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return window.btoa(binary);
 }
 
-async function inflateCatalog_old(arrayBuffer: ArrayBuffer): Promise<any> {
-  console.log("inflateCatalog - arrayBuffer: ", arrayBuffer);
-  const ds = new DecompressionStream('gzip');
-  console.log("inflateCatalog - ds: ", ds);
-  const decompressedStream = new Response(arrayBuffer).body!.pipeThrough(ds);
-  console.log("inflateCatalog - decompressedStream: ", decompressedStream);
-  const blob = await new Response(decompressedStream).blob();
-  console.log("inflateCatalog - blob: ", blob);
-  
-  const text = await blob.text();
-  console.log("inflateCatalog - text: ", text);
-  return JSON.parse(text);
-}
-
-  async function inflateCatalog(arrayBuffer: ArrayBuffer): Promise<any> {
-    // 1. Try parsing as raw JSON first (in case browser auto-decompressed via Content-Encoding)
-    try {
-      const text = new TextDecoder().decode(arrayBuffer);
-      const data = JSON.parse(text);
-      console.log("inflateCatalog: Data was already raw JSON (browser auto-decompressed).");
-      return data;
-    } catch (e) {
-      // It's not valid JSON, so it must be zipped. Continue to step 2.
-    }
-
-    // 2. Try to decompress as Gzip
-    try {
-      const ds = new DecompressionStream('gzip');
-      const decompressedStream = new Response(arrayBuffer).body!.pipeThrough(ds);
-      const blob = await new Response(decompressedStream).blob();
-      const text = await blob.text();
-      return JSON.parse(text);
-    } catch (gzipError) {
-      console.error("inflateCatalog: Data is neither raw JSON nor valid Gzip.", gzipError);
-      
-      // 3. DEBUGGING: Log the first 4 bytes to see what the data actually is
-      const bytes = new Uint8Array(arrayBuffer.slice(0, 4));
-      const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ');
-      console.error("inflateCatalog: First 4 bytes (hex):", hex); 
-      // If it's gzip, it will start with "1f 8b 08"
-      // If it's an HTML error, it might start with "<!DO" (3c 21 44 4f)
-      
-      throw new Error("Catalog data is corrupted or in an unexpected format.");
-    }
+async function inflateCatalog(arrayBuffer: ArrayBuffer): Promise<any> {
+  // 1. Try parsing as raw JSON first (in case browser auto-decompressed via Content-Encoding)
+  try {
+    const text = new TextDecoder().decode(arrayBuffer);
+    const data = JSON.parse(text);
+    console.log("inflateCatalog: Data was already raw JSON (browser auto-decompressed).");
+    return data;
+  } catch (e) {
+    // It's not valid JSON, so it must be zipped. Continue to step 2.
   }
 
+  // 2. Try to decompress as Gzip
+  try {
+    const ds = new DecompressionStream('gzip');
+    const decompressedStream = new Response(arrayBuffer).body!.pipeThrough(ds);
+    const blob = await new Response(decompressedStream).blob();
+    const text = await blob.text();
+    return JSON.parse(text);
+  } catch (gzipError) {
+    console.error("inflateCatalog: Data is neither raw JSON nor valid Gzip.", gzipError);
+    
+    // 3. DEBUGGING: Log the first 4 bytes to see what the data actually is
+    const bytes = new Uint8Array(arrayBuffer.slice(0, 4));
+    const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ');
+    console.error("inflateCatalog: First 4 bytes (hex):", hex); 
+    // If it's gzip, it will start with "1f 8b 08"
+    // If it's an HTML error, it might start with "<!DO" (3c 21 44 4f)
+    
+    throw new Error("Catalog data is corrupted or in an unexpected format.");
+  }
+}
+
+// ─── Encapsulated Cache I/O ───
+// These helpers wrap localStorage so we can migrate to IndexedDB
+// later (for PWA / Service Worker compatibility) without changing
+// any callers.
+
+async function readCatalogCache(): Promise<{ data: string; version: string } | null> {
+  const data = localStorage.getItem('catalog_data');
+  const version = localStorage.getItem('catalog_version');
+  if (data && version) return { data, version };
+  return null;
+}
+
+async function writeCatalogCache(data: string, version: string): Promise<void> {
+  localStorage.setItem('catalog_data', data);
+  localStorage.setItem('catalog_version', version);
+}
+
+async function clearCatalogCache(): Promise<void> {
+  localStorage.removeItem('catalog_data');
+  localStorage.removeItem('catalog_version');
+}
+
+// Public getter so the admin page or future SW can read the current version
+export function getCatalogVersion(): string {
+  return localStorage.getItem('catalog_version') || '';
+}
 
 
 // Inflates a Base64 gzipped string into the catalog array and stores it in memory
@@ -123,6 +148,61 @@ export async function getCatalog(): Promise<any[]> {
     // Clear the promise lock whether it succeeded or failed
     window.__LABRI_CATALOG_PROMISE__ = undefined;
   }
+}
+
+// ─── getCachedCatalog() ───
+// Returns the catalog as fast as possible — from memory, then local
+// cache, then server. Unlike getCatalog(), it does NOT block on the
+// server check. Instead, it returns the cached version immediately
+// and triggers a background revalidation to check for updates.
+//
+// Callers: user-facing search/display components that prioritize
+// perceived performance over absolute freshness.
+//
+// Admin components (CatalogViewer, UploadManager) should continue
+// to use getCatalog() which waits for a fresh server response.
+
+export async function getCachedCatalog(): Promise<{ tracks: any[]; isStale: boolean }> {
+  // 1. Already in memory? Return instantly.
+  if (window.__LABRI_CATALOG__ && window.__LABRI_CATALOG__.length > 0) {
+    // Fire-and-forget revalidation in the background
+    backgroundRevalidate();
+    return { tracks: window.__LABRI_CATALOG__, isStale: false };
+  }
+
+  // 2. Another component is already fetching. Wait for it.
+  if (window.__LABRI_CATALOG_PROMISE__) {
+    const tracks = await window.__LABRI_CATALOG_PROMISE__;
+    backgroundRevalidate();
+    return { tracks, isStale: false };
+  }
+
+  // 3. Try local cache first (fast path)
+  const cached = await readCatalogCache();
+  if (cached) {
+    try {
+      // Start a new promise for the decompression, but don't assign it
+      // to the global promise — we want to return immediately with the
+      // cached data, not block other callers.
+      const tracks = await inflateBase64ToCatalog(cached.data);
+      // Fire-and-forget revalidation
+      backgroundRevalidate();
+      return { tracks, isStale: true };
+    } catch (e) {
+      // Cache corrupted, clear it and fall through to server
+      console.warn('Local cache corrupted, clearing', e);
+      await clearCatalogCache();
+    }
+  }
+
+  // 4. No cache at all — fall back to the full server fetch (blocking)
+  // This is the same path as getCatalog() for cold starts.
+  if (!window.__LABRI_CATALOG_PROMISE__) {
+    window.__LABRI_CATALOG_PROMISE__ = loadCatalogInternal();
+  }
+  const tracks = await window.__LABRI_CATALOG_PROMISE__;
+  window.__LABRI_CATALOG_PROMISE__ = undefined;
+  return { tracks, isStale: false };
 }
 
 // ==================================================================================
@@ -190,7 +270,8 @@ async function loadCatalogInternal(): Promise<any[]> {
     // Save to localStorage
     const base64Data = arrayBufferToBase64(arrayBuffer);
     localStorage.setItem('catalog_data', base64Data);
-    localStorage.setItem('catalog_version', newETag);
+    const versionToStore = newETag || `local-${Date.now()}`;
+    localStorage.setItem('catalog_version', versionToStore);
 
     // USE HELPER (We pass the base64Data we just saved so we
     // don't have to read it back out of localStorage)
@@ -209,6 +290,58 @@ async function loadCatalogInternal(): Promise<any[]> {
       }
     }
     return[];
+  }
+}
+
+// ─── Background Revalidation ───
+// Checks the server for a newer catalog version without blocking
+// the UI. If a new version is found, it updates the memory cache
+// and localStorage. This is fire-and-forget — the caller doesn't
+// wait for the result.
+
+let revalidationInProgress = false;
+
+async function backgroundRevalidate(): Promise<void> {
+  // Prevent concurrent revalidations
+  if (revalidationInProgress) return;
+  revalidationInProgress = true;
+
+  try {
+    const clientVersion = getCatalogVersion();
+    const res = await fetch(
+      `${import.meta.env.PUBLIC_API_BASE_URL}/api/catalog?version=${clientVersion}`
+    );
+
+    // 304 = our cache is still current
+    if (res.status === 304) return;
+
+    // 200 = new version available
+    if (res.ok) {
+      const arrayBuffer = await res.arrayBuffer();
+      const newETag = res.headers.get('ETag') || '';
+      const base64Data = arrayBufferToBase64(arrayBuffer);
+
+      // Update localStorage
+      await writeCatalogCache(base64Data, newETag);
+
+      // Update in-memory cache so the next call to getCachedCatalog
+      // returns the fresh data. We inflate it here but don't return it.
+      try {
+        await inflateBase64ToCatalog(base64Data);
+      } catch (e) {
+        console.warn('Background revalidation: failed to inflate new catalog', e);
+      }
+    }
+  } catch (err) {
+    // Network error is expected if offline — ignore silently
+    // The cached version remains available.
+    if (err instanceof TypeError && err.message === 'Failed to fetch') {
+      // Offline — do nothing
+    } else {
+      console.warn('Background revalidation failed:', err);
+    }
+  } finally {
+    revalidationInProgress = false;
   }
 }
 

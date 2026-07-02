@@ -41,6 +41,7 @@ export async function getStaticPaths() {
 }
 
 const { label, category } = Astro.props;
+const apiBase = import.meta.env.PUBLIC_API_BASE_URL;
 ---
 
 <LabriLayout title={label}>
@@ -53,6 +54,6 @@ const { label, category } = Astro.props;
     <h1 class="text-3xl font-bold mb-6 text-white">{label}</h1>
     <p class="text-sm text-gray-500 mb-6">Category: {category}</p>
     
-    <TrackList topic={category} client:load />
+    <TrackList topic={category} {apiBase} client:load />
   </div>
 </LabriLayout>
