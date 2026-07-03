@@ -315,6 +315,10 @@
         status = 'idle';
         currentTime = 0;
         duration = 0;
+        // Queue is now empty, so close both the mobile queue overlay
+        // and the desktop sidebar.
+        mobileView.set('min');
+        desktopQueueOpen.set(false);
       } else {
         // Play next without restoring position (fresh start)
         const nextTrack = tracks[0];
@@ -715,7 +719,11 @@
         aria-label="Toggle expanded player"
         aria-pressed={$mobileView === 'max'}
       >
-        <Maximize2 size={18} />
+        {#if $mobileView === 'max'}
+          <Minimize2 size={18} />
+        {:else}
+          <Maximize2 size={18} />
+        {/if}
       </button>
     </div>
 
