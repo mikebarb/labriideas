@@ -1,8 +1,9 @@
 <!-- src/components/QueueDrawer.svelte -->
 <script lang="ts">
   import { Play, Pause, X, Download, Music, GripVertical } from 'lucide-svelte';
-  import { 
-    isPlaylistOpen, trackList, currentTrackStore, statusStore, isAdminStore,
+ import { 
+    mobileView, desktopQueueOpen, 
+    trackList, currentTrackStore, statusStore, isAdminStore,
     currentTimeStore, durationStore
   } from '../lib/playerStore.ts';
   import type { Track } from '../lib/types.ts';
@@ -12,7 +13,7 @@
   // Now, we call the library function directly. This is cleaner because:
   //   - QueueDrawer no longer needs to know about Player's internal API.
   //   - The same download logic can be used in the search results.
-  import { downloadTrack } from '../lib/downloader';
+  import { downloadTrack } from '../lib/downloader.ts';
 
   interface Props {
     apiBase: string;  // CHANGED: Added to enable downloads
@@ -50,9 +51,15 @@
       },
     });
   }
-
+  
+  // On mobile, sets mobileView back to 'min'.
+  // On desktop, the QueueDrawer X button can also close the sidebar
   function closeDrawer() {
-    isPlaylistOpen.set(false);
+    if (window.innerWidth < 768) {
+      mobileView.set('min');
+    } else {
+      desktopQueueOpen.set(false);
+    }
   }
 
   // ─── Progress visualization ───

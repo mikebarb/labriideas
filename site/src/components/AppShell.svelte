@@ -1,7 +1,7 @@
 <!-- src/components/AppShell.svelte -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { isPlaylistOpen, trackList } from '../lib/playerStore.js';
+  import { mobileView, desktopQueueOpen, trackList } from '../lib/playerStore.js';
   import QueueDrawer from './QueueDrawer.svelte';
 
   interface Props {
@@ -13,9 +13,9 @@
   // The player takes 96px (h-24) when showing, 0px when hidden
   let mainPaddingBottom = $derived($trackList.length > 0 ? 'pb-24' : 'pb-0');
 
-  // Close drawer handler for mobile overlay
-  function closeDrawer() {
-    isPlaylistOpen.set(false);
+  // CHANGED: Close drawer handler for mobile overlay
+  function closeMobileDrawer() {
+    mobileView.set('min');
   }
 
 </script>
@@ -30,28 +30,29 @@
   </main>
 
   <!-- Queue Sidebar: Reactive visibility -->
-  <!-- 
+    <!--
     DESKTOP: Inline sidebar (>= md breakpoint)
-    Slides in/out with width transition.
+    Driven by desktopQueueOpen. Slides in/out with width transition.
   -->
   <div 
     class="transition-all duration-300 overflow-hidden hidden md:block"
-    class:!w-80={$isPlaylistOpen}
-    class:w-0={!$isPlaylistOpen}
+    class:!w-80={$desktopQueueOpen}
+    class:w-0={!$desktopQueueOpen}
   >
     <QueueDrawer {apiBase} />
   </div>
 
   <!--
     MOBILE: Full-screen overlay (< md breakpoint)
-    The drawer becomes a fixed overlay that covers the main content.
-    The player bar at the bottom remains visible (z-50 player, z-40 drawer).
+    Only visible when mobileView === 'list'.
+    The persistent player bar at the bottom (z-50) remains visible above
+    the drawer (z-40) so users always have the toggle buttons.
   -->
-  {#if $isPlaylistOpen}
+  {#if $mobileView === 'list'}
     <div class="md:hidden fixed inset-0 z-40 bg-[#0e0e0e] flex flex-col">
       <div class="flex items-center justify-end p-2 border-b border-neutral-800">
         <button
-          onclick={closeDrawer}
+          onclick={closeMobileDrawer}
           class="text-neutral-400 hover:text-white p-2 rounded-full hover:bg-white/10"
           aria-label="Close queue"
         >
@@ -63,6 +64,4 @@
       </div>
     </div>
   {/if}
-
-
 </div>

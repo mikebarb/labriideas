@@ -9,5 +9,9 @@ export default defineConfig({
   integrations: [svelte()],
   vite: {
     plugins: [tailwindcss()]
+  },
+  // CHANGED: Disable the dev toolbar to avoid the 504 error
+  devToolbar: {
+    enabled: false
   }
 });
