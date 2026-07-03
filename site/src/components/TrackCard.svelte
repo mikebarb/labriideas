@@ -4,7 +4,7 @@
   import { buildTrack } from '../lib/buildTrack.ts';
   import { sanitizeKeywords } from '../lib/dataUtils.js';
   import { downloadTrack } from '../lib/downloader.js';
-  import { Download } from 'lucide-svelte';
+  import { Download, Pencil } from 'lucide-svelte';
 
   interface Props {
     item: any;
@@ -52,6 +52,16 @@
         downloadingFilename = null;
       },
     });
+  }
+
+  // TrackCard stays decoupled from the editor; the parent decides
+  // how the editor is mounted.
+  function handleEdit(event: MouseEvent) {
+    event.stopPropagation();
+    console.log('[TrackCard] Dispatching edit-track', item.filename);
+    window.dispatchEvent(new CustomEvent('edit-track', { 
+      detail: { track: item } 
+    }));
   }
 
   function formatCategory(category: string | string[] | undefined): string {
@@ -125,6 +135,14 @@
             Download icon. Disabled state prevents double-clicks.
           -->
           {#if isAdmin}
+            <button
+              onclick={handleEdit}
+              class="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition"
+              aria-label="Edit track"
+            >
+              <Pencil size={16} />
+            </button>
+            
             <button
               onclick={handleDownload}
               disabled={downloadingFilename === item.filename}
