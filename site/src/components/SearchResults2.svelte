@@ -27,6 +27,7 @@
 
   onMount(() => {
     loadCatalog();
+    window.addEventListener('search2-updated', handleUpdate as EventListener);
   });
 
   function handleUpdate(event: Event) {
