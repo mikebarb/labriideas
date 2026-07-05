@@ -41,6 +41,8 @@
   --font-sans: "Nunito Sans", ui-sans-serif, system-ui, sans-serif; 
   --font-serif: "Playfair Display", Times, serif;
   
+    /* z-100 is not standard tailwind */
+  --z-index-100: 100;
   
   /* You can add custom colors here later if needed */
   /* --color-labri-orange: #f97316; */

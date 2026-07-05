@@ -6,7 +6,8 @@
     Volume2, VolumeX, ListMusic, Minimize2, Maximize2
   } from 'lucide-svelte';
   import { 
-    isPlaylistOpen, trackList, currentTrackStore, statusStore, isAdminStore,
+    mobileView, desktopQueueOpen,
+    trackList, currentTrackStore, statusStore, isAdminStore,
     currentTimeStore, durationStore
   } from '../lib/playerStore.js';
   import type { Track } from '../lib/types.ts';
@@ -31,7 +32,6 @@
   let volume = $state(0.8);
   let isMuted = $state(false);
   let errorMessage = $state('');
-  let isMobileExpanded = $state(false);
 
   let audioElement: HTMLAudioElement | null = $state(null);
   let seekBarElement: HTMLElement | null = $state(null);
@@ -84,6 +84,27 @@
   let displayTime = $derived(
     isDragging ? (dragProgress / 100) * duration : currentTime
   );
+
+   // ─── Mobile view toggles (NEW) ───
+  // State machine: 'min' | 'max' | 'list'
+  // Both buttons act as toggles, with the priority/selection logic
+  // we agreed on. Each tap flips the relevant view on/off; if neither
+  // is selected, the user returns to 'min'.
+  function toggleMaxPlayer(): void {
+    if ($mobileView === 'max') {
+      mobileView.set('min');
+    } else {
+      mobileView.set('max');
+    }
+  }
+
+  function togglePlaylist(): void {
+    if ($mobileView === 'list') {
+      mobileView.set('min');
+    } else {
+      mobileView.set('list');
+    }
+  }
 
   // ─── Helpers ───
   function formatTime(s: number): string {
@@ -294,6 +315,10 @@
         status = 'idle';
         currentTime = 0;
         duration = 0;
+        // Queue is now empty, so close both the mobile queue overlay
+        // and the desktop sidebar.
+        mobileView.set('min');
+        desktopQueueOpen.set(false);
       } else {
         // Play next without restoring position (fresh start)
         const nextTrack = tracks[0];
@@ -455,7 +480,6 @@
       }
     }));
   }
-
 
   // ─── Lifecycle ───
   onMount(() => {
@@ -637,7 +661,7 @@
         </button>
       </div>
 
-      <button onclick={() => isPlaylistOpen.update(v => !v)} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10" aria-label="Toggle queue">
+      <button onclick={() => desktopQueueOpen.update(v => !v)}  class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10" aria-label="Toggle queue">
         <ListMusic size={20} />
       </button>
 
@@ -649,37 +673,72 @@
     </div>
   </div>
 
-  <!-- MOBILE LAYOUT -->
+  <!-- MOBILE LAYOUT
+    Three views now share a single root with two pieces:
+      1. A persistent bottom bar (always rendered when tracks exist)
+      2. The view-specific content above the bar (only when maxPlayer is shown)
+
+    The QueueDrawer is rendered separately by AppShell.svelte when
+    $mobileView === 'list', so it sits above the bar and is dismissable
+    via the bar's Playlist toggle or its own X button.
+  -->
   <div class="md:hidden">
-    {#if !isMobileExpanded}
-      <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md h-14 bg-[#181818] border border-neutral-800 rounded-full px-4 flex items-center gap-3 z-50 shadow-2xl">
-        <button onclick={togglePlayPause} class="text-white p-1" aria-label="Play/Pause" disabled={!currentTrack}>
-          {#if status === 'playing'}<Pause size={20} fill="currentColor" />{:else}<Play size={20} fill="currentColor" class="ml-0.5" />{/if}
-        </button>
-        <div class="flex-1 min-w-0">
-          <div class="text-sm font-medium truncate text-white">{currentTrack?.title ?? 'No track'}</div>
-          <div class="text-xs text-neutral-400 truncate">{currentTrack?.speaker ?? ''}</div>
-        </div>
-        <button onclick={() => isMobileExpanded = true} class="text-neutral-300 hover:text-white p-2" aria-label="Expand player">
-          <Maximize2 size={18} />
-        </button>
+    <!-- 1. Persistent bottom bar -->
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md h-14 bg-[#181818] border border-neutral-800 rounded-full px-4 flex items-center gap-3 z-60 shadow-2xl">
+      <button onclick={togglePlayPause} class="text-white p-1" aria-label="Play/Pause" disabled={!currentTrack}>
+        {#if status === 'playing'}<Pause size={20} fill="currentColor" />{:else}<Play size={20} fill="currentColor" class="ml-0.5" />{/if}
+      </button>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-medium truncate text-white">{currentTrack?.title ?? 'No track'}</div>
+        <div class="text-xs text-neutral-400 truncate">{currentTrack?.speaker ?? ''}</div>
       </div>
-    {:else}
-      <div class="fixed inset-0 bg-[#0e0e0e] z-50 flex flex-col p-6">
+
+      <!--
+        Playlist toggle (CHANGED).
+        - On the bar: shows track list (replaces maxPlayer if shown)
+        - In trackList: returns to min
+        - Visual state indicates which view is active
+      -->
+      <button 
+        onclick={togglePlaylist} 
+        class="text-neutral-300 hover:text-white p-2 {$mobileView === 'list' ? 'text-white bg-white/10' : ''} rounded-full" 
+        aria-label="Toggle queue"
+        aria-pressed={$mobileView === 'list'}
+      >
+        <ListMusic size={18} />
+      </button>
+
+      <!--
+        Expand toggle (NEW on mobile bar).
+        - On the bar: shows maxPlayer (replaces trackList if shown)
+        - In maxPlayer: returns to min
+      -->
+      <button 
+        onclick={toggleMaxPlayer} 
+        class="text-neutral-300 hover:text-white p-2 {$mobileView === 'max' ? 'text-white bg-white/10' : ''} rounded-full" 
+        aria-label="Toggle expanded player"
+        aria-pressed={$mobileView === 'max'}
+      >
+        {#if $mobileView === 'max'}
+          <Minimize2 size={18} />
+        {:else}
+          <Maximize2 size={18} />
+        {/if}
+      </button>
+    </div>
+
+    <!-- 2. maxPlayer view (only when active) -->
+    {#if $mobileView === 'max'}
+      <div class="fixed inset-0 bg-[#0e0e0e] z-50 flex flex-col p-6 pb-20">
         <div class="flex items-center justify-between mb-8">
-          <button onclick={() => isMobileExpanded = false} class="text-neutral-300 hover:text-white p-2" aria-label="Minimize">
-            <Minimize2 size={24} />
-          </button>
           <h2 class="text-sm font-semibold uppercase tracking-wider text-neutral-400">Now Playing</h2>
+          <!-- CHANGED: X close button on header. Same effect as the bar's Expand toggle. -->
           <button 
-            onclick={() => {
-              isMobileExpanded = false;              // Minimize the expanded player
-              isPlaylistOpen.set(true);              // Open the queue drawer
-            }} 
-            class="text-neutral-300 hover:text-white p-2" 
-            aria-label="Queue"
+            onclick={toggleMaxPlayer} 
+            class="text-neutral-300 hover:text-white p-2 rounded-full hover:bg-white/10" 
+            aria-label="Minimize"
           >
-            <ListMusic size={24} />
+            <Minimize2 size={24} />
           </button>
         </div>
 
@@ -738,19 +797,8 @@
         </div>
 
         <div class="mt-auto space-y-4 pb-4">
-          <!--
-            CHANGED: Mobile speed control — same three-button cluster
-            as desktop: − [1.0x] +. Middle button long-press resets.
-          -->
           <div class="flex items-center justify-center gap-2">
-            <button
-              onclick={decreaseSpeed}
-              class="text-neutral-300 hover:text-white w-10 h-10 rounded-full hover:bg-white/10 disabled:opacity-30 flex items-center justify-center text-lg leading-none"
-              aria-label="Decrease speed"
-              disabled={!currentTrack}
-            >
-              −
-            </button>
+            <button onclick={decreaseSpeed} class="text-neutral-300 hover:text-white w-10 h-10 rounded-full hover:bg-white/10 disabled:opacity-30 flex items-center justify-center text-lg leading-none" aria-label="Decrease speed" disabled={!currentTrack}>−</button>
             <button
               onpointerdown={onSpeedPointerDown}
               onpointerup={onSpeedPointerUp}
@@ -762,14 +810,7 @@
             >
               {(currentTrack?.playbackRate ?? 1.0).toFixed(2)}x
             </button>
-            <button
-              onclick={increaseSpeed}
-              class="text-neutral-300 hover:text-white w-10 h-10 rounded-full hover:bg-white/10 disabled:opacity-30 flex items-center justify-center text-lg leading-none"
-              aria-label="Increase speed"
-              disabled={!currentTrack}
-            >
-              +
-            </button>
+            <button onclick={increaseSpeed} class="text-neutral-300 hover:text-white w-10 h-10 rounded-full hover:bg-white/10 disabled:opacity-30 flex items-center justify-center text-lg leading-none" aria-label="Increase speed" disabled={!currentTrack}>+</button>
           </div>
 
           <div class="flex items-center justify-center gap-3">
