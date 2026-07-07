@@ -19,10 +19,11 @@ export const navItems = [
       { label: 'Featured', href: '/featured/' },
       { label: 'Playlists', href: '/playlists/' },
       { label: 'Schaeffer Collection', href: '/schaeffer/' },
-      { label: 'Search', href: '/search/search2/' },
+      { label: 'Search', href: '/search/search3/' },
       { label: 'Search-base', href: '/search/search/' },
       { label: 'Search-ranked', href: '/search/search-ranked/' },
-      { label: 'Search-scoped', href: '/search/search-scoped/' }
+      { label: 'Search-scoped', href: '/search/search-scoped/' },
+      { label: 'Search-filtered', href: '/search/search2/' }
     ]
   },
   { id: 'contact', 

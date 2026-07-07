@@ -1,7 +1,19 @@
 // src/lib/searchEngine.ts
 import Fuse from 'fuse.js';
 import type { Track, SearchParams } from './types';
-import { sanitizeKeywords } from './dataUtils.js'
+import { sanitizeKeywords } from './dataUtils.js';
+import { rankedSearch } from './rankedEngine.js';
+
+// ===== V3 Types (NEW) =====
+
+export type Dimension = 'speakers' | 'categories' | 'keywords';
+
+export interface MultiSearchParams {
+  query: string;
+  speakers: string[];
+  categories: string[];
+  keywords: string[];
+}
 
 // ===== URL Parsing =====
 
@@ -39,7 +51,7 @@ export function emptySearchParams(): SearchParams {
   };
 }
 
-// ===== The Main Filter Pipeline =====
+// ===== The Main Filter Pipeline (V1/V2) =====
 
 export function filterTracks(tracks: Track[], searchParams: SearchParams): Track[] {
   let workingSet: Track[] = tracks;
@@ -148,4 +160,135 @@ export function writeSearchParamsToUrl(params: SearchParams): void {
     : window.location.pathname;
 
   window.history.replaceState({}, '', newUrl);
+}
+
+// ===== V3 Helpers (NEW) =====
+
+/**
+ * Private helper that applies the multi-value constraints (speakers,
+ * categories, keywords) to a track list. Used by both filterTracksMulti
+ * and getNarrowedPool so the two stay in sync.
+ * 
+ * If params has a dimension with an empty array, that dimension is 
+ * treated as "no constraint" (i.e. matches everything).
+ */
+function _applyConstraints(tracks: Track[], params: MultiSearchParams): Track[] {
+  const q = params.query.trim().toLowerCase();
+  
+  return tracks.filter(track => {
+    // Speaker
+    const sMatch = params.speakers.length === 0 || 
+                   params.speakers.includes(track.speaker || '');
+    
+    // Category
+    const trackCats = Array.isArray(track.category) 
+      ? track.category 
+      : (track.category ? [track.category] : []);
+    const cMatch = params.categories.length === 0 || 
+                   trackCats.some(c => params.categories.includes(c));
+    
+    // Keyword
+    const trackKws = sanitizeKeywords(track.keywords);
+    const kMatch = params.keywords.length === 0 || 
+                   params.keywords.some(kw => trackKws.some(tk => tk.includes(kw.toLowerCase())));
+    
+    // Query (NEW): substring across title, filename, speaker, category, keywords
+    const qMatch = q === '' || (() => {
+      const haystack = [
+        track.title || '',
+        track.filename || '',
+        track.speaker || '',
+        ...trackCats,
+        ...trackKws
+      ].join(' ').toLowerCase();
+      return haystack.includes(q);
+    })();
+    
+    return sMatch && cMatch && kMatch && qMatch;
+  });
+}
+
+
+/**
+ * V3 main filter pipeline.
+ * - Applies the multi-value constraints.
+ * - If query is non-empty, ranks the results with rankedSearch.
+ * - Otherwise, sorts alphabetically.
+ */
+export function filterTracksMulti(
+  tracks: Track[], 
+  params: MultiSearchParams
+): Track[] {
+  const filtered = _applyConstraints(tracks, params);
+  
+  if (params.query.trim()) {
+    return rankedSearch(filtered, params.query);
+  }
+  return sortTracksAlphabetically(filtered);
+}
+
+/**
+ * V3 pool derivation.
+ * Returns the set of unique values available for the given dimension,
+ * given the OTHER constraints. The dimension's own current selection
+ * is ignored (so the user can see options to deselect).
+ * 
+ * Example: getNarrowedPool(tracks, params, 'speakers') returns all
+ * speakers that would be valid if the current speaker selection 
+ * were empty.
+ */
+export function getNarrowedPool(
+  tracks: Track[], 
+  params: MultiSearchParams, 
+  dimension: Dimension
+): string[] {
+  // Build params with the requested dimension zeroed out
+  const paramsWithoutDimension: MultiSearchParams = {
+    query: params.query,
+    speakers: dimension === 'speakers' ? [] : params.speakers,
+    categories: dimension === 'categories' ? [] : params.categories,
+    keywords: dimension === 'keywords' ? [] : params.keywords
+  };
+  
+  // Find tracks that pass the OTHER constraints
+  const subset = _applyConstraints(tracks, paramsWithoutDimension);
+  
+  // Extract unique values for the requested dimension
+  const set = new Set<string>();
+  subset.forEach(t => {
+    if (dimension === 'speakers' && t.speaker) {
+      set.add(t.speaker);
+    } else if (dimension === 'categories') {
+      const cats = Array.isArray(t.category) 
+        ? t.category 
+        : (t.category ? [t.category] : []);
+      cats.forEach((c: string) => set.add(c));
+    } else if (dimension === 'keywords') {
+      sanitizeKeywords(t.keywords).forEach((k: string) => set.add(k));
+    }
+  });
+  
+  return Array.from(set).sort();
+}
+
+/**
+ * Merges the "available pool" with the currently selected values.
+ * Returns a sorted list where items in `selected` but NOT in `pool`
+ * are marked isStale: true.
+ * 
+ * Used by SearchFilter3 to feed FilterPopover. The popover uses the
+ * isStale flag to grey out items that no longer match but should
+ * remain visible so the user can deselect them.
+ */
+export function mergeOptions(
+  pool: string[], 
+  selected: string[]
+): { value: string; isStale: boolean }[] {
+  const merged = new Set<string>([...pool, ...selected]);
+  return Array.from(merged)
+    .sort()
+    .map(value => ({
+      value,
+      isStale: selected.includes(value) && !pool.includes(value)
+    }));
 }

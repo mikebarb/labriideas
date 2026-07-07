@@ -2,20 +2,42 @@
 <script lang="ts">
   interface Props {
     label: string;
-    options: string[];
+    options: string[] | { value: string; isStale: boolean }[];
     selected: string[];
     onToggle: (val: string) => void;
     color?: string;
+    stale?: string[];
   }
 
-  let { label, options, selected, onToggle, color = 'bg-gray-100' }: Props = $props();
+  let { label, options, selected, onToggle, color = 'bg-gray-100', stale = [] }: Props = $props();
   let open = $state(false);
   let filterText = $state('');
 
-  let filteredOptions: string[] = $derived.by(() => {
+  // ─── V3-COMPATIBLE WRAPPER (added) ──────────────────────────────
+  // Supports both the legacy `string[]` contract (used by V2) and the
+  // new `{ value, isStale }[]` contract (used by V3).
+  //
+  // To revert to V2-only behavior:
+  //   1. Remove this `displayOptions` derivation.
+  //   2. Change the `{#each}` in the template back to:
+  //        {#each filteredOptions as opt (opt)}
+  //        ...selected.includes(opt)...
+  //   3. Revert `filteredOptions` to operate on `options` directly.
+  // ─────────────────────────────────────────────────────────────────
+  let displayOptions = $derived(
+    options.map(o => {
+      const value = typeof o === 'string' ? o : o.value;
+      const isStale = typeof o === 'string' 
+        ? stale.includes(o) 
+        : o.isStale;
+      return { value, isStale };
+    })
+  );
+
+  let filteredOptions: { value: string; isStale: boolean }[] = $derived.by(() => {
     const q = filterText.trim().toLowerCase();
-    if (!q) return options;
-    return options.filter(opt => opt.toLowerCase().includes(q));
+    if (!q) return displayOptions;
+    return displayOptions.filter(opt => opt.value.toLowerCase().includes(q));
   });
 
   let searchInput: HTMLInputElement | undefined = $state();
@@ -104,15 +126,19 @@
       {#if filteredOptions.length === 0}
         <p class="text-xs text-gray-400 italic p-2">No matches found</p>
       {:else}
-        {#each filteredOptions as opt (opt)}
-          <label class="flex items-center gap-2 p-1.5 hover:bg-gray-50 cursor-pointer text-sm rounded">
+        {#each filteredOptions as { value, isStale } (value)}
+          <label 
+            class="flex items-center gap-2 p-1.5 hover:bg-gray-50 cursor-pointer text-sm rounded transition-opacity"
+            class:opacity-50={isStale}
+            title={isStale ? 'No tracks match with current filters' : ''}
+          >
             <input
               type="checkbox"
-              checked={selected.includes(opt)}
-              onchange={() => handleToggle(opt)}
+              checked={selected.includes(value)}
+              onchange={() => handleToggle(value)}
               class="cursor-pointer"
             />
-            <span class="truncate">{opt}</span>
+            <span class="truncate">{value}</span>
           </label>
         {/each}
       {/if}

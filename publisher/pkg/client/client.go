@@ -32,8 +32,8 @@ func New() *Client {
 func NewFromEnv() *Client {
 	base := osGetenv("API_BASE_URL")
 	if base == "" {
-		// base = "https://labriideas-api.onrender.com"
-		base = "http://localhost:8080" // For local testing
+		base = "https://labriideas-api.onrender.com"
+		// base = "http://localhost:8080" // For local testing
 	}
 	return &Client{BaseURL: base}
 }

@@ -24,7 +24,7 @@
           triggers the submission.
         -->
         <form 
-          action="/search/search2/" 
+          action="/search/search3/" 
           method="get" 
           class="relative flex items-center border border-gray-300 rounded-full h-10 w-10 sm:w-32 focus-within:w-48 transition-all duration-300 overflow-hidden"
         >
