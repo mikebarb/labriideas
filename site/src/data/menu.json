@@ -1,8 +1,158 @@
 {
   "subMenus": [
     {
+      "subMenu": "Contact L'Abri",
+      "description": "L'Abri has study centres around the world. Each location is a place of community, study, and hospitality. For general enquiries or to arrange a visit, please contact the centre nearest you.",
+      "sites": [
+        {
+          "id": "australia",
+          "title": "Australian L'Abri",
+          "details": [
+            { "label": "Site", "value": "www.labri.org/australia", "url": "https://www.labri.org/australia" },
+            { "label": "Email", "value": "australia@labri.org", "url": "mailto:australia@labri.org" },
+            { "label": "Phone", "value": "International: +61 2 4658 0227 / Local: 02 4658 0227" },
+            { "label": "Mail", "value": "10 River Rd., Elderslie NSW 2570, Australia" }
+          ]
+        },
+        {
+          "id": "canada",
+          "title": "Canadian L'Abri",
+          "details": [
+            { "label": "Site", "value": "www.canadianlabri.org", "url": "https://www.canadianlabri.org" },
+            { "label": "Podcast", "value": "canadianlabri.podbean.com", "url": "https://canadianlabri.podbean.com" },
+            { "label": "Email", "value": "canadianlabri@gmail.com", "url": "mailto:canadianlabri@gmail.com" },
+            { "label": "Phone", "value": "+1 (250) 652-3355" },
+            { "label": "Mail", "value": "6485 West Saanich Road, Saanichton, BC, V8M 1W8, Canada" }
+          ]
+        },
+        {
+          "id": "english",
+          "title": "English L'Abri",
+          "details": [
+            { "label": "Site", "value": "www.englishlabri.org", "url": "https://www.englishlabri.org" },
+            { "label": "Podcast", "value": "englishlabri.podbean.com", "url": "https://englishlabri.podbean.com" },
+            { "label": "Email", "value": "bookings@englishlabri.org", "url": "mailto:bookings@englishlabri.org" },
+            { "label": "Office Phone", "value": "+44-1420-538436" },
+            { "label": "Office Fax", "value": "+44-1420-538432" },
+            { "label": "Student Phone", "value": "+44-1420-538329", "note": "(please contact students here)" },
+            { "label": "Mail", "value": "L'Abri Fellowship, The Manor House, Greatham, Liss, Hants GU33 6HF, United Kingdom"}
+          ]
+        },
+        {
+          "id": "dutch",
+          "title": "Dutch L'Abri",
+          "details": [
+            { 
+              "label": "Site", 
+              "value": "www.labri.nl", 
+              "url": "https://www.labri.nl" 
+            },
+            { 
+              "label": "Email", 
+              "value": "labri@labri.nl", 
+              "url": "mailto:labri@labri.nl" 
+            },
+            { 
+              "label": "Mail - Residential House in Eck en Weil", 
+              "value": "" 
+            },
+            { 
+              "label": "", 
+              "value": "Huize Kortenhoeve, Burgemeester Verbrughweg 40, 4024 HR Eck en Weil, The Netherlands" 
+            },
+            { 
+              "label": "Phone - Eck en Weil", 
+              "value": "+31 (0) 344 691914" 
+            },
+            { 
+              "label": "Mail - City Centre (Utrecht)", 
+              "value": " " 
+            },
+            { 
+              "label": "", 
+              "value": "L’Abri Nederland, Kromme Nieuwegracht 90, 3512 HM Utrecht, The Netherlands" 
+            },
+            { 
+              "label": "Phone - Utrecht",
+              "value": "+31 (0) 30 2316933" 
+            }
+          ]
+        },
+        {
+          "id": "korean",
+          "title": "Korean L'Abri",
+          "details": [
+            { "label": "Site", "value": "www.labri.kr", "url": "https://www.labri.kr" },
+            { "label": "Email", "value": "yangyang@labri.kr", "url": "mailto:yangyang@labri.kr" },
+            { "label": "Phone", "value": "+82 033-673-0037" },
+            { "label": "Mail", "value": "3025 Guryongnyeong Road, Seomyon, Yang Yang, Kangwondo, 25037, Korea" }
+          ]
+        },
+        {
+          "id": "massachusetts",
+          "title": "Massachusetts L'Abri",
+          "details": [
+            { "label": "Site", "value": "www.southboroughlabri.org", "url": "https://www.southboroughlabri.org" },
+            { "label": "Podcast", "value": "labrisouthborough.podbean.com", "url": "https://labrisouthborough.podbean.com" },
+            { "label": "Email", "value": "southborough@labri.org", "url": "mailto:southborough@labri.org" },
+            { "label": "Phone", "value": "+1 (508) 481-6490" },
+            { "label": "Mail", "value": "49 Lynbrook Rd., Southborough, MA, 01772, USA" }
+          ]
+        },
+        {
+          "id": "minnesota",
+          "title": "Minnesota L'Abri",
+          "details": [
+            { "label": "Site", "value": "www.labri.org/minn", "url": "https://www.labri.org/minn" },
+            { "label": "Email", "value": "rochester@labri.org", "url": "mailto:rochester@labri.org" },
+            { "label": "Phone", "value": "+1 (507) 536-0108" },
+            { "label": "Mail", "value": "1465 12th Ave NE, Rochester, MN 55906-4383, USA" }
+          ]
+        },
+        {
+          "id": "swiss",
+          "title": "Swiss L'Abri",
+          "details": [
+            { "label": "Site", "value": "swisslabri.org", "url": "https://swisslabri.org" },
+            { "label": "Email", "value": "swiss@labri.org", "url": "mailto:swiss@labri.org" },
+            { "label": "Phone", "value": "+41 24 495 2139" },
+            { "label": "Fax", "value": "+41 24 495 7647" },
+            { "label": "Mail", "value": "Chalet Bellevue, Route de Villars 89, 1884 Huemoz, Switzerland" }
+          ]
+        },
+        {
+          "id": "brazil",
+          "title": "Brazilian L'Abri",
+          "details": [
+            { "label": "Site", "value": "www.labri.org.br", "url": "https://www.labri.org.br" },
+            { "label": "Email", "value": "labri.brasil@gmail.com", "url": "mailto:labri.brasil@gmail.com" }
+          ]
+        },
+        {
+          "id": "south-africa",
+          "title": "South African L'Abri",
+          "details": [
+            { "label": "Site", "value": "labri.za.org", "url": "https://www.labri.za.org" },
+            { "label": "Email", "value": "contact@labri.za.org", "url": "mailto:contact@labri.za.org" },
+            { "label": "Phone", "value": "+27 738 676864" }
+          ]
+        }
+      ]
+    },
+    {
       "subMenu": "Playlists",
       "albums": [
+        {
+          "id": "how-to-read-the-bible",
+          "title": "How to Read the Bible",
+          "titleBgColor": "bg-red-500",
+          "description": "A collection of lectures on where the Bible came from, how to read it, and its reliability.",
+          "backgroundImage": "/images/playlists/how-to-read-the-bible-bg.avif",
+          "tracks": [
+            { "displayTitle": "The Canon of Scripture - Part One", "filename": "(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3" },
+            { "displayTitle": "The Canon of Scripture - Part Two", "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3" }
+          ]
+        },
         {
           "id": "how-to-read-the-bible",
           "title": "How to Read the Bible",

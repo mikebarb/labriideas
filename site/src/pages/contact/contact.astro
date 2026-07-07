@@ -1,6 +1,19 @@
 ---
 import LabriLayout from '../../layouts/LabriLayout.astro';
 import Hero from '../../components/Hero.svelte';
+import menuData from '../../data/menu.json';
+
+// Define the shape of each contact detail
+type ContactDetail = {
+  label: string;
+  value: string;
+  url?: string;
+  note?: string;
+};
+
+// Find the Contact L'Abri section
+const contactSection = menuData.subMenus.find(s => s.subMenu === 'Contact L\'Abri');
+const sites = contactSection?.sites ?? [];
 ---
 
 <LabriLayout title="Contact L'Abri">
@@ -15,65 +28,41 @@ import Hero from '../../components/Hero.svelte';
   <section class="max-w-3xl mx-auto px-4 pb-12 text-left">
     <h2 class="text-2xl font-bold mb-6 text-center">GET IN TOUCH</h2>
     <p class="text-gray-700 leading-relaxed text-lg">
-      L'Abri has study centres around the world. Each location is a place of community, study, 
-      and hospitality. For general enquiries or to arrange a visit, please contact the centre 
-      nearest you.
+      {contactSection?.description}
     </p>
   </section>
 
   <!-- CONTACT DETAILS GRID -->
   <section class="max-w-4xl mx-auto px-4 pb-20">
-    <!-- EDIT: replace these contact details with real information -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
     
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
-      
-      <!-- Australian L'Abri -->
+    {sites.map(site => (
       <div>
-        <h3 class="text-lg font-bold mb-2">Australian L'Abri</h3>
+        <h3 class="text-lg font-bold mb-2">{site.title}</h3>
         <p class="text-gray-700 text-sm leading-relaxed">
-          <strong>Site:</strong> <a href="https://www.labri.org/australia" class="underline decoration-1 hover:text-orange-600">www.labri.org/australia</a><br>
-          <strong>Email:</strong> <a href="mailto:australia@labri.org" class="underline decoration-1 hover:text-orange-600">australia@labri.org</a><br>
-          <strong>Phone:</strong> International: +61 2 4658 0227 / Local: 02 4658 0227<br>
-          <strong>Mail:</strong> 10 River Rd., Elderslie NSW 2570, Australia
+          {/* Apply the type here so the editor recognizes 'note' */}
+          {site.details.map((detail: ContactDetail) => (
+            <>
+                {detail.label && detail.label.trim() !== "" ? (
+                <strong>{detail.label}:</strong>
+                ) : null}
+                
+                {" "} {/* Adds a space between the label section and the value section */}
+              {detail.url ? (
+                <a href={detail.url} target="_blank" rel="noopener noreferrer" class="underline decoration-1 hover:text-orange-600">
+                  {detail.value}
+                </a>
+              ) : (
+                detail.value
+              )}
+              {/* This renders the note ONLY if it exists in the JSON */}
+              {detail.note && <span class="italic text-gray-500 ml-1">{detail.note}</span>}
+              <br />
+            </>
+          ))}
         </p>
       </div>
-
-      <!-- Canadian L'Abri -->
-      <div>
-        <h3 class="text-lg font-bold mb-2">Canadian L'Abri</h3>
-        <p class="text-gray-700 text-sm leading-relaxed">
-          <strong>Site:</strong> <a href="https://www.canadianlabri.org" class="underline decoration-1 hover:text-orange-600">www.canadianlabri.org</a><br>
-          <strong>Podcast:</strong> <a href="https://canadianlabri.podbean.com" class="underline decoration-1 hover:text-orange-600">canadianlabri.podbean.com</a><br>
-          <strong>Email:</strong> <a href="mailto:canadianlabri@gmail.com" class="underline decoration-1 hover:text-orange-600">canadianlabri@gmail.com</a><br>
-          <strong>Phone:</strong> +1 (250) 652-3355<br>
-          <strong>Mail:</strong> 6485 West Saanich Road, Saanichton, BC, V8M 1W8, Canada
-        </p>
-      </div>
-
-      <!-- English L'Abri -->
-      <div>
-        <h3 class="text-lg font-bold mb-2">English L'Abri</h3>
-        <p class="text-gray-700 text-sm leading-relaxed">
-          <strong>Site:</strong> <a href="https://www.englishlabri.org" class="underline decoration-1 hover:text-orange-600">www.englishlabri.org</a><br>
-          <strong>Podcast:</strong> <a href="https://englishlabri.podbean.com" class="underline decoration-1 hover:text-orange-600">englishlabri.podbean.com</a><br>
-          <strong>Email:</strong> <a href="mailto:bookings@englishlabri.org" class="underline decoration-1 hover:text-orange-600">bookings@englishlabri.org</a><br>
-          <strong>Phone:</strong> +44-1420-538436<br>
-          <strong>Fax:</strong> +44-1420-538432<br>
-          <strong>Student Phone:</strong> +44-1420-538329
-        </p>
-      </div>
-
-      <!-- Dutch L'Abri -->
-      <div>
-        <h3 class="text-lg font-bold mb-2">Dutch L'Abri</h3>
-        <p class="text-gray-700 text-sm leading-relaxed">
-          <strong>Site:</strong> <a href="https://www.labri.nl" class="underline decoration-1 hover:text-orange-600">www.labri.nl</a><br>
-          <strong>Email:</strong> <a href="mailto:labri@labri.nl" class="underline decoration-1 hover:text-orange-600">labri@labri.nl</a><br>
-          <strong>Phone:</strong> +31 (0) 344 691914<br>
-          <strong>Address:</strong> Huize Kortenhoeve, Burgemeester Verbrughweg 40, 4024 HR Eck en Weil, The Netherlands
-        </p>
-      </div>
-
-    </div>
-  </section>
+    ))}
+  </div>
+</section>
 </LabriLayout>
