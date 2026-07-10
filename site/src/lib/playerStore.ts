@@ -1,5 +1,7 @@
 import { writable } from 'svelte/store';
 import type { Track } from './types.ts';
+import type { DownloadedTrack } from './opfsStore.ts';
+import { isOnline as isOnlineStore, verifyConnectivity } from './connectivityStore.ts';
 
 //export const isPlaylistOpen = writable(false);
 export const trackList = writable<Track[]>([]);
@@ -24,3 +26,27 @@ export const mobileView = writable<'min' | 'max' | 'list'>('min');
 // views above (mobileView === 'list'), so this doesn't apply.
 export const desktopQueueOpen = writable(false);
 
+// ─── Connectivity State ───
+// Re-exported from the dedicated connectivity module so components
+// can import everything player-related from one place.
+export { isOnline, verifyConnectivity } from './connectivityStore.ts';
+
+// ─── Downloaded Tracks Cache (in-memory mirror of OPFS) ───
+// Components use this to reactively show "downloaded" badges
+// without hitting OPFS on every render.
+
+export const downloadedTracksStore = writable<DownloadedTrack[]>([]);
+
+// ─── Download State (for progress UI) ───
+export type DownloadStatus = 'idle' | 'downloading' | 'error';
+export const downloadStatusStore = writable<{
+  status: DownloadStatus;
+  filename: string | null;
+  progress: number;  // 0-100
+  error: string | null;
+}>({
+  status: 'idle',
+  filename: null,
+  progress: 0,
+  error: null
+});

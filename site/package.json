@@ -22,12 +22,13 @@
     "svelte": "^5.55.7",
     "svelte-dnd-action": "^0.9.70",
     "tailwindcss": "^4.3.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "workbox-window": "^7.4.1"
   },
   "allowScripts": {
     "esbuild@0.27.7": true,
     "sharp@0.34.5": true,
-    "workerd@1.20260603.1": true,
-    "esbuild@0.27.3": true
+    "workerd@1.20260708.1": true,
+    "esbuild@0.28.1": true
   }
 }

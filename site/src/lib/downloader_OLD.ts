@@ -14,17 +14,8 @@
 // Memory management:
 // - The blob URL is revoked immediately after the download is triggered.
 // - This frees the in-memory blob so the browser's garbage collector can reclaim it.
-// 
-// OPFS Integration:
-// - downloadTrack now checks OPFS FIRST. If the track is already cached locally
-//   (e.g., the user has played it before), the file is pulled from disk.
-// - This means the Download button becomes a "local export" for already-played
-//   tracks, saving bandwidth and working even on a flaky network.
-// - If we have to fetch from the network, we save the resulting blob to OPFS
-//   so subsequent downloads/plays are instant.
 
 import type { Track } from './types';
-import { getTrackBlob, saveTrackToOpfs } from './opfsStore.ts';
 
 // ---------------------------------------------------------------------------
 // Lifecycle callbacks for downloadTrack
@@ -81,66 +72,62 @@ export async function fetchPresignedUrl(
 // ---------------------------------------------------------------------------
 // Flow:
 //   1. Call onStart callback (component can show a spinner)
-//   2. CHECK OPFS: If the blob is already cached locally, use it.
-//   3. FETCH: If not in OPFS, fetch the presigned URL from the API.
-//   4. CACHE: Save the fetched blob to OPFS for next time.
-//   5. TRIGGER: Create a temporary <a> element with the download attribute.
-//   6. Click it to trigger the browser's download manager.
-//   7. Revoke the blob URL to free memory.
-//   8. Call onComplete or onError callback
+//   2. Fetch the presigned URL from the API
+//   3. Use XMLHttpRequest to download the file as a blob
+//   4. Create a temporary <a> element with the download attribute
+//   5. Click it to trigger the browser's download manager
+//   6. Revoke the blob URL to free memory
+//   7. Call onComplete or onError callback
 //
-// Why OPFS first?
-//   - If the user has already played the track, the file is on their disk.
-//   - The Download button becomes an instant, zero-bandwidth "export to OS".
-//   - The app degrades gracefully on bad networks.
+// Why XHR instead of fetch():
+//   - We use XHR for compatibility with the blob response type.
+//   - fetch() + blob() also works, but XHR is the established pattern.
 //
-// CHANGED: Now async. Was previously a sync void return with XHR.
-export async function downloadTrack(
+// CHANGED: This used to live in Player.svelte as `downloadTrack(track)`. 
+// It was moved here so any component can use it. The function now takes 
+// apiBase as a parameter (previously it was available via closure in Player).
+export function downloadTrack(
   track: Track,
   apiBase: string,
   callbacks: DownloadCallbacks = {}
-): Promise<void> {
+): void {
   callbacks.onStart?.();
 
-  try {
-    let blob: Blob | null = null;
+  fetchPresignedUrl(track.filename, apiBase)
+    .then((ticket) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', ticket.url, true);
+      xhr.responseType = 'blob';
 
-    // 1. TRY OPFS FIRST
-    if (track.hash) {
-      blob = await getTrackBlob(track.hash);
-    }
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          const blob = xhr.response;
+          const blobUrl = URL.createObjectURL(blob);
 
-    // 2. IF NOT IN OPFS, FETCH FROM NETWORK AND CACHE IT
-    if (!blob) {
-      const ticket = await fetchPresignedUrl(track.filename, apiBase);
-      const response = await fetch(ticket.url);
-      if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
-      blob = await response.blob();
-      
-      // Save to OPFS for the next download/play
-      if (track.hash) {
-        try {
-          await saveTrackToOpfs(track.hash, blob);
-        } catch (cacheErr) {
-          // If caching fails, we still proceed with the download.
-          console.warn('[Downloader] OPFS cache failed, proceeding anyway:', cacheErr);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = track.filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
+
+          callbacks.onComplete?.();
+        } else {
+          const err = new Error(`Download failed: ${xhr.status}`);
+          callbacks.onError?.(err);
         }
-      }
-    }
+      };
 
-    // 3. TRIGGER BROWSER DOWNLOAD
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = track.filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(blobUrl);
+      xhr.onerror = () => {
+        const err = new Error('Network error during download');
+        callbacks.onError?.(err);
+      };
 
-    callbacks.onComplete?.();
-  } catch (err) {
-    const errObj = err instanceof Error ? err : new Error(String(err));
-    callbacks.onError?.(errObj);
-  }
+      xhr.send();
+    })
+    .catch((err) => {
+      const errObj = err instanceof Error ? err : new Error(String(err));
+      callbacks.onError?.(errObj);
+    });
 }

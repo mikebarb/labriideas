@@ -13,7 +13,7 @@
   // Now, we call the library function directly. This is cleaner because:
   //   - QueueDrawer no longer needs to know about Player's internal API.
   //   - The same download logic can be used in the search results.
-  import { downloadTrack } from '../lib/downloader.ts';
+  import { downloadTrack } from '../lib/downloader_OLD.ts';
 
   interface Props {
     apiBase: string;  // CHANGED: Added to enable downloads

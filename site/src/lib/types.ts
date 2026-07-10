@@ -23,11 +23,14 @@ export interface Track {
   };
   playbackRate?: number;        // <-- ADD: optional, defaults to 1.0
   // Mutable runtime state (populated by Player)
-  position?: number;      // last known playback position in seconds
-  duration?: number;      // track duration in seconds (0 until metadata loads)
-  url?: string;           // presigned S3 URL ('' until first load)
-  urlExpiresAt?: number;  // timestamp when URL expires (0 until first load)
+  position?: number;        // last known playback position in seconds
+  duration?: number;        // track duration in seconds (0 until metadata loads)
+  url?: string;             // presigned S3 URL ('' until first load)
+  urlExpiresAt?: number;    // timestamp when URL expires (0 until first load)
+  isDownloaded?: boolean;   // true if the track is cached in OPFS
+  isActive?: boolean;       // True if this is the track that was playing
 }
+
 // Previous value
 //metadata?: Record<string, any>;
 

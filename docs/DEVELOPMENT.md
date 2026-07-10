@@ -42,7 +42,7 @@ Ensure you have installed:
 2.  Install dependencies: `npm install`.
 3.  Install library to calculate MD5 in the browser: `npm install spark-md5`.
 3.  Install library manage drag and drop in the browser: `npm install svelte-dnd-action`.
-
+4.  To allow coding the PWA capability: `npm install workbox-window`.
 
 ## 4. Operational Commands
 Open two terminal instances within VS Code:

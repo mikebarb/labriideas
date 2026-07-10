@@ -11,7 +11,9 @@
     currentTimeStore, durationStore
   } from '../lib/playerStore.js';
   import type { Track } from '../lib/types.ts';
-  import { fetchPresignedUrl } from '../lib/downloader.ts';
+  import { fetchPresignedUrl } from '../lib/downloader_OLD.ts';
+  import { removeTrackFromOpfs, getTrackBlob } from '../lib/opfsStore';
+    import type { unknown } from 'astro:schema';
 
   // ─── Props ───
   interface Props {
@@ -25,6 +27,7 @@
   // The tracks array is the source of truth. Each track holds its own
   // runtime state (position, duration, url, urlExpiresAt).
   let tracks: Track[] = $state([]);
+  let isQueueLoaded = $state(false); // Guards against clearing localStorage on the first mount
   let currentTrack: Track | null = $state(null);
   let status = $state<'idle' | 'loading' | 'playing' | 'paused' | 'buffering' | 'error'>('idle');
   let currentTime = $state(0);
@@ -75,7 +78,37 @@
    */
   function commitQueue(): void {
     trackList.set(tracks);
+    if (isQueueLoaded) {
+      localStorage.setItem('labri_queue', JSON.stringify(tracks));
+    }
   }
+
+  // ─── Reactive Active Track Recovery ───
+  // This runs whenever `tracks` changes. It handles BOTH cases:
+  //   1. Fresh page load (onMount populates tracks from localStorage)
+  //   2. Persisted page navigation (transition:persist keeps component alive,
+  //      so onMount doesn't re-run, but the store still updates tracks)
+  // If `currentTrack` is null but the queue has an `isActive` track,
+  // we restore it. This makes the player "self-healing" across all 
+  // navigation patterns.
+  $effect(() => {
+    if (!currentTrack && tracks.length > 0) {
+      const activeTrack = $state.snapshot(tracks).find(t => t.isActive);
+      if (activeTrack) {
+        currentTrack = activeTrack;
+        duration = activeTrack.duration ?? 0;
+        currentTime = activeTrack.position ?? 0;
+        console.log(`[Player] Effect restored active track: ${activeTrack.title ?? activeTrack.filename}`);
+        
+        if (audioElement) {
+          loadTrack(activeTrack).catch(err => {
+            console.warn(`[Player] Could not preload ${activeTrack.filename}:`, err);
+          });
+        }
+      }
+    }
+  });
+
 
   // ─── Derived ───
   let progress = $derived(
@@ -266,7 +299,22 @@
         currentTime = savedPos;
       }
       
+         // Clear the flag on any previously active track
+      if (currentTrack && currentTrack.filename !== track.filename) {
+        const oldIdx = tracks.findIndex(t => t.filename === currentTrack!.filename);
+        if (oldIdx !== -1) {
+          tracks[oldIdx] = { ...tracks[oldIdx], isActive: false };
+        }
+      }
+
+      // Set the flag on the newly active track
+      const activeIdx = tracks.findIndex(t => t.filename === track.filename);
+      if (activeIdx !== -1) {
+        tracks[activeIdx] = { ...tracks[activeIdx], isActive: true };
+      }
+
       currentTrack = track;
+
       await audioElement.play();
       status = 'playing';
     } catch (err: any) {
@@ -298,6 +346,21 @@
   }
 
   function removeFromQueue(filename: string) {
+    // Capture the track before it's removed, so we can wipe OPFS ───
+    const trackToRemove = tracks.find(t => t.filename === filename);
+    
+    // If it was the currently playing track and loaded from OPFS, free the memory ───
+    if (currentTrack?.filename === filename && audioElement && audioElement.src.startsWith('blob:')) {
+      URL.revokeObjectURL(audioElement.src);
+    }
+    
+    // Purge the audio file from the OPFS hard drive ───
+    if (trackToRemove?.hash) {
+      removeTrackFromOpfs(trackToRemove.hash).catch((err: unknown) => {
+        console.warn(`[OPFS] Failed to remove ${trackToRemove.hash}:`, err);
+      });
+    }
+
     const wasCurrent = currentTrack?.filename === filename;
     // Filter out the track — its position, duration, url all go with it
     tracks = tracks.filter(t => t.filename !== filename);
@@ -483,6 +546,53 @@
 
   // ─── Lifecycle ───
   onMount(() => {
+    // The "Self-Healing" OnMount:
+    // 1. Restore Queue from localStorage
+    // 2. Restore the Active Track (NEW)
+    // 3. Bind Audio Element Listeners
+    // 4. Bind External Event Listeners
+    const savedQueue = localStorage.getItem('labri_queue');
+    if (savedQueue) {
+      try {
+        const parsed = JSON.parse(savedQueue);
+        if (Array.isArray(parsed)) {
+          tracks = parsed;
+          const unwrappedForLog = $state.snapshot(tracks);
+          console.log('[Player] Recovered from localStorage:', unwrappedForLog);
+        }
+      } catch (e) {
+        console.error("[Player] Failed to restore queue from localStorage", e);
+      }
+    }
+    isQueueLoaded = true;
+    commitQueue(); // Sync the store so QueueDrawer sees the restored list immediately
+    
+    // ─── Restore the Active Track ───
+    // We use $state.snapshot() to unwrap the reactive Proxy. 
+    // The native HTML <audio> element and the OPFS API require 
+    // plain, unwrapped JavaScript objects to work reliably.
+    //const unwrappedTracks = $state.snapshot(tracks);
+    //const activeTrack = unwrappedTracks.find(t => t.isActive);
+
+    //console.log('[Player] Recovery process started. Active track found:', activeTrack);
+
+    //if (activeTrack) {
+      // Guard against undefined duration/position to prevent audio errors
+    //  currentTrack = activeTrack;
+    //  duration = activeTrack.duration ?? 0;
+    // currentTime = activeTrack.position ?? 0;
+      
+    //  console.log(`[Player] Restored active track: ${activeTrack.title ?? activeTrack.filename}`);
+      
+      // Preload the audio (silently fail if offline/no cache)
+    //  if (audioElement) {
+    //    loadTrack(activeTrack).catch(err => {
+    //      console.warn(`[Player] Could not preload ${activeTrack.filename}:`, err);
+    //    });
+    //  }
+    //}
+
+   
     if (audioElement) {
       audioElement.volume = volume;
 
