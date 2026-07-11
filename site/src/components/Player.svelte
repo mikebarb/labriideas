@@ -247,6 +247,18 @@
         if (audioElement && isFinite(audioElement.duration) && audioElement.duration > 0) {
           track.duration = audioElement.duration;
           duration = audioElement.duration;
+           // ─── NEW: Seek to the saved position NOW that we know the duration ───
+          // On mobile browsers, setting currentTime BEFORE metadata loads 
+          // is silently ignored. We have to wait for the duration to be 
+          // known before the seek will actually take effect.
+          if (track.position && track.position > 0 && isFinite(track.position)) {
+            // Clamp the position to the actual duration. If the saved position 
+            // is 14:32 but the audio is only 14:30 long, don't crash.
+            const safePosition = Math.min(track.position, audioElement.duration - 0.5);
+            audioElement.currentTime = safePosition;
+            currentTime = safePosition;
+            console.log(`[Player] Resumed at ${safePosition.toFixed(2)}s`);
+          }
         }
         audioElement?.removeEventListener('loadedmetadata', onMeta);
         resolve();

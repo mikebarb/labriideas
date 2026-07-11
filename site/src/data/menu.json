@@ -154,17 +154,6 @@
           ]
         },
         {
-          "id": "how-to-read-the-bible",
-          "title": "How to Read the Bible",
-          "titleBgColor": "bg-red-500",
-          "description": "A collection of lectures on where the Bible came from, how to read it, and its reliability.",
-          "backgroundImage": "/images/playlists/how-to-read-the-bible-bg.avif",
-          "tracks": [
-            { "displayTitle": "The Canon of Scripture - Part One", "filename": "(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3" },
-            { "displayTitle": "The Canon of Scripture - Part Two", "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3" }
-          ]
-        },
-        {
           "id": "difficult-questions",
           "title": "Difficult Questions in Theology",
           "titleBgColor": "bg-green-500",

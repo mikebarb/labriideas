@@ -20,7 +20,7 @@
       <span class="text-sm font-bold uppercase tracking-wider">Playlists</span>
     </a>
 
-    <a href="/search" class="flex flex-col items-center hover:text-orange-600 group">
+    <a href="/search/search3/" class="flex flex-col items-center hover:text-orange-600 group">
       <Search class="w-10 h-10 mb-3 text-gray-800 group-hover:text-orange-600" />
       <span class="text-sm font-bold uppercase tracking-wider">Search</span>
     </a>
