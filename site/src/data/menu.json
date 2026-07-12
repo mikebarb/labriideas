@@ -149,8 +149,18 @@
           "description": "A collection of lectures on where the Bible came from, how to read it, and its reliability.",
           "backgroundImage": "/images/playlists/how-to-read-the-bible-bg.avif",
           "tracks": [
-            { "displayTitle": "The Canon of Scripture - Part One", "filename": "(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3" },
-            { "displayTitle": "The Canon of Scripture - Part Two", "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3" }
+            { "displayTitle": "The Canon of Scripture part 1: The Biblical Canon", "filename": "The Canon of Scripture part 1_ The Biblical Canon - Richard Bradford___1791.mp3" },
+            { "displayTitle": "The Canon of Scripture part 2: Biblical Authority", "filename": "The Canon of Scripture part 2_ Biblical Authority - Richard Bradford___1792.mp3" },
+            { "displayTitle": "The Canon of Scripture part 3: Biblical Inerrancy", "filename": "The Canon of Scripture part 3_ Biblical Inerrancy - Richard Bradford___1793.mp3" },
+            { "displayTitle": "But Who Do They Say That I AM? - Considering Jesus in the \"Gospels\" That Did not make it into the New Testament", "filename": "__But Who Do They Say That I AM^__ - Considering Jesus in the __Gospels__ That Did not make it into the New Testament - Joshua Chestnut___224.mp3" },
+            { "displayTitle": "Authority & Canonization of the New Testament", "filename": "Authority & Canonization of the New Testament - Jerram Barrs___154.mp3" },
+            { "displayTitle": "On the Origins of the Gospels", "filename": "On the Origins of the Gospels - Dirk Jongkind___1328.mp3" },
+            { "displayTitle": "How We Got the Bible", "filename": "How We Got the Bible - Andy Patton___834.mp3" },
+            { "displayTitle": "What is the Bible?", "filename": "What is the Bible^ - Phillip Johnston___2295.mp3" },
+            { "displayTitle": "The Authority of the Bible", "filename": "The authority of the bible - Andrew Fellows.mp3"},
+            { "displayTitle": "The Bible as Inerrant Revelation", "filename": "The Bible as Inerrant Revelation - Jerram Barrs___1749.mp3" },
+            { "displayTitle": "How to Read the Story of Jesus in Every Part of the Bible: An Introduction to Biblical Theology", "filename": "How to Read the Story of Jesus in Every Part of the Bible_ An Introduction to Biblical Theology - Andy Patton___831.mp3" },
+            { "displayTitle": "How To Read The Bible", "filename": "How To Read The Bible - Jerram Barrs___830.mp3" }
           ]
         },
         {
@@ -160,9 +170,17 @@
           "description": "Are all religions the same? Is God a construction? Are there any certainties? Here is a collection of L'Abri lectures on the most difficult questions of the day.",
           "backgroundImage": "/images/playlists/difficult-questions-bg.avif",
           "tracks": [
-            { "displayTitle": "Is God Angry", "filename": "Are We Better Than God^ part 3_ Is God Angry^ - Wade Bradshaw___130.mp3" },
-            { "displayTitle": "An Historical Defense of the Exodus - Part 1", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
-            { "displayTitle": "An Historical Defense of the Exodus - Part 2", "filename": "An Historical Defense of the Exodus & Conquest (Part 2) - Sandra Richter___99.mp3" }
+            { "displayTitle": "Is God Angry?", "filename": "Is God Angry^ - Wade Bradshaw___961.mp3" },
+            { "displayTitle": "An Historical Defense of the Exodus & Conquest (Part 1)", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
+            { "displayTitle": "Horrible Histories: Is The Destruction Of The Canaanites A Moral Problem?", "filename": "Horrible Histories_ Is The Destruction Of The Canaanites A Moral Problem^ - Stephen Lloyd___793.mp3" },
+            { "displayTitle": "Did Yahweh Evolve", "filename": "Did Yahweh Evolve^ - Sandra Richter.mp3" },
+            { "displayTitle": "Knowing the Inaudible, Invisible, Untouchable God", "filename": "Knowing the Inaudible, Invisible, Untouchable God - Richard Winter___1092.mp3" },
+            { "displayTitle": "What is the Biblical Perspective on Slavery?", "filename": "What is the Biblical Perspective on Slavery^ - Dick Keyes___2296.mp3" },
+            { "displayTitle": "Does God Change His Mind?", "filename": "Does God Change His Mind^ - Dick Keyes___515.mp3" },
+            { "displayTitle": "The Sovereignty of God & the Responsibility of Human Beings", "filename": "The Sovereignty of God & the Responsibility of Human Beings - Dick Keyes___2113.mp3" },
+            { "displayTitle": "Am I only a Christian because my Parents were?", "filename": "Am I only a Christian because my Parents were^ - Edith Reitsema___89.mp3" },
+            { "displayTitle": "Is God a Construction?", "filename": "Is God a Construction^ - Dave Friedrich___958.mp3" },
+            { "displayTitle": "Who's On Top Of The Mountain - Are There Many Ways To God?", "filename": "Who__s On Top Of The Mountain - Are There Many Ways To God^ - Wade Bradshaw___2341.mp3" }
           ]
         },
         {
@@ -172,9 +190,14 @@
           "description": "For many today, the Bible's view of gender is a hot-button issue. Collected here are lectures on some of the most controversial passages on the genders as well as an overall framework for answering questions that often come up.",
           "backgroundImage": "/images/playlists/men-women-bible-bg.avif",
           "tracks": [
-            { "displayTitle": "Is Go                         d Angry", "filename": "Are We Better Than God^ part 3_ Is God Angry^ - Wade Bradshaw___130.mp3" },
-            { "displayTitle": "An Historical Defense of the Exodus - Part 1", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
-            { "displayTitle": "An Historical Defense of the Exodus - Part 2", "filename": "An Historical Defense of the Exodus & Conquest (Part 2) - Sandra Richter___99.mp3" }
+            { "displayTitle": "Man, Woman & God: Church & Society - part 1", "filename": "Man, Woman & God_ Church & Society - part 1 - Jerram Barrs___1200.mp3" },
+            { "displayTitle": "Man, Woman & God: Church & Society - part 2", "filename": "Man, Woman & God_ Church & Society - part 2 - Jerram Barrs___1201.mp3" },
+            { "displayTitle": "Man, Woman & God: Church & Society - part 3", "filename": "Man, Woman & God_ Church & Society - part 3 - Jerram Barrs___1202.mp3" },
+            { "displayTitle": "Men & Women In The Bible: Controversial Texts", "filename": "Men & Women In The Bible_ Controversial Texts - Mardi Keyes___1229.mp3" },
+            { "displayTitle": "Biblical Overview of Women in Leadership", "filename": "Biblical Overview of Women in Leadership - Mardi Keyes___197.mp3" },
+            { "displayTitle": "The Bible's View of Women", "filename": "The Bible__s View of Women - Jerram Barrs___1762.mp3" },
+            { "displayTitle": "Sexual Freedom", "filename": "Sexual Freedom - Mardi Keyes___1616.mp3" },
+            { "displayTitle": "Bodies with Meaning_ Christians & Sex in the First & the Twenty-first Century", "filename": "Bodies with Meaning_ Christians & Sex in the First & the Twenty-first Century - Phillip Johnston___209.mp3" }
           ]
         },
         {
@@ -184,10 +207,15 @@
           "description": "What does it mean to be alone? To be with others? To be a friend? To be married? These lectures talk about the many questions that come up as we dance the steps of relationship.",
           "backgroundImage": "/images/playlists/navigating-relationships-bg.avif",
           "tracks": [
-            { "displayTitle": "Is God Angry", "filename": "Are We Better Than God^ part 3_ Is God Angry^ - Wade Bradshaw___130.mp3" },
-            { "displayTitle": "An Historical Defense of the Exodus - Part 1", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
-            { "displayTitle": "An Historical Defense of the Exodus - Part 2", "filename": "An Historical Defense of the Exodus & Conquest (Part 2) - Sandra Richter___99.mp3" }
-          ]
+            { "displayTitle": "Marriage Redeemed", "filename": "Marriage Redeemed - Mardi Keyes___1214.mp3" },
+            { "displayTitle": "Subverting Modernity: How Community Dismantles Practical Atheism", "filename": "Subverting Modernity_ How Community Dismantles Practical Atheism - Jeff Adams___1675.mp3" },
+            { "displayTitle": "Making Room For One Another: Practising Active Passivity In Our Relationships", "filename": "Making Room For One Another_ Practising Active Passivity In Our Relationships - Jim Paul___1197.mp3" },
+            { "displayTitle": "The Ethics of Divorce & Remarriage", "filename": "The Ethics of Divorce & Remarriage - Dick Keyes___1891.mp3" },
+            { "displayTitle": "Moving Out & Moving On: Why It's Important to Run Away from Home", "filename": "Moving Out & Moving On_ Why It__s Important to Run Away from Home - Mary Frances Giles___1265.mp3" },
+            { "displayTitle": "Love for Humanity & Love for Humans", "filename": "It__s People I Can__t Stand_ Love for Humanity & Love for Humans - Ben Keyes___985.mp3" },
+            { "displayTitle": "Reflections on the Contemporary Search for Community", "filename": "Reflections on the Contemporary Search for Community - Jock McGregor___1511.mp3" },
+            { "displayTitle": "In Christ, Alone? Recovering a Christian Vision for the Single Life", "filename": "In Christ, Alone^ Recovering a Christian Vision for the Single Life - Phillip Johnston___888.mp3" },
+            { "displayTitle": "Singleness", "filename": "Singleness & Sexuality - Jerram Barrs___1629.mp3" }          ]
         },
         {
           "id": "literature-poetry",
@@ -196,9 +224,18 @@
           "description": "If Christ is Lord of all of life, the domain of the written word should be the concern of Christ's followers. Here is a collection of lectures on Flannery O'Connor, T. S. Eliot, Tolkien, Rowling, and more.",
           "backgroundImage": "/images/playlists/litature-bg.avif",
           "tracks": [
-            { "displayTitle": "Is God Angry", "filename": "Are We Better Than God^ part 3_ Is God Angry^ - Wade Bradshaw___130.mp3" },
-            { "displayTitle": "An Historical Defense of the Exodus - Part 1", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
-            { "displayTitle": "An Historical Defense of the Exodus - Part 2", "filename": "An Historical Defense of the Exodus & Conquest (Part 2) - Sandra Richter___99.mp3" }
+            { "displayTitle": "Tolkien, Grace & \"The Lord of the Rings\"", "filename": "Tolkien, Grace & __The Lord of the Rings__ - Jerram Barrs___2164.mp3" },
+            { "displayTitle": "T.S. Eliot's \"Four Quartets\"", "filename": "T.S. Eliot__s __Four Quartets__ - Tom Howard___1688.mp3" },
+            { "displayTitle": "Behind the Scenes: The Life & Letters of Dorothy L Sayers", "filename": "Behind the Scenes_ The Life & Letters of Dorothy L Sayers - Dawn Merz___174.mp3" },
+            { "displayTitle": "How People Change: The Transformation Of Character In C.S. Lewis' \"the Chronicles Of Narnia\"", "filename": "How People Change_ The Transformation Of Character In C.S. Lewis__ __the Chronicles Of Narnia__ - Gavin McGrath___819.mp3" },
+            { "displayTitle": "Comic. Tragic. Brutal. The Life & Writings of Flannery O'Connor", "filename": "Comic. Tragic. Brutal. The Life & Writings of Flannery O__Connor - Clarke Scheibe___340.mp3" },
+            { "displayTitle": "Poetry & Prayer", "filename": "Poetry & Prayer - Anna Friedrich___1391.mp3" },
+            { "displayTitle": "Jane Austen", "filename": "Jane Austen - Jerram Barrs___992.mp3" },
+            { "displayTitle": "Echoes of Eden: Looking at Tolkien & Lewis", "filename": "Echoes of Eden_ Looking at Tolkien & Lewis - Jerram Barrs___533.mp3" },
+            { "displayTitle": "Street Ballads - A reflection on Marilynne Robinson's Gilead Trilogy", "filename": "Street Ballads - A reflection on Marilynne Robinson__s Gilead Trilogy - Andrew Jones___1670.mp3" },
+            { "displayTitle": "Order, Chaos, Poetry & God", "filename": "Order, Chaos, Poetry & God - Luci Shaw___1335.mp3" },
+            { "displayTitle": "World of Harry Potter & the Evangelical Muggles", "filename": "World of Harry Potter & the Evangelical Muggles - Jerram Barrs___2376.mp3" },
+            { "displayTitle": "An Introduction to George MacDonald", "filename": "An Introduction to George MacDonald - Olga Lukmanova___102.mp3" }
           ]
         },
         {
@@ -216,43 +253,42 @@
       "hierarchy": {
         "Theology & Worldview": {
           "L'Abri": [
-            { "subtopic": "Introduction to L'Abri", "altName": "Introduction", "category": "Christianity and Film" },
-            { "subtopic": "Core Ideas of L'Abri", "altName": "Core Ideas", "category": "labri" }
+            { "subtopic": "Introduction to L'Abri", "altName": "Introduction", "category": "Introduction to L'Abri" },
+            { "subtopic": "Core Ideas of L'Abri", "altName": "Core Ideas", "category": "The Core Ideas of L'Abri" }
           ],
           "Doctrine": [
-            { "subtopic": "Big Questions in Theology", "altName": "Big Questions", "category": "doctrine" },
-            { "subtopic": "Jesus", "altName": "", "category": "doctrine" },
-            { "subtopic": "The Holy Spirit", "altName": "", "category": "doctrine" },
-            { "subtopic": "Sin and Evil", "altName": "", "category": "doctrine" },
-            { "subtopic": "Being Human", "altName": "", "category": "doctrine" },
-            { "subtopic": "The Law", "altName": "", "category": "doctrine" },
-            { "subtopic": "Prayer and Worship", "altName": "Prayer & Worship", "category": "doctrine" },
-            { "subtopic": "Prophecy and the Future", "altName": "Prophecy & Future", "category": "doctrine" },
-            { "subtopic": "Church and Sacraments", "altName": "Church & Sacraments", "category": "doctrine" },
-            { "subtopic": "Spiritual Growth", "altName": "", "category": "doctrine" }
+            { "subtopic": "Big Questions in Theology", "altName": "Big Questions", "category": "Important Questions in Christian Doctrine" },
+            { "subtopic": "Jesus", "altName": "", "category": "The Life and Work of Jesus" },
+            { "subtopic": "The Holy Spirit", "altName": "", "category": "The Work of the Holy Spirit" },
+            { "subtopic": "Sin and Evil", "altName": "", "category": "Sin, Evil, and the Fall" },
+            { "subtopic": "Being Human", "altName": "", "category": "What Does It Mean To Be Human?" },
+            { "subtopic": "The Law", "altName": "", "category": "Thinking About God's Law" },
+            { "subtopic": "Prayer and Worship", "altName": "Prayer & Worship", "category": "Prayer and Worship" },
+            { "subtopic": "Prophecy and the Future", "altName": "Prophecy & Future", "category": "Important Questions in Christian Doctrine" },
+            { "subtopic": "Church and Sacraments", "altName": "Church & Sacraments", "category": "The Church and the Sacraments" },
+            { "subtopic": "Spiritual Growth", "altName": "", "category": "Christian Spirituality and Growth" }
           ],
           "Bible": [
-            { "subtopic": "New Testament", "altName": "", "category": "bible" },
-            { "subtopic": "Old Testament", "altName": "", "category": "bible" },
-            { "subtopic": "Interpretation", "altName": "", "category": "bible" },
-            { "subtopic": "Inspiration", "altName": "", "category": "bible" },
-            { "subtopic": "Canon", "altName": "", "category": "bible" }
+            { "subtopic": "New Testament", "altName": "", "category": "The Bible - Exploring the New Testament" },
+            { "subtopic": "Old Testament", "altName": "", "category": "The Bible - Exploring the Old Testament" },
+            { "subtopic": "Interpretation", "altName": "", "category": "The Bible - How to Interpret Scripture" },
+            { "subtopic": "Inspiration", "altName": "", "category": "The Bible - Inspiration and Authority" },
+            { "subtopic": "Canon", "altName": "", "category": "The Bible - The Canon" }
           ],
           "Apologetics": [
-            { "subtopic": "Exploring Christianity", "altName": "", "category": "apologetics" },
-            { "subtopic": "Sharing Your Faith", "altName": "", "category": "apologetics" },
-            { "subtopic": "Modern Questions, Ancient Answers", "altName": "Common Questions", "category": "apologetics" }
+            { "subtopic": "Exploring Christianity", "altName": "", "category": "Apologetics: Exploring the Truth of Christianity" },
+            { "subtopic": "Sharing Your Faith", "altName": "", "category": "How to Share Your Faith" },
+            { "subtopic": "Modern Questions, Ancient Answers", "altName": "Common Questions", "category": "Ancient Answers to Modern Questions" }
           ],
           "History": [
-            { "subtopic": "Church History", "altName": "", "category": "history" },
-            { "subtopic": "Catholicism", "altName": "", "category": "history" },
-            { "subtopic": "Liberalism", "altName": "", "category": "history" }
+            { "subtopic": "Church History", "altName": "", "category": "History of Christianity" },
+            { "subtopic": "Catholicism", "altName": "", "category": "Catholicism" },
+            { "subtopic": "Liberalism", "altName": "", "category": "Christianity and Liberalism" }
           ],
           "Other": [
-            { "subtopic": "Ethics and Morality", "altName": "Ethics & Morality", "category": "other" },
-            { "subtopic": "Eastern Religion and the New Age", "altName": "Eastern Religion", "category": "other" },
-            { "subtopic": "Islam", "altName": "", "category": "other" },
-            { "subtopic": "Cults ad the Occult", "altName": "Cults & Occult", "category": "other" }
+            { "subtopic": "Ethics and Morality", "altName": "Ethics & Morality", "category": "Apologetics: Exploring the Truth of Christianity" },
+            { "subtopic": "Eastern Religion and the New Age", "altName": "Eastern Religion", "category": "Eastern Religion and the New Age" },
+            { "subtopic": "Cults ad the Occult", "altName": "Cults & Occult", "category": "Sects, Cults, and the Occult" }
           ]
         },
         "Culture and Society": {
@@ -342,7 +378,7 @@
         "titleBgColor": "bg-orange-600",
         "speaker": "Jim Paul",
         "image": "/images/featured/jim_paul.avif",
-        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+        "filename": "What is a __Personal Relationship with God__^ - Jim Paul___2273.mp3"
       },
       {
         "id": "2",
@@ -350,7 +386,7 @@
         "titleBgColor": "bg-lime-700",
         "speaker": "Andrew Fellows",
         "image": "/images/featured/andrew_fellows.avif",
-        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+        "filename": "Community as Subversion of Modernity - Andrew Fellows___354.mp3"
       },
       {
         "id": "3",
@@ -358,7 +394,7 @@
         "titleBgColor": "bg-sky-400",
         "speaker": "Andy Patton",
         "image": "/images/featured/andy_patton.avif",
-        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+        "filename": "How We Got the Bible - Andy Patton___834.mp3"
       },
       {
         "id": "4",
@@ -366,7 +402,7 @@
         "titleBgColor": "bg-orange-400",
         "speaker": "John Hodges",
         "image": "/images/featured/john_hodges.avif",
-        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+        "filename": "Les Miserables - John Hodges___1128.mp3"
       },
       {
         "id": "5",
@@ -374,7 +410,7 @@
         "titleBgColor": "bg-amber-300",
         "speaker": "Josuha Chestnut",
         "image": "/images/featured/josuha_chestnut.avif",
-        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+        "filename": "Imagination, Habit & Hope in a Pornified Society - Joshua Chestnut___882.mp3"
       },
       {
         "id": "6",
@@ -382,7 +418,7 @@
         "titleBgColor": "bg-lime-700",
         "speaker": "Sandra Richter",
         "image": "/images/featured/sandra_richter.avif",
-        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+        "filename": "Did Yahweh Evolve^ - Sandra Richter.mp3"
       },
       {
         "id": "7",
@@ -390,23 +426,23 @@
         "titleBgColor": "bg-violet-900",
         "speaker": "Nancy Pearcey",
         "image": "/images/featured/nancy_pearcey.avif",
-        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+        "filename": "On Saving Leonardo From the Clutches of Secularism - Nancy Pearcey___1326.mp3"
       },
       {
         "id": "8",
-        "title": "22 Things I Have Learned In Life",
+        "title": "Twenty-Two Things I Have Learned in Life",
         "titleBgColor": "bg-sky-400",
         "speaker": "Donald Drew",
         "image": "/images/featured/donald_drew.avif",
-        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+        "filename": "Twenty-Two Things I Have Learned in Life - Donald Drew___2212.mp3"
       },
       {
         "id": "9",
-        "title": "Compreehensive Spirituality",
+        "title": "Comprehensive Spirituality",
         "titleBgColor": "bg-emerald-700",
         "speaker": "Ellis Potter",
         "image": "/images/featured/ellis_potter.avif",
-        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+        "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3"
       },
       {
         "id": "10",
@@ -414,7 +450,7 @@
         "titleBgColor": "bg-orange-700",
         "speaker": "Dirk Jongkind",
         "image": "/images/featured/dirk_jongkind.avif",
-        "filename": "20th Century American Novel (Part 1a) - Francis Schaeffer___7.mp3"
+        "filename": "On the Origins of the Gospels - Dirk Jongkind___1328.mp3"
       }
     ]
   },
@@ -430,12 +466,17 @@
           {
             "id": "francis-1",
             "title": "Two Contents, Two Realities",
-            "filename": "(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3"
+            "filename": "Loss Of Absolutes part 2_ What Next^ What Needed^ Two Contents, two Realities - Francis Schaeffer___1182.mp3"
           },
           {
             "id": "francis-2",
+            "title": "The Question of Apologetics",
+            "filename": "The Question of Apologetics - Francis Schaeffer___2084.mp3"
+          },
+          {
+            "id": "francis-3",
             "title": "Art in the Bible",
-            "filename": "Art_in_the_Bible___12.mp3"
+            "filename": "Art In The Bible - Francis Schaeffer___141.mp3"
           }
         ],
         "moreLink": "x"
@@ -447,12 +488,12 @@
           {
             "id": "edith-1",
             "title": "True Spirituality",
-            "filename": "(Not) Growing Up With Wes Anderson - Danny Burbeck___0.mp3"
+            "filename": "True Spirituality - Edith Schaeffer___2190.mp3"
           },
           {
             "id": "edith-2",
             "title": "Study on Prayer",
-            "filename": "Study_on_Prayer___15.mp3"
+            "filename": "Study on Prayer - Edith Schaeffer___1673.mp3"
           }
         ],
         "moreLink": "x"

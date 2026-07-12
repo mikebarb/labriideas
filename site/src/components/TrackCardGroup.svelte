@@ -11,6 +11,9 @@
 
   let { items, children, apiBase, isAdmin = false }: Props = $props();
 
+  // Filter out null entries so we don't blow up on `item.filename`
+  const safeItems = $derived(items.filter((item): item is any => item != null));
+
   // Single-expanded state: only one card can be open at a time
   let expandedFilename: string | null = $state(null);
 
@@ -20,7 +23,7 @@
 </script>
 
 <div class="space-y-2">
-  {#each items as item (item.filename)}
+  {#each safeItems as item (item.filename)}
     <TrackCard
       {item}
       expanded={expandedFilename === item.filename}
