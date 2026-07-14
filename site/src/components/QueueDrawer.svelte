@@ -13,7 +13,7 @@
   // Now, we call the library function directly. This is cleaner because:
   //   - QueueDrawer no longer needs to know about Player's internal API.
   //   - The same download logic can be used in the search results.
-  import { downloadTrack } from '../lib/downloader_OLD.ts';
+  import { downloadTrack } from '../lib/downloader.ts';
 
   interface Props {
     apiBase: string;  // CHANGED: Added to enable downloads
@@ -265,8 +265,11 @@
 
           <button
             class="text-neutral-400 hover:text-white p-1.5 rounded hover:bg-white/10 
-                   opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 
-                   cursor-grab {isDragging ? 'cursor-grabbing' : ''}"
+                  md:opacity-0 
+                  md:group-hover:opacity-100 
+                  focus-within:opacity-100
+                  transition-opacity duration-150
+                  cursor-grab {isDragging ? 'cursor-grabbing' : ''}"
             style="touch-action: none;"
             aria-label="Drag to reorder or use Alt+Arrow keys"
             aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
@@ -279,8 +282,11 @@
           </button>
 
           <button 
-            class="text-neutral-400 hover:text-red-400 p-1.5 rounded hover:bg-white/10 
-                   opacity-100 md:opacity-0 md:group-hover:opacity-100"
+            class="text-neutral-400 hover:text-white p-1.5 rounded hover:bg-white/10 
+                  md:opacity-0 
+                  md:group-hover:opacity-100 
+                  focus-within:opacity-100
+                  transition-opacity duration-150"
             onclick={(e) => { e.stopPropagation(); removeFromQueue(track.filename); }}
             aria-label="Remove from queue"
           >
@@ -296,8 +302,10 @@
               -->
               <button 
                 class="text-neutral-400 hover:text-white p-1.5 rounded hover:bg-white/10 
-                       opacity-100 md:opacity-0 md:group-hover:opacity-100
-                       disabled:opacity-100 disabled:cursor-wait"
+                      md:opacity-0 
+                      md:group-hover:opacity-100 
+                      focus-within:opacity-100
+                      transition-opacity duration-150"
                 onclick={(e) => { e.stopPropagation(); handleDownload(track); }}
                 disabled={downloadingFilename === track.filename}
                 aria-label="Download track"

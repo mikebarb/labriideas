@@ -11,9 +11,9 @@
     currentTimeStore, durationStore
   } from '../lib/playerStore.js';
   import type { Track } from '../lib/types.ts';
-  import { fetchPresignedUrl } from '../lib/downloader_OLD.ts';
-  import { removeTrackFromOpfs, getTrackBlob } from '../lib/opfsStore';
-    import type { unknown } from 'astro:schema';
+  import { fetchPresignedUrl } from '../lib/downloader';
+  import { removeTrackFromOpfs, getTrackBlob, saveTrackToOpfs } from '../lib/opfsStore';
+  import { isOnline } from '../lib/connectivityStore';
 
   // ─── Props ───
   interface Props {
@@ -214,8 +214,15 @@
   }
 
   /**
-   * Load a track's metadata (URL, duration) into its object.
-   * Uses cached URL if still valid.
+   * Load a track's audio source into the <audio> element.
+   * 
+   * PRIORITY ORDER (Local-First):
+   *   1. OPFS (local disk cache) — instant, works offline
+   *   2. In-memory valid presigned URL — avoids a network call
+   *   3. Network fetch — only if online and not cached
+   * 
+   * On a network fetch, we also save the blob to OPFS so that the 
+   * NEXT play of this track is instant and offline-capable.
    */
   async function loadTrack(track: Track): Promise<void> {
     if (!audioElement) return;
@@ -223,37 +230,98 @@
     status = 'loading';
     errorMessage = '';
 
-    // Use cached URL if valid, otherwise fetch new one
-    if (!track.url || !track.urlExpiresAt || track.urlExpiresAt < Date.now()) {
-      try {
-        const ticket = await fetchPresignedUrl(track.filename, apiBase);
-        track.url = ticket.url;
-        track.urlExpiresAt = ticket.expiresAt;
-      } catch (err: any) {
-        console.error('Failed to fetch URL:', err);
-        status = 'error';
-        errorMessage = err.message;
-        throw err;
+    let finalUrl: string | null = null;
+
+    // ─── TIER 1: Try OPFS (Local Disk Cache) ───
+    if (track.hash) {
+      const cachedBlob = await getTrackBlob(track.hash);
+      if (cachedBlob) {
+        audioElement.src = URL.createObjectURL(cachedBlob);
+        audioElement.load();
+        audioElement.playbackRate = track.playbackRate ?? 1.0;
+        
+        // Capture duration and restore position (same as network path)
+        await waitForMetadata(track);
+        return; // Successfully loaded from cache — done.
       }
     }
 
-    audioElement.src = track.url;
-    audioElement.load();
-    audioElement.playbackRate = track.playbackRate ?? 1.0;
+    // ─── TIER 2: Deep Network Check ───
+    // We don't pre-check $isOnline. The actual fetch IS the test.
+    // If the user is offline OR the server is down, fetchPresignedUrl 
+    // will throw. We catch it and inhibit all further progress.
+    try {
+      // Use existing presigned URL if still valid
+      if (!track.url || !track.urlExpiresAt || track.urlExpiresAt < Date.now()) {
+        const ticket = await fetchPresignedUrl(track.filename, apiBase);
+        track.url = ticket.url;
+        track.urlExpiresAt = ticket.expiresAt;
+      }
+      const finalUrl = track.url!;
 
-    // Capture duration on metadata load
-    await new Promise<void>((resolve) => {
+      // ─── SINGLE FETCH: One network call serves both playback and caching ───
+      const audioResponse = await fetch(finalUrl);
+      if (!audioResponse.ok) throw new Error(`Audio fetch failed: ${audioResponse.status}`);
+      
+      const audioBlob = await audioResponse.blob();
+      // Use the blob for immediate playback
+      audioElement.src = URL.createObjectURL(audioBlob);
+      audioElement.load();
+      audioElement.playbackRate = track.playbackRate ?? 1.0;
+      // ─── METADATA FIRST: Let the browser process the audio ───
+      // The audio element needs the event loop free to parse the 
+      // audio header and fire 'loadedmetadata'. If we block the 
+      // thread with a 23MB OPFS write first, the event never fires.
+      await waitForMetadata(track);
+
+      // ─── BACKGROUND CACHE: Save to OPFS AFTER metadata loads ───
+      // The user is already playing at this point. The OPFS write 
+      // is now truly "background" — the user has heard the first 
+      // second of audio before we even start the disk write.
+      if (track.hash) {
+        try {
+          await saveTrackToOpfs(track.hash, audioBlob);
+          console.log(`[Player] Cached to OPFS: ${track.filename}`);
+        } catch (e) {
+          // Cache failed, but playback will still work this time.
+          console.warn(`[Player] Background OPFS cache failed:`, e);
+        }
+      }
+
+    } catch (err) {
+      // ─── INHIBIT: Server unreachable ───
+      // This catches BOTH:
+      //   - "No internet" (TypeError: Failed to fetch)
+      //   - "Server down" (5xx errors, DNS failures, CORS blocks)
+      // The actual fetch attempt is the ground truth — more reliable 
+      // than a cached $isOnline state.
+      console.error('[Player] loadTrack FAILED with error:', err);
+      console.error('[Player] Error type:', err instanceof Error ? err.constructor.name : typeof err);
+      console.error('[Player] Error message:', err instanceof Error ? err.message : String(err));
+      console.error('[Player] Error stack:', err instanceof Error ? err.stack : 'no stack');
+
+
+      console.error('[Player] Server unreachable or request failed:', err);
+      status = 'error';
+      errorMessage = 'Library server unreachable. Please check your connection.';
+      // Stop progress: no audio.src set, no caching attempted.
+      throw err;
+    }
+  }
+
+  /**
+   * Extracted helper: waits for the audio element to report its duration
+   * and restores the playback position if one was saved.
+   */
+  function waitForMetadata(track: Track): Promise<void> {
+    return new Promise<void>((resolve) => {
       const onMeta = () => {
         if (audioElement && isFinite(audioElement.duration) && audioElement.duration > 0) {
           track.duration = audioElement.duration;
           duration = audioElement.duration;
-           // ─── NEW: Seek to the saved position NOW that we know the duration ───
-          // On mobile browsers, setting currentTime BEFORE metadata loads 
-          // is silently ignored. We have to wait for the duration to be 
-          // known before the seek will actually take effect.
+
+          // Restore position NOW that we know the duration
           if (track.position && track.position > 0 && isFinite(track.position)) {
-            // Clamp the position to the actual duration. If the saved position 
-            // is 14:32 but the audio is only 14:30 long, don't crash.
             const safePosition = Math.min(track.position, audioElement.duration - 0.5);
             audioElement.currentTime = safePosition;
             currentTime = safePosition;
@@ -283,50 +351,57 @@
     }
 
     // CASE 2: Different track
-    // Finalize the outgoing track's progress — its position is now
-    // "frozen" as progress made so far, so the drawer can show it.
+    // Finalize the outgoing track's progress
     if (currentTrack && audioElement.src) {
       const finalPos = audioElement.currentTime;
       updateCurrentTrackPosition(finalPos);
-      commitQueue(); // ← structural: current-track changed
+      commitQueue();
     }
 
-    // Add to queue if not already there
-    if (!tracks.find(t => t.filename === track.filename)) {
-      tracks = [...tracks, track];
-      commitQueue(); // ← structural: queue grew
-    }
-
-    currentTime = 0;
-    duration = 0;
+    // ─── DEEP CHECK: ATTEMPT LOAD FIRST ───
+    // We do NOT add the track to the queue yet. We try to resolve
+    // the audio source (OPFS or network). If the resolution fails, 
+    // the track is inhibited from ever entering the queue.
+    status = 'loading';
     errorMessage = '';
-
+    
     try {
       await loadTrack(track);
-      
-      // Restore position if any
-      const savedPos = track.position ?? 0;
-      if (savedPos > 0) {
-        audioElement.currentTime = savedPos;
-        currentTime = savedPos;
-      }
-      
-         // Clear the flag on any previously active track
-      if (currentTrack && currentTrack.filename !== track.filename) {
-        const oldIdx = tracks.findIndex(t => t.filename === currentTrack!.filename);
-        if (oldIdx !== -1) {
-          tracks[oldIdx] = { ...tracks[oldIdx], isActive: false };
-        }
-      }
+    } catch (err: any) {
+      // ─── INHIBIT: The resolution failed. Abort everything. ───
+      console.error('[Player] loadTrack failed, inhibiting track:', err);
+      status = 'error';
+      errorMessage = err.message || 'Track is not available.';
+      return; // ← The track is NOT added to the queue. No "ghost" track.
+    }
 
-      // Set the flag on the newly active track
-      const activeIdx = tracks.findIndex(t => t.filename === track.filename);
-      if (activeIdx !== -1) {
-        tracks[activeIdx] = { ...tracks[activeIdx], isActive: true };
+    // ─── COMMIT: The track is now playable. Add it to the queue. ───
+    if (!tracks.find(t => t.filename === track.filename)) {
+      tracks = [...tracks, track];
+    }
+
+    // Clear the flag on any previously active track
+    if (currentTrack && currentTrack.filename !== track.filename) {
+      const oldIdx = tracks.findIndex(t => t.filename === currentTrack!.filename);
+      if (oldIdx !== -1) {
+        tracks[oldIdx] = { ...tracks[oldIdx], isActive: false };
       }
+    }
 
-      currentTrack = track;
+    // Set the flag on the newly active track
+    const activeIdx = tracks.findIndex(t => t.filename === track.filename);
+    if (activeIdx !== -1) {
+      tracks[activeIdx] = { ...tracks[activeIdx], isActive: true };
+    }
 
+    // ─── SET STATE ───
+    currentTrack = track;
+    currentTime = track.position ?? 0;
+    duration = track.duration ?? 0;
+    commitQueue();
+
+    // ─── PLAY ───
+    try {
       await audioElement.play();
       status = 'playing';
     } catch (err: any) {

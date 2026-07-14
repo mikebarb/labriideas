@@ -144,3 +144,26 @@ export async function downloadTrack(
     callbacks.onError?.(errObj);
   }
 }
+
+
+/**
+ * Background pre-caching. Fetches a track and saves it to OPFS 
+ * without playing it. Used for pre-warming the cache.
+ */
+export async function ensureTrackCached(track: Track): Promise<void> {
+  if (!track.hash) return;
+  const { getTrackBlob, saveTrackToOpfs } = await import('./opfsStore');
+  
+  const alreadyCached = await getTrackBlob(track.hash);
+  if (alreadyCached) return;
+
+  try {
+    const ticket = await fetchPresignedUrl(track.filename, '');
+    const response = await fetch(ticket.url);
+    if (!response.ok) throw new Error('Fetch failed');
+    const blob = await response.blob();
+    await saveTrackToOpfs(track.hash, blob);
+  } catch (err) {
+    console.warn(`[CacheManager] Failed to cache ${track.filename}:`, err);
+  }
+}

@@ -276,7 +276,7 @@
             { "subtopic": "Canon", "altName": "", "category": "The Bible - The Canon" }
           ],
           "Apologetics": [
-            { "subtopic": "Exploring Christianity", "altName": "", "category": "Apologetics: Exploring the Truth of Christianity" },
+            { "subtopic": "Exploring Christianity", "altName": "", "category": "Apologetics - Exploring the Truth of Christianity" },
             { "subtopic": "Sharing Your Faith", "altName": "", "category": "How to Share Your Faith" },
             { "subtopic": "Modern Questions, Ancient Answers", "altName": "Common Questions", "category": "Ancient Answers to Modern Questions" }
           ],
@@ -286,7 +286,7 @@
             { "subtopic": "Liberalism", "altName": "", "category": "Christianity and Liberalism" }
           ],
           "Other": [
-            { "subtopic": "Ethics and Morality", "altName": "Ethics & Morality", "category": "Apologetics: Exploring the Truth of Christianity" },
+            { "subtopic": "Ethics and Morality", "altName": "Ethics & Morality", "category": "Apologetics - Exploring the Truth of Christianity" },
             { "subtopic": "Eastern Religion and the New Age", "altName": "Eastern Religion", "category": "Eastern Religion and the New Age" },
             { "subtopic": "Cults ad the Occult", "altName": "Cults & Occult", "category": "Sects, Cults, and the Occult" }
           ]
