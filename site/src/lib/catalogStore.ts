@@ -163,6 +163,7 @@ export async function getCatalog(): Promise<any[]> {
 // to use getCatalog() which waits for a fresh server response.
 
 export async function getCachedCatalog(): Promise<{ tracks: any[]; isStale: boolean }> {
+  console.log("getCachedCatalog called");
   // 1. Already in memory? Return instantly.
   if (window.__LABRI_CATALOG__ && window.__LABRI_CATALOG__.length > 0) {
     // Fire-and-forget revalidation in the background

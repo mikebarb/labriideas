@@ -5,6 +5,7 @@
   import { onMount } from 'svelte';
   import QueueDrawer from './QueueDrawer.svelte';
   import MetadataEditor from './MetadataEditor.svelte';
+  import { getCachedCatalog } from '../lib/catalogStore.js';
 
   interface Props {
     children: Snippet;
@@ -22,15 +23,29 @@
   // Global state for the metadata editor.
   // When set, MetadataEditor mounts and shows the editor for that track.
   let editingTrack = $state(null);
-
   function closeEditor() {
     editingTrack = null;
+  }
+
+  // Called to wake up the sleeping server and preload the catalog
+  let isSyncing = $state(false);
+  async function performInitialHandshake(): Promise<void> {
+    isSyncing = true; // Show a subtle "Syncing..." icon
+    try {
+      await getCachedCatalog();
+    } finally {
+      isSyncing = false; // Hide it
+    }
   }
 
   // Listen for 'edit-track' events from anywhere in the app.
   // CatalogViewer, TrackCard, etc. can all dispatch this and the
   // editor opens here.
   onMount(() => {
+    // wake up the go server and preload catalog
+    performInitialHandshake();
+
+    // edit-track handling.
     const handleEditTrack = (event: Event) => {
       const customEvent = event as CustomEvent<{ track: any }>;
       editingTrack = customEvent.detail.track;
