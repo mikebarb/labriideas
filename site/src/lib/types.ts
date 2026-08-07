@@ -28,7 +28,7 @@ export interface Track {
   url?: string;             // presigned S3 URL ('' until first load)
   urlExpiresAt?: number;    // timestamp when URL expires (0 until first load)
   isDownloaded?: boolean;   // true if the track is cached in OPFS
-  isActive?: boolean;       // True if this is the track that was playing
+  loading?: boolean;  // Used to track download/buffering stateive?: boolean;       // True if this is the track that was playing
 }
 
 // Previous value

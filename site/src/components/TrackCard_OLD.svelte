@@ -4,10 +4,7 @@
   import { buildTrack } from '../lib/buildTrack.ts';
   import { sanitizeKeywords } from '../lib/dataUtils.js';
   import { downloadTrack } from '../lib/downloader.js';
-  import { Download, Pencil, Play, Pause, Loader2 } from 'lucide-svelte';
-
-  // REFACTOR: Import stores to observe player state
-  import { currentTrackStore, statusStore, trackList } from '../lib/playerStore.ts';
+  import { Download, Pencil } from 'lucide-svelte';
 
   interface Props {
     item: any;
@@ -27,26 +24,12 @@
   // so we can show a spinner on the right card.
   let downloadingFilename: string | null = $state(null);
 
-  // REFACTOR: Derive UI state from stores
-  // isPlaying: true if this track is currently playing
-  const isPlaying = $derived($currentTrackStore?.filename === item.filename && $statusStore === 'playing');
-  // isLoading: true if this track is in the queue and still loading
-  const isLoading = $derived(!!$trackList.find(t => t.filename === item.filename)?.loading);
-  // isInQueue: (optional) can be used later if needed
-  const isInQueue = $derived(!!$trackList.find(t => t.filename === item.filename));
-
   function handleHeaderClick() {
     ontoggle?.(item.filename);
   }
 
-  // REFACTOR: Updated handler to support pause toggle
   function handlePlay(event: MouseEvent) {
     event.stopPropagation();
-    // If already playing, dispatch a new 'toggle-play' event (Player will handle)
-    if (isPlaying) {
-      window.dispatchEvent(new CustomEvent('toggle-play'));
-      return;
-    }
     const track = buildTrack(item);
     window.dispatchEvent(new CustomEvent('play-track', { detail: track }));
   }
@@ -112,21 +95,13 @@
       <p class="text-sm text-gray-500 wrap-break-words">{item.speaker}</p>
     </button>
 
-    <!-- REFACTOR: Play button now shows spinner, pause, or play based on state -->
+    <!-- Play button (right, always visible) -->
     <button
       onclick={handlePlay}
-      disabled={isLoading}
-      class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold transition shrink-0
-             disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
-      aria-label={isPlaying ? 'Pause track' : 'Play track'}
+      class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold transition shrink-0"
+      aria-label="Play track"
     >
-      {#if isLoading}
-        <Loader2 size={18} class="animate-spin" /> Loading
-      {:else if isPlaying}
-        <Pause size={18} fill="currentColor" /> Pause
-      {:else}
-        <Play size={18} fill="currentColor" /> Play
-      {/if}
+      ▶ Play
     </button>
   </div>
 

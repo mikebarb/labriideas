@@ -1,5 +1,11 @@
 ---
 // src/pages/featured/index.astro
+// Added a CSS-only press feedback to the featured cards.
+// WHY: The featured section is a promotional surface, not a state-aware
+// component like TrackCard. We want to give users immediate tactile
+// feedback without coupling these cards to the player stores or adding
+// JS complexity. This uses a simple :active transition - lightweight,
+// no rework, and disappears naturally when the player takes over.
 import Layout from '../../layouts/LabriLayout.astro';
 import menuData from '../../data/menu.json';
 import Hero from '../../components/Hero.svelte';
@@ -80,3 +86,17 @@ const { sectionTitle, sectionSubtitle, items } = featuredData;
     });
   </script>
 </Layout>
+
+<style>
+  /* Added press feedback for featured cards.
+     WHY: Provides instant visual confirmation that the button was clicked.
+     Using :active transition - this is lightweight, requires no JS,
+     and doesn't interfere with the play-track event dispatch.
+     The effect is subtle (scale + opacity) to feel responsive but not jarring. 
+  */
+  [data-featured-id]:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+    transition: transform 0.1s ease, opacity 0.1s ease;
+  }
+</style>

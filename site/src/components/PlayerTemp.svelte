@@ -11,9 +11,9 @@
     currentTimeStore, durationStore
   } from '../lib/playerStore.js';
   import type { Track } from '../lib/types.ts';
-  import { fetchPresignedUrl } from '../lib/downloader.ts';
-  import { removeTrackFromOpfs, getTrackBlob, saveTrackToOpfs } from '../lib/opfsStore.ts';
-  import { isOnline } from '../lib/connectivityStore.ts';
+  import { fetchPresignedUrl } from '../lib/downloader';
+  import { removeTrackFromOpfs, getTrackBlob, saveTrackToOpfs } from '../lib/opfsStore';
+  import { isOnline } from '../lib/connectivityStore';
 
   // ─── Props ───
   interface Props {
@@ -338,8 +338,8 @@
   /**
    * Main entry point. Handles:
    *   - Same track → toggle play/pause
-   *   - Existing track → make active + resume from saved position
-   *   - New track → load + add to queue + play
+   *   - Switching tracks → save old position (frozen), load new, restore position
+   *   - New track → load + play
    */
   async function playTrack(track: Track): Promise<void> {
     if (!audioElement) return;
@@ -350,61 +350,70 @@
       return;
     }
 
-    // CASE 2: Existing track → Force Play
-    const existingIndex = tracks.findIndex(t => t.filename === track.filename);
-    if (existingIndex !== -1) {
-      if (currentTrack && currentTrack.filename !== track.filename) {
-          updateCurrentTrackPosition(audioElement.currentTime);
-          commitQueue();
-      }
-      currentTrack = tracks[existingIndex];
-      if (currentTrack.position && currentTrack.position > 0) {
-          audioElement.currentTime = currentTrack.position;
-      }
-      // Trigger play
-      await performPlay(); 
-      return;
+    // CASE 2: Different track 
+    // - requested track is not the track being played. 
+    // Save the current track's position and commit the queue.
+    // Finalize the outgoing track's progress
+    if (currentTrack && audioElement.src) {
+      const finalPos = audioElement.currentTime;
+      updateCurrentTrackPosition(finalPos);
+      commitQueue();
     }
 
-    // CASE 3: New track → Load then Play
-    track.loading = true; // Trigger spinner
-    tracks = [...tracks, track];
-    commitQueue();
-
+    // ─── DEEP CHECK: ATTEMPT LOAD FIRST ───
+    // We do NOT add the track to the queue yet. We try to resolve
+    // the audio source (OPFS or network). If the resolution fails, 
+    // the track is inhibited from ever entering the queue.
+    status = 'loading';
+    errorMessage = '';
+    
     try {
       await loadTrack(track);
-      //track.loading = false; // Clear spinner
-      const idx = tracks.findIndex(t => t.filename === track.filename);
-      if (idx !== -1) {
-        tracks[idx].loading = false;
-      }
-      commitQueue();
-
-      if (currentTrack) {
-         updateCurrentTrackPosition(audioElement.currentTime);
-      }
-      
-      currentTrack = track;
-      commitQueue();
-      
-      await performPlay(); // Trigger play
     } catch (err: any) {
-      tracks = tracks.filter(t => t.filename !== track.filename);
-      commitQueue();
+      // ─── INHIBIT: The resolution failed. Abort everything. ───
+      console.error('[Player] loadTrack failed, inhibiting track:', err);
       status = 'error';
-      errorMessage = err.message || 'Load failed';
+      errorMessage = err.message || 'Track is not available.';
+      return; // ← The track is NOT added to the queue. No "ghost" track.
     }
-  }
 
-  // Refactored helper to maintain your clean separation
-  async function performPlay() {
+    // ─── COMMIT: The track is now playable. Add it to the queue. ───
+    if (!tracks.find(t => t.filename === track.filename)) {
+      tracks = [...tracks, track];
+    }
+
+    // Clear the flag on any previously active track
+    if (currentTrack && currentTrack.filename !== track.filename) {
+      const oldIdx = tracks.findIndex(t => t.filename === currentTrack!.filename);
+      if (oldIdx !== -1) {
+        tracks[oldIdx] = { ...tracks[oldIdx], isActive: false };
+      }
+    }
+
+    // Set the flag on the newly active track
+    const activeIdx = tracks.findIndex(t => t.filename === track.filename);
+    if (activeIdx !== -1) {
+      tracks[activeIdx] = { ...tracks[activeIdx], isActive: true };
+    }
+
+    // ─── SET STATE ───
+    currentTrack = track;
+    currentTime = track.position ?? 0;
+    duration = track.duration ?? 0;
+    commitQueue();
+
+    // ─── PLAY ───
     try {
-      await audioElement!.play();
+      await audioElement.play();
       status = 'playing';
     } catch (err: any) {
       console.error('Play error:', err);
-      status = err.name === 'NotAllowedError' ? 'paused' : 'error';
-      if (status === 'error') errorMessage = err.message;
+      if (err.name === 'NotAllowedError') {
+        status = 'paused';
+      } else {
+        status = 'error';
+        errorMessage = err.message;
+      }
     }
   }
 
@@ -751,9 +760,6 @@
     window.addEventListener('pagehide', flushPosition);
     window.addEventListener('beforeunload', flushPosition);
 
-    const handleTogglePlay = () => togglePlayPause();
-    window.addEventListener('toggle-play', handleTogglePlay);
-
     return () => {
       window.removeEventListener('play-track', handlePlay);
       window.removeEventListener('remove-from-queue', handleRemove);
@@ -761,7 +767,6 @@
       window.removeEventListener('keydown', handleGlobalReorder);
       window.removeEventListener('pagehide', flushPosition);
       window.removeEventListener('beforeunload', flushPosition);
-      window.removeEventListener('toggle-play', handleTogglePlay);
     };
   });
 </script>
