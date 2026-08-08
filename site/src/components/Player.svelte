@@ -350,50 +350,56 @@
       return;
     }
 
-    // CASE 2: Existing track → Force Play
+    // CASE 2: Existing track (exists in queue) → Force Play
     const existingIndex = tracks.findIndex(t => t.filename === track.filename);
-    if (existingIndex !== -1) {
-      if (currentTrack && currentTrack.filename !== track.filename) {
-          updateCurrentTrackPosition(audioElement.currentTime);
-          commitQueue();
+    if (existingIndex !== -1) {                                                  // new track is is in the queue
+      if (currentTrack && currentTrack.filename !== track.filename) {            // and is not currently playing
+        const finalPos = audioElement.currentTime;                               // save the current track's position before switching
+        updateCurrentTrackPosition(finalPos);
+        commitQueue();
       }
-      currentTrack = tracks[existingIndex];
-      if (currentTrack.position && currentTrack.position > 0) {
+      currentTrack = tracks[existingIndex];                                      // switch to the new track
+      if (currentTrack.position && currentTrack.position > 0) {                  // restore its saved position
           audioElement.currentTime = currentTrack.position;
       }
       // Trigger play
-      await performPlay(); 
+      await performPlay();                                                        // play it.
       return;
     }
 
     // CASE 3: New track → Load then Play
-    track.loading = true; // Trigger spinner
-    tracks = [...tracks, track];
+    track.loading = true;          // Trigger spinner
+    tracks = [...tracks, track];   // Add to queue
     commitQueue();
 
-    try {
+    try {                         // Download and load the track (may throw if offline or server unreachable)
       await loadTrack(track);
-      //track.loading = false; // Clear spinner
-      const idx = tracks.findIndex(t => t.filename === track.filename);
-      if (idx !== -1) {
-        tracks[idx].loading = false;
-      }
-      commitQueue();
-
-      if (currentTrack) {
-         updateCurrentTrackPosition(audioElement.currentTime);
-      }
-      
-      currentTrack = track;
-      commitQueue();
-      
-      await performPlay(); // Trigger play
-    } catch (err: any) {
-      tracks = tracks.filter(t => t.filename !== track.filename);
-      commitQueue();
-      status = 'error';
-      errorMessage = err.message || 'Load failed';
+      } catch (err: any) {
+        // ─── INHIBIT: The resolution failed. Abort everything. ───
+        console.error('[Player] loadTrack failed, inhibiting track:', err);
+        tracks = tracks.filter(t => t.filename !== track.filename);
+        commitQueue();
+        status = 'error';
+        errorMessage = err.message || 'Track is not available.'; 
+        return; // ← The track is NOT added to the queue. No "ghost" track.
     }
+    // Track loaded successfully. Clear spinner and update queue.
+    const idx = tracks.findIndex(t => t.filename === track.filename);
+    if (idx !== -1) {
+      tracks[idx].loading = false;  // clear spinner
+    }
+    commitQueue();
+
+    if (currentTrack) {
+        updateCurrentTrackPosition(audioElement.currentTime);
+    }
+    // ─── SET STATE ───
+    currentTrack = track;
+    currentTime = track.position ?? 0;
+    duration = track.duration ?? 0;
+    commitQueue();
+    
+    await performPlay(); // Trigger play
   }
 
   // Refactored helper to maintain your clean separation
