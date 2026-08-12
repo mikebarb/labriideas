@@ -7,7 +7,7 @@ export const navItems = [
     id: 'about', 
     label: 'ABOUT', 
     dropdown: [
-      { label: 'Using the ideas library', href: '/about/using' },
+      { label: 'Using the Ideas Library', href: '/about/using' },
       { label: 'History of L\'Abri', href: '/about/history' }
     ]
   },

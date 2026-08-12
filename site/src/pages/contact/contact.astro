@@ -18,51 +18,53 @@ const sites = contactSection?.sites ?? [];
 
 <LabriLayout title="Contact L'Abri">
   <Hero 
-    title="Contact<br>L'Abri"
-    backgroundImage={import.meta.env.BASE_URL + "images/using-the-ideas-library-bg.avif"}
-    height="h-[350px]"
+    title="CONTACT"
+    subtitle="L'ABRI"
+    backgroundImage={import.meta.env.BASE_URL + "images/contact.avif"}
+    height="h-[400px]"
     showBrushStroke={false}
+    color="white"
   />
 
+
+
+
+  <section class="max-w-4xl">
   <!-- INTRO TEXT SECTION -->
-  <section class="max-w-3xl mx-auto px-4 pb-12 text-left">
-    <h2 class="text-2xl font-bold mb-6 text-center">GET IN TOUCH</h2>
-    <p class="text-gray-700 leading-relaxed text-lg">
+    <!-- <h3 class="font-bold">Get in Touch</h3> -->
+    <p>
       {contactSection?.description}
     </p>
-  </section>
-
-  <!-- CONTACT DETAILS GRID -->
-  <section class="max-w-4xl mx-auto px-4 pb-20">
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
     
-    {sites.map(site => (
-      <div>
-        <h3 class="text-lg font-bold mb-2">{site.title}</h3>
-        <p class="text-gray-700 text-sm leading-relaxed">
-          {/* Apply the type here so the editor recognizes 'note' */}
-          {site.details.map((detail: ContactDetail) => (
-            <>
-                {detail.label && detail.label.trim() !== "" ? (
-                <strong>{detail.label}:</strong>
-                ) : null}
-                
-                {" "} {/* Adds a space between the label section and the value section */}
-              {detail.url ? (
-                <a href={detail.url} target="_blank" rel="noopener noreferrer" class="underline decoration-1 hover:text-orange-600">
-                  {detail.value}
-                </a>
-              ) : (
-                detail.value
-              )}
-              {/* This renders the note ONLY if it exists in the JSON */}
-              {detail.note && <span class="italic text-gray-500 ml-1">{detail.note}</span>}
-              <br />
-            </>
-          ))}
-        </p>
-      </div>
-    ))}
-  </div>
+  <!-- CONTACT DETAILS GRID -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+      {sites.map(site => (
+        <div>
+          <h3 class="font-bold">{site.title}</h3>
+          <p class="text-md">
+            {/* Apply the type here so the editor recognizes 'note' */}
+            {site.details.map((detail: ContactDetail) => (
+              <>
+                  {detail.label && detail.label.trim() !== "" ? (
+                  <strong>{detail.label}:</strong>
+                  ) : null}
+                  
+                  {" "} {/* Adds a space between the label section and the value section */}
+                {detail.url ? (
+                  <a href={detail.url} target="_blank" rel="noopener noreferrer" class="underline text-md">
+                    {detail.value}
+                  </a>
+                ) : (
+                  detail.value
+                )}
+                {/* This renders the note ONLY if it exists in the JSON */}
+                {detail.note && <span class="italic text-gray-500 ml-1">{detail.note}</span>}
+                <br />
+              </>
+            ))}
+          </p>
+        </div>
+      ))}
+    </div>
 </section>
 </LabriLayout>

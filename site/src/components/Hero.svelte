@@ -2,14 +2,16 @@
   import BrushStroke from './BrushStroke.svelte';
   
   let {
-    title = "L'Abri Ideas Library",
+    title = "",
     subtitle = "",
+    tagline = "",
     backgroundImage = import.meta.env.BASE_URL + "images/labri-home.avif",
     showBrushStroke = true,
     height = "h-[500px]",
     blurBackground = false,
     isSerif = false,
-    color = "white"
+    color = "black",
+    tracking = "0.5em"
   } = $props();
 </script>
 
@@ -33,19 +35,26 @@
         />
       </div>
     {/if}
-
     <h1 
-      class="relative z-10 text-4xl md:text-6xl text-center tracking-[0.5em] font-light text-{color} {isSerif ? 'font-serif' : `font-sans`}"
+      class="relative z-10 text-4xl md:text-6xl leading-snug text-center tracking-[0.3em] font-light text-{color} {isSerif ? 'font-serif italic' : `font-sans`}"
     >
       {@html title}
     </h1>
 
     {#if subtitle}
       <h2 
-        class="relative z-10 text-4xl md:text-7xl text-center tracking-[0.35em] font-sans font-medium text-{color} {isSerif ? 'font-serif' : `font-sans`}"
+        class="relative z-10 text-4xl md:text-7xl text-center tracking-[0.2em] font-medium text-{color} {isSerif ? 'font-serif' : `font-sans`}"
       >
         {@html subtitle}
       </h2>
+    {/if}
+
+    {#if tagline}
+      <h6 
+        class="relative z-10 text-center leading-loose text-{color}"
+      >
+        {@html tagline}
+      </h6>
     {/if}
   </div>
 </div>
