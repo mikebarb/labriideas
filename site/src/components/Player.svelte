@@ -41,6 +41,21 @@
   let isDragging = $state(false);
   let dragProgress = $state(0);
 
+  // ─── Switch guard ───
+  // Plain (non-reactive) flag: true while playTrack() is transitioning
+  // between tracks. During the async loadTrack() window, the audio element
+  // still holds the OUTGOING track's audio — but `currentTrack` may already
+  // point at the INCOMING track (CASE 2 reassigns it before the load).
+  // Any timeupdate / pause / ended / durationchange event in that window
+  // would attribute the old element's state to the WRONG track, corrupting
+  // saved resume positions (e.g. the 'pause' fired by audioElement.load()
+  // carries currentTime = 0, which would overwrite the incoming track's
+  // saved position). All audio-element listeners check this flag.
+  //
+  // Deliberately NOT $state: nothing renders from this, and it flips too
+  // fast to warrant effect scheduling.
+  let isSwitching = false;
+
    // ─── Speed Control ───
   let speedLongPressTimer: ReturnType<typeof setTimeout> | null = $state(null);
   let isSpeedLongPressing = $state(false);
@@ -98,7 +113,7 @@
         currentTrack = activeTrack;
         duration = activeTrack.duration ?? 0;
         currentTime = activeTrack.position ?? 0;
-        console.log(`[Player] Effect restored active track: ${activeTrack.title ?? activeTrack.filename}`);
+        //console.log(`[Player] Effect restored active track: ${activeTrack.title ?? activeTrack.filename}`);
         
         if (audioElement) {
           loadTrack(activeTrack).catch(err => {
@@ -108,7 +123,6 @@
       }
     }
   });
-
 
   // ─── Derived ───
   let progress = $derived(
@@ -162,8 +176,14 @@
    * `playTrack` can resume correctly on switch. The store is only
    * notified when the position becomes "frozen" (pause / switch / end /
    * crash recovery) via commitQueue().
+   *
+   * WARNING: this writes into `currentTrack`'s slot. All callers that fire
+   * during a track switch (timeupdate / pause / ended listeners) must be
+   * gated on `isSwitching` — during the switch window the audio element's
+   * state belongs to the OUTGOING track while `currentTrack` may already
+   * be the INCOMING track.
    */
-  function updateCurrentTrackPosition(pos: number): void {
+  function updateCurrentTrackPosition_OLD(pos: number): void {
     if (!currentTrack) return;
     currentTrack.position = pos;
     // Mirror the new position onto the slot in `tracks` so it stays
@@ -171,6 +191,15 @@
     // create a new object — this keeps immutability explicit and avoids
     // any stale-reference surprises if something reads `tracks[idx]`
     // between this mutation and a subsequent commitQueue().
+    const idx = tracks.findIndex(t => t.filename === currentTrack!.filename);
+    if (idx !== -1) {
+      tracks[idx] = { ...tracks[idx], position: pos };
+    }
+  }
+
+  function updateCurrentTrackPosition(pos: number): void {
+    if (!currentTrack) return;
+    currentTrack.position = pos;
     const idx = tracks.findIndex(t => t.filename === currentTrack!.filename);
     if (idx !== -1) {
       tracks[idx] = { ...tracks[idx], position: pos };
@@ -236,12 +265,14 @@
     if (track.hash) {
       const cachedBlob = await getTrackBlob(track.hash);
       if (cachedBlob) {
+        // FIXED (race): waitForMetadata now attaches its 'loadedmetadata'
+        // listener BEFORE we call load() below, so a fast local-blob
+        // metadata parse can no longer slip past the listener.
+        const metaReady = waitForMetadata(track);
         audioElement.src = URL.createObjectURL(cachedBlob);
         audioElement.load();
         audioElement.playbackRate = track.playbackRate ?? 1.0;
-        
-        // Capture duration and restore position (same as network path)
-        await waitForMetadata(track);
+        await metaReady;
         return; // Successfully loaded from cache — done.
       }
     }
@@ -264,6 +295,9 @@
       if (!audioResponse.ok) throw new Error(`Audio fetch failed: ${audioResponse.status}`);
       
       const audioBlob = await audioResponse.blob();
+
+      // FIXED (race): same listener-before-load ordering as the OPFS tier.
+      const metaReady = waitForMetadata(track);
       // Use the blob for immediate playback
       audioElement.src = URL.createObjectURL(audioBlob);
       audioElement.load();
@@ -272,7 +306,7 @@
       // The audio element needs the event loop free to parse the 
       // audio header and fire 'loadedmetadata'. If we block the 
       // thread with a 23MB OPFS write first, the event never fires.
-      await waitForMetadata(track);
+      await metaReady;
 
       // ─── BACKGROUND CACHE: Save to OPFS AFTER metadata loads ───
       // The user is already playing at this point. The OPFS write 
@@ -281,7 +315,7 @@
       if (track.hash) {
         try {
           await saveTrackToOpfs(track.hash, audioBlob);
-          console.log(`[Player] Cached to OPFS: ${track.filename}`);
+          //console.log(`[Player] Cached to OPFS: ${track.filename}`);
         } catch (e) {
           // Cache failed, but playback will still work this time.
           console.warn(`[Player] Background OPFS cache failed:`, e);
@@ -300,7 +334,6 @@
       console.error('[Player] Error message:', err instanceof Error ? err.message : String(err));
       console.error('[Player] Error stack:', err instanceof Error ? err.stack : 'no stack');
 
-
       console.error('[Player] Server unreachable or request failed:', err);
       status = 'error';
       errorMessage = 'Library server unreachable. Please check your connection.';
@@ -310,36 +343,100 @@
   }
 
   /**
-   * Extracted helper: waits for the audio element to report its duration
-   * and restores the playback position if one was saved.
+   * Waits for the audio element to load the NEW track's metadata, then
+   * restores the saved playback position.
+   *
+   * FIXED (resume position lost on track switch): the previous version
+   * performed the restore seek inside 'loadedmetadata'. At HAVE_METADATA
+   * the element's seekable ranges are not yet populated for blob URLs in
+   * Chrome, so the seek silently snapped currentTime back to 0 — the UI
+   * flashed the restored position (state variable) and then reverted when
+   * the first real timeupdate reported the element's actual 0.00.
+   *
+   * The restore seek now happens on 'canplay' (readyState >= 3), when
+   * seeking is guaranteed to work, and is verified one frame later with a
+   * single retry if it still hasn't landed.
+   *
+   * ALSO FIXED: the readyState>=1 "fast path" has been REMOVED. Callers
+   * invoke this BEFORE setting src (listener-first contract), so
+   * readyState at call time reflects the PREVIOUS track — a fast-path
+   * completion would read the old track's duration and seek the old
+   * track's audio. We now ALWAYS wait for the next 'loadedmetadata',
+   * which is guaranteed to fire because loadTrack() calls load()
+   * immediately after invoking this helper.
+   *
+   * CONTRACT (unchanged): call BEFORE setting src / calling load(), then
+   * await the returned promise after load() is invoked.
    */
   function waitForMetadata(track: Track): Promise<void> {
     return new Promise<void>((resolve) => {
-      const onMeta = () => {
-        if (audioElement && isFinite(audioElement.duration) && audioElement.duration > 0) {
-          track.duration = audioElement.duration;
-          duration = audioElement.duration;
+      if (!audioElement) { resolve(); return; }
+      const el = audioElement;
 
-          // Restore position NOW that we know the duration
-          if (track.position && track.position > 0 && isFinite(track.position)) {
-            const safePosition = Math.min(track.position, audioElement.duration - 0.5);
-            audioElement.currentTime = safePosition;
-            currentTime = safePosition;
-            console.log(`[Player] Resumed at ${safePosition.toFixed(2)}s`);
-          }
+      // Capture the resume target up front, from the track's saved slot
+      const resumeTarget =
+        track.position && track.position > 0 && isFinite(track.position)
+          ? track.position
+          : null;
+
+      const onMeta = () => {
+        el.removeEventListener('loadedmetadata', onMeta);
+
+        if (isFinite(el.duration) && el.duration > 0) {
+          track.duration = el.duration;
+          duration = el.duration;
         }
-        audioElement?.removeEventListener('loadedmetadata', onMeta);
-        resolve();
+
+        // Nothing to restore — resolve immediately
+        if (resumeTarget === null) { resolve(); return; }
+
+        const doSeek = () => {
+          const safe = Math.min(resumeTarget, el.duration - 0.5);
+          el.currentTime = safe;
+          currentTime = safe;
+          // Verify the seek actually landed; retry once on the next frame
+          // if the element discarded it.
+          requestAnimationFrame(() => {
+            if (Math.abs(el.currentTime - safe) > 1) {
+              console.warn(`[Player] Seek did not stick (element at ${el.currentTime.toFixed(2)}), retrying`);
+              el.currentTime = safe;
+            }
+            resolve();
+          });
+        };
+
+        // Defer the seek until 'canplay': seeking is only reliable once
+        // the browser has enough buffered data to populate seekable ranges.
+        if (el.readyState >= 3) {
+          doSeek();
+        } else {
+          const onCanPlay = () => {
+            el.removeEventListener('canplay', onCanPlay);
+            doSeek();
+          };
+          el.addEventListener('canplay', onCanPlay);
+        }
       };
-      audioElement?.addEventListener('loadedmetadata', onMeta);
+
+      el.addEventListener('loadedmetadata', onMeta);
     });
   }
+
+
 
   /**
    * Main entry point. Handles:
    *   - Same track → toggle play/pause
-   *   - Existing track → make active + resume from saved position
+   *   - Existing track → load into audio element + resume from saved position
    *   - New track → load + add to queue + play
+   *
+   * POSITION-SAFETY INVARIANT (both CASE 2 and CASE 3):
+   *   1. The OUTGOING track's position is frozen BEFORE loadTrack() runs,
+   *      while its audio is still loaded in the element.
+   *   2. `isSwitching = true` wraps the entire loadTrack() call, so the
+   *      timeupdate / pause / ended / durationchange listeners cannot
+   *      attribute the old element's state to the wrong track during the
+   *      async transition window.
    */
   async function playTrack(track: Track): Promise<void> {
     if (!audioElement) return;
@@ -350,28 +447,74 @@
       return;
     }
 
-    // CASE 2: Existing track (exists in queue) → Force Play
+    // CASE 2: Existing track (exists in queue) → Load + Resume + Play
+    //
+    // FIXED: previously this branch switched `currentTrack` and called
+    // performPlay() WITHOUT calling loadTrack(). The audio element kept
+    // the PREVIOUS track's src, so clicking a queued track updated the UI
+    // but kept playing (or re-seeking) the old audio — and after a page
+    // reload, when the audio element had no src at all, it did nothing.
+    //
+    // The corrected flow mirrors CASE 3's discipline:
+    //   freeze outgoing position → switch currentTrack → loadTrack()
+    //   (which restores the saved position via waitForMetadata) → play,
+    //   with error inhibition that reverts the selection if load fails.
     const existingIndex = tracks.findIndex(t => t.filename === track.filename);
-    if (existingIndex !== -1) {                                                  // new track is is in the queue
-      if (currentTrack && currentTrack.filename !== track.filename) {            // and is not currently playing
-        const finalPos = audioElement.currentTime;                               // save the current track's position before switching
+    if (existingIndex !== -1) {
+      // Freeze the outgoing track's position before switching
+      if (currentTrack && currentTrack.filename !== track.filename) {
+        const finalPos = audioElement.currentTime;
         updateCurrentTrackPosition(finalPos);
         commitQueue();
       }
-      currentTrack = tracks[existingIndex];                                      // switch to the new track
-      if (currentTrack.position && currentTrack.position > 0) {                  // restore its saved position
-          audioElement.currentTime = currentTrack.position;
+
+      // Switch selection. Keep a reference to the previous track so we
+      // can revert the UI if the load below fails.
+      const previousTrack = currentTrack;
+      const nextTrack = tracks[existingIndex];
+      currentTrack = nextTrack;
+      commitQueue(); // ← structural: active-row indicator moves immediately
+
+      isSwitching = true; // Suppress listener position-writes during load
+      try {
+        // Load the new track's audio into the element. waitForMetadata
+        // (inside loadTrack) restores nextTrack.position safely, clamped
+        // against the NEW track's real duration — so the old manual
+        // `audioElement.currentTime = ...` seek has been REMOVED; it ran
+        // before the new metadata was known and could clamp against the
+        // wrong track's duration.
+        await loadTrack(nextTrack);
+      } catch (err: any) {
+        // ─── INHIBIT: same discipline as CASE 3 ───
+        // Revert the selection rather than leaving the UI showing a
+        // track whose audio never loaded.
+        console.error('[Player] Switch load failed, reverting selection:', err);
+        currentTrack = previousTrack;
+        commitQueue();
+        return; // status/errorMessage already set inside loadTrack
+      } finally {
+        isSwitching = false; // Always release — success or failure
       }
-      // Trigger play
-      await performPlay();                                                        // play it.
+
+      await performPlay();
       return;
     }
 
     // CASE 3: New track → Load then Play
+
+    // Freeze the OUTGOING track's position FIRST, while its audio is still
+    // loaded in the element. (Previously this ran AFTER loadTrack(), when
+    // audioElement.currentTime already belonged to the NEW track — which
+    // wiped the outgoing track's resume position.)
+    if (currentTrack) {
+      updateCurrentTrackPosition(audioElement.currentTime);
+    }
+
     track.loading = true;          // Trigger spinner
     tracks = [...tracks, track];   // Add to queue
     commitQueue();
 
+    isSwitching = true;            // Suppress listener position-writes during load
     try {                         // Download and load the track (may throw if offline or server unreachable)
       await loadTrack(track);
       } catch (err: any) {
@@ -382,7 +525,10 @@
         status = 'error';
         errorMessage = err.message || 'Track is not available.'; 
         return; // ← The track is NOT added to the queue. No "ghost" track.
+    } finally {
+      isSwitching = false;
     }
+
     // Track loaded successfully. Clear spinner and update queue.
     const idx = tracks.findIndex(t => t.filename === track.filename);
     if (idx !== -1) {
@@ -390,9 +536,6 @@
     }
     commitQueue();
 
-    if (currentTrack) {
-        updateCurrentTrackPosition(audioElement.currentTime);
-    }
     // ─── SET STATE ───
     currentTrack = track;
     currentTime = track.position ?? 0;
@@ -634,7 +777,7 @@
   onMount(() => {
     // The "Self-Healing" OnMount:
     // 1. Restore Queue from localStorage
-    // 2. Restore the Active Track (NEW)
+    // 2. Restore the Active Track (handled by the reactive $effect above)
     // 3. Bind Audio Element Listeners
     // 4. Bind External Event Listeners
     const savedQueue = localStorage.getItem('labri_queue');
@@ -643,8 +786,6 @@
         const parsed = JSON.parse(savedQueue);
         if (Array.isArray(parsed)) {
           tracks = parsed;
-          const unwrappedForLog = $state.snapshot(tracks);
-          console.log('[Player] Recovered from localStorage:', unwrappedForLog);
         }
       } catch (e) {
         console.error("[Player] Failed to restore queue from localStorage", e);
@@ -653,32 +794,6 @@
     isQueueLoaded = true;
     commitQueue(); // Sync the store so QueueDrawer sees the restored list immediately
     
-    // ─── Restore the Active Track ───
-    // We use $state.snapshot() to unwrap the reactive Proxy. 
-    // The native HTML <audio> element and the OPFS API require 
-    // plain, unwrapped JavaScript objects to work reliably.
-    //const unwrappedTracks = $state.snapshot(tracks);
-    //const activeTrack = unwrappedTracks.find(t => t.isActive);
-
-    //console.log('[Player] Recovery process started. Active track found:', activeTrack);
-
-    //if (activeTrack) {
-      // Guard against undefined duration/position to prevent audio errors
-    //  currentTrack = activeTrack;
-    //  duration = activeTrack.duration ?? 0;
-    // currentTime = activeTrack.position ?? 0;
-      
-    //  console.log(`[Player] Restored active track: ${activeTrack.title ?? activeTrack.filename}`);
-      
-      // Preload the audio (silently fail if offline/no cache)
-    //  if (audioElement) {
-    //    loadTrack(activeTrack).catch(err => {
-    //      console.warn(`[Player] Could not preload ${activeTrack.filename}:`, err);
-    //    });
-    //  }
-    //}
-
-   
     if (audioElement) {
       audioElement.volume = volume;
 
@@ -689,7 +804,11 @@
       // progress and a static placeholder for the current track; a
       // position update mid-playback is not a structural event.
       audioElement.addEventListener('timeupdate', () => {
-        if (audioElement && currentTrack) {
+        // isSwitching guard: mid-switch ticks belong to the OUTGOING
+        // track's audio, but currentTrack may already be the INCOMING
+        // track — an unguarded tick would write the old track's live
+        // position into the new track's slot.
+        if (audioElement && currentTrack && !isSwitching) {
           if (status === 'playing' || status === 'paused') {
             const t = audioElement.currentTime;
             currentTime = t;
@@ -699,7 +818,9 @@
       });
 
       audioElement.addEventListener('durationchange', () => {
-        if (audioElement && currentTrack && isFinite(audioElement.duration)) {
+        // isSwitching guard: during a CASE 3 load, currentTrack is still
+        // the outgoing track — don't stamp the NEW track's duration onto it.
+        if (audioElement && currentTrack && !isSwitching && isFinite(audioElement.duration)) {
           duration = audioElement.duration;
           currentTrack.duration = audioElement.duration;
           // No commitQueue — duration isn't surfaced in the drawer.
@@ -712,13 +833,21 @@
       // IS a structural event for the drawer's purposes, so commit.
       audioElement.addEventListener('pause', () => {
         if (status !== 'loading') status = 'paused';
-        if (currentTrack && audioElement) {
+        // isSwitching guard: loadTrack() calls audioElement.load(), which
+        // fires 'pause' on the outgoing audio with currentTime reset to 0.
+        // Without this guard, that 0 would be written into the INCOMING
+        // track's slot — the root cause of "track always reverts to 0".
+        if (currentTrack && audioElement && !isSwitching) {
           updateCurrentTrackPosition(audioElement.currentTime);
           commitQueue(); // ← structural: position frozen at pause
         }
       });
 
       audioElement.addEventListener('ended', () => {
+        // isSwitching guard: a stale 'ended' from the outgoing audio must
+        // not zero the incoming track's position or double-advance the
+        // queue — the in-flight playTrack switch owns what plays next.
+        if (isSwitching) return;
         // Track ended — finalize position to 0 (Spotify-style: ended
         // tracks are "ready to replay from start", not 100% complete).
         if (currentTrack) {
