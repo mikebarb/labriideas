@@ -276,7 +276,7 @@
             { "subtopic": "Canon", "altName": "", "category": "The Bible - The Canon" }
           ],
           "Apologetics": [
-            { "subtopic": "Exploring Christianity", "altName": "", "category": "Apologetics - Exploring the Truth of Christianity" },
+            { "subtopic": "Exploring Christianity", "altName": "", "category": "Apologetics: Exploring the Truth of Christianity" },
             { "subtopic": "Sharing Your Faith", "altName": "", "category": "How to Share Your Faith" },
             { "subtopic": "Modern Questions, Ancient Answers", "altName": "Common Questions", "category": "Ancient Answers to Modern Questions" }
           ],
@@ -286,65 +286,65 @@
             { "subtopic": "Liberalism", "altName": "", "category": "Christianity and Liberalism" }
           ],
           "Other": [
-            { "subtopic": "Ethics and Morality", "altName": "Ethics & Morality", "category": "Apologetics - Exploring the Truth of Christianity" },
+            { "subtopic": "Ethics and Morality", "altName": "Ethics & Morality", "category": "Apologetics: Exploring the Truth of Christianity" },
             { "subtopic": "Eastern Religion and the New Age", "altName": "Eastern Religion", "category": "Eastern Religion and the New Age" },
             { "subtopic": "Cults ad the Occult", "altName": "Cults & Occult", "category": "Sects, Cults, and the Occult" }
           ]
         },
         "Culture and Society": {
           "Arts": [
-            { "subtopic": "Theology of Art", "altName": "Theology", "category": "arts" },
-            { "subtopic": "Literature and Poetry", "altName": "Literature & Poetry", "category": "arts" },
-            { "subtopic": "Film", "altName": "", "category": "arts" },
-            { "subtopic": "Modern Art", "altName": "", "category": "arts" },
-            { "subtopic": "Theater and the Stage", "altName": "Theatre & Stage", "category": "arts" },
-            { "subtopic": "Classical Music", "altName": "", "category": "arts" },
-            { "subtopic": "Popular Music", "altName": "", "category": "arts" },
-            { "subtopic": "Music: General", "altName": "", "category": "arts" }
+            { "subtopic": "Theology of Art", "altName": "Theology", "category": "Christianity and Art" },
+            { "subtopic": "Literature and Poetry", "altName": "Literature & Poetry", "category": "Literature and Poetry" },
+            { "subtopic": "Film", "altName": "", "category": "Christianity and Film" },
+            { "subtopic": "Modern Art", "altName": "", "category": "Painting & Modern Art" },
+            { "subtopic": "Theater and the Stage", "altName": "Theatre & Stage", "category": "Theatre and the Stage" },
+            { "subtopic": "Classical Music", "altName": "", "category": "Christianity and Music: Classical music" },
+            { "subtopic": "Popular Music", "altName": "", "category": "Christianity and Music: Popular music" },
+            { "subtopic": "Music: General", "altName": "", "category": "Christianity and Music: General" }
           ],
-          "Science": [{ "subtopic": "Science and Faith", "altName": "", "category": "science" }],
-          "Technology": [{ "subtopic": "Technology and the Future", "altName": "", "category": "technology" }],
-          "Philosophy": [{ "subtopic": "Engaging Philosophy", "altName": "Christianity & Philosophy", "category": "philosophy" }],
+          "Science": [{ "subtopic": "Science and Faith", "altName": "", "category": "science and faith" }],
+          "Technology": [{ "subtopic": "Technology and the Future", "altName": "", "category": "Technology and the Future" }],
+          "Philosophy": [{ "subtopic": "Engaging Philosophy", "altName": "Christianity & Philosophy", "category": "Philosophy" }],
           "The Church and Modernity": [
-            { "subtopic": "Christianity and the Modern Age", "altName": "Christianity & Modernity", "category": "church-modernity" },
-            { "subtopic": "Reflections on Modern Culture", "altName": "Christianity & Culture", "category": "church-modernity" }
+            { "subtopic": "Christianity and the Modern Age", "altName": "Christianity & Modernity", "category": "Christianity in the Modern Age" },
+            { "subtopic": "Reflections on Modern Culture", "altName": "Christianity & Culture", "category": "Reflections on Modern Culture" }
           ],
           "Other": [
-            { "subtopic": "History of Thought", "altName": "", "category": "other" },
-            { "subtopic": "Politics", "altName": "", "category": "other" },
-            { "subtopic": "Economics", "altName": "", "category": "other" },
-            { "subtopic": "Race", "altName": "", "category": "other" },
-            { "subtopic": "War", "altName": "", "category": "other" },
-            { "subtopic": "Education", "altName": "", "category": "other" },
-            { "subtopic": "Medical Ethics", "altName": "", "category": "other" },
-            { "subtopic": "Leasure and Games", "altName": "Leisure & Games", "category": "other" },
-            { "subtopic": "Ecology", "altName": "", "category": "other" },
-            { "subtopic": "Work", "altName": "", "category": "other" }
+            { "subtopic": "History of Thought", "altName": "", "category": "The History of Secular Thought" },
+            { "subtopic": "Politics", "altName": "", "category": "Politics and Economics" },
+            { "subtopic": "Economics", "altName": "", "category": "Politics and Economics" },
+            { "subtopic": "Race", "altName": "", "category": "Race & racism" },
+            { "subtopic": "War", "altName": "", "category": "War & Peace" },
+            { "subtopic": "Education", "altName": "", "category": "Education" },
+            { "subtopic": "Medical Ethics", "altName": "", "category": "Medical ethics and the Modern Age" },
+            { "subtopic": "Leasure and Games", "altName": "Leisure & Games", "category": "Games, Sports, and Leisure" },
+            { "subtopic": "Ecology", "altName": "", "category": "Nature & ecology" },
+            { "subtopic": "Work", "altName": "", "category": "Theology of Work" }
           ]
         },
         "Personal - Identity & Relationships": {
           "Relationships": [
-            { "subtopic": "Community", "altName": "", "category": "relationships" },
-            { "subtopic": "Hospitality", "altName": "", "category": "relationships" },
-            { "subtopic": "Marriage", "altName": "", "category": "relationships" },
-            { "subtopic": "Family", "altName": "", "category": "relationships" },
-            { "subtopic": "Singleness", "altName": "", "category": "relationships" }
+            { "subtopic": "Community", "altName": "", "category": "Community and Relationships" },
+            { "subtopic": "Hospitality", "altName": "", "category": "Hospitality" },
+            { "subtopic": "Marriage", "altName": "", "category": "Marriage" },
+            { "subtopic": "Family", "altName": "", "category": "Family" },
+            { "subtopic": "Singleness", "altName": "", "category": "Singleness" }
           ],
           "Self": [
-            { "subtopic": "Identity", "altName": "", "category": "self" },
-            { "subtopic": "Psychology", "altName": "", "category": "self" },
-            { "subtopic": "Emotions", "altName": "", "category": "self" }
+            { "subtopic": "Identity", "altName": "", "category": "Identity and the Self" },
+            { "subtopic": "Psychology", "altName": "", "category": "Psychology & counseling" },
+            { "subtopic": "Emotions", "altName": "", "category": "Emotions and Forgiveness" }
           ],
           "Sex and Gender": [
-            { "subtopic": "Sexuality, Gender, and Feminism", "altName": "Christianity & Sexuality", "category": "sex-gender" }
+            { "subtopic": "Sexuality, Gender, and Feminism", "altName": "Christianity & Sexuality", "category": "Sexuality, Gender, and the Bible" }
           ],
           "Suffering": [
-            { "subtopic": "Suffering, Pain, and Healing", "altName": "Suffering, Pain, and Healing", "category": "suffering" }
+            { "subtopic": "Suffering, Pain, and Healing", "altName": "Suffering, Pain, and Healing", "category": "Suffering, Pain, and Healing" }
           ],
           "Other": [
-            { "subtopic": "Making Decisions", "altName": "", "category": "other" },
-            { "subtopic": "Food and Eating", "altName": "Food", "category": "other" },
-            { "subtopic": "Ethics", "altName": "", "category": "other" }
+            { "subtopic": "Making Decisions", "altName": "", "category": "Guidance and Decision Making" },
+            { "subtopic": "Food and Eating", "altName": "Food", "category": "Food and Eating" },
+            { "subtopic": "Ethics", "altName": "", "category": "Ethics and Morality" }
           ]
         }
       },

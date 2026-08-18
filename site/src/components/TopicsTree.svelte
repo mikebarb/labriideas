@@ -2,6 +2,7 @@
 <script lang="ts">
   import { ChevronDown, ChevronRight, Search, Maximize2, Minimize2 } from 'lucide-svelte';
   import menuData from '../data/menu.json';
+  import { slugify } from '../lib/slugify.ts';
 
   interface LeafItem {
     subtopic: string;
@@ -16,17 +17,29 @@
   if (!topicsSubMenu || !topicsSubMenu.hierarchy) {
     throw new Error('Configuration error: "Topics" subMenu with hierarchy not found in menu.json');
   }
+
   
   // Now TypeScript knows hierarchy exists
   const hierarchy = topicsSubMenu.hierarchy;
 
   // Track open state for BOTH minor themes (under majors) and the major themes themselves
-  let openSections: Record<string, boolean> = $state({});
+  // Define a helper to generate the default state object
+  const initialOpenState = () => {
+    const state: Record<string, boolean> = {};
+    for (const majorTheme of Object.keys(hierarchy)) {
+      state[majorTheme] = true;
+    }
+    return state;
+  };
+  // Initialize the state directly with the generated object
+  let openSections = $state(initialOpenState());
+  
+  //let openSections: Record<string, boolean> = $state({});
 
   // Open all major themes on initial load
-  for (const majorTheme of Object.keys(hierarchy)) {
-    openSections[majorTheme] = true;
-  }
+  //for (const majorTheme of Object.keys(hierarchy)) {
+  //  openSections[majorTheme] = true;
+  //}
 
   function toggle(id: string) {
     openSections[id] = !openSections[id];
@@ -56,8 +69,23 @@
   }
 
   // NEW: Pure URL generator (no side effects)
-  function getTopicUrl(item: LeafItem): string {
+  function getTopicUrl_OLD(item: LeafItem): string {
+    const thisUrl = `/topics/${item.category}?label=${encodeURIComponent(item.subtopic)}`;
+    console.log(`Generated URL for ${item.subtopic}: ${thisUrl}`);
     return `/topics/${item.category}?label=${encodeURIComponent(item.subtopic)}`;
+  }
+  // NEW: Pure URL generator (no side effects) that encodes both category and label
+  //function getTopicUrl(item: LeafItem): string {
+  //  const category = encodeURIComponent(item.category);
+  //  const label = encodeURIComponent(item.subtopic);
+  //  return `/topics/${category}?label=${label}`;
+  //}
+
+  //const slugify = (text: string): string =>
+  //text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+  function getTopicUrl(item: LeafItem): string {
+    return `/topics/${slugify(item.category)}`;
   }
 
 </script>

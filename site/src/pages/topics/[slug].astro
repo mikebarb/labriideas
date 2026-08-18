@@ -1,6 +1,10 @@
 ---
 import LabriLayout from '../../layouts/LabriLayout.astro';
 import TrackList from '../../components/TrackList.svelte';
+import { slugify } from '../../lib/slugify.ts';
+
+//const slugify = (text: string): string =>
+//  text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
 export async function getStaticPaths() {
   const menuData = (await import('../../data/menu.json')).default;
@@ -34,10 +38,49 @@ export async function getStaticPaths() {
     }
   }
   
-  return Array.from(categoryMap.entries()).map(([category, subtopic]) => ({
-    params: { slug: category },
-    props: { label: subtopic, category: category }
-  }));
+  //return Array.from(categoryMap.entries()).map(([category, subtopic]) => ({
+  //  params: { slug: category },
+  //  props: { label: subtopic, category: category }
+  //}));
+
+  // Updated to allow for question mark in the URL by encoding the category
+  //return Array.from(categoryMap.entries()).map(([category, subtopic]) => ({
+  //  params: { slug: encodeURIComponent(category) },  // ← encoded here
+  //  props: { label: subtopic, category: category }   // ← raw value still passed as prop
+  //}));
+
+  // Slugification can create collisions: "What Does It Mean To Be Human?" 
+  // and "What does it mean to be human" both become what-does-it-mean-to-be-human. 
+  // So add a quick guard in getStaticPaths.
+  
+  // Track used slugs to detect collisions
+  const seenSlugs = new Map<string, string>(); // slug -> category that claimed it
+  
+  return Array.from(categoryMap.entries()).map(([category, subtopic]) => {
+    const slug = slugify(category);
+    
+    // GUARD: fail the build if two different categories produce the same slug
+    const existing = seenSlugs.get(slug);
+    if (existing !== undefined) {
+      throw new Error(
+        `Slug collision in topics: "${category}" and "${existing}" both map to slug "${slug}". ` +
+        `Rename one of these categories in menu.json.`
+      );
+    }
+    seenSlugs.set(slug, category);
+    
+    return {
+      params: { slug },
+      props: { label: subtopic, category: category }
+    };
+  });
+
+
+  //return Array.from(categoryMap.entries()).map(([category, subtopic]) => ({
+  //  params: { slug: slugify(category) },           // ← clean ASCII slug
+  //  props: { label: subtopic, category: category } // ← raw value for API filtering
+  //}));
+
 }
 
 const { label, category } = Astro.props;
