@@ -3,8 +3,10 @@
   import { sanitizeKeywords } from '../lib/dataUtils.js';
   import { Download, Pencil, Play, Pause, Loader2, Plus } from 'lucide-svelte';
 
-  // REFACTOR: Use our new centralized controller
-  import { play, queue, download, isQueued } from '../lib/playerController.js';
+  // Actions + download spinner come from the shared composable.
+  import { useTrackActions } from '../lib/useTrackActions.svelte.js';
+  // Global transition flag (the "switch lock")
+  import { isTrackSwitching } from '../lib/transition.svelte.js';
   import { currentTrackStore, statusStore, trackList } from '../lib/playerStore.js';
 
   interface Props {
@@ -19,36 +21,37 @@
   let { item, expanded = false, ontoggle, children, apiBase = '', isAdmin = false }: Props = $props();
 
   const keywords = $derived(sanitizeKeywords(item.keywords ?? []));
-  //const keywords = $derived([...new Set(sanitizeKeywords(item.keywords ?? []))]);
   const categoryText = $derived(formatCategory(item.category));
 
-  // Reactive state for the UI
+  // Visual state (native $store auto-subscription — reliable here)
   const isPlaying = $derived($currentTrackStore?.filename === item.filename && $statusStore === 'playing');
-  const isLoading = $derived(!!$trackList.find(t => t.filename === item.filename)?.loading);
-  const queued = $derived(isQueued(item));
+  const isCurrent = $derived($currentTrackStore?.filename === item.filename);
+  const isPlayerLoading = $derived($statusStore === 'loading' || $statusStore === 'buffering');
+  const queued = $derived(!!$trackList.find(t => t.filename === item.filename));
 
-  // Local spinner for download
-  let isDownloading = $state(false);
+  // ─── Loading state: the bulletproof switch-lock logic ───
+  // Local pending: immediate spinner on THIS card only, set on click.
+  let isPending = $state(false);
 
-  function handlePlay(event: MouseEvent) {
-    event.stopPropagation();
-     // Logic: Player controller handles the 'newPlay' logic
-    play(item, apiBase);
-  }
+  // Store-based loading is only trusted when NO transition is in flight.
+  // During a switch, currentTrackStore still holds the OLD track, so its
+  // signal is ambiguous — only the clicked card (isPending) may spin.
+  const isLoading = $derived(
+    isPending || (!isTrackSwitching() && isCurrent && isPlayerLoading)
+  );
 
-  function handleQueue(event: MouseEvent) {
-    event.stopPropagation();
-    // Logic: Player controller promotes track to queue
-    queue(item);
-  }
+  // When the transition completes, the store state is authoritative again.
+  $effect(() => {
+    if (!isTrackSwitching() && isPending) isPending = false;
+  });
 
-  function handleDownload(event: MouseEvent) {
-    event.stopPropagation();
-    isDownloading = true;
-    download(item, apiBase, {
-      onComplete: () => { isDownloading = false; },
-      onError: () => { isDownloading = false; },
-    });
+  // ─── Actions + download spinner from the shared composable ───
+  const { isDownloading, handlePlay, handleQueue, handleDownload } =
+    useTrackActions(() => item, () => apiBase);
+
+  function handlePlayLocal(event: MouseEvent) {
+    isPending = true; // Immediate feedback on THIS card
+    handlePlay(event); // Composable raises the switch lock + dispatches play
   }
 
   // TrackCard stays decoupled from the editor; the parent decides
@@ -83,7 +86,7 @@
 
     <!-- NEWPLAY BUTTON -->
     <button
-      onclick={handlePlay}
+      onclick={handlePlayLocal}
       disabled={isLoading}
       class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold transition shrink-0
              disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"

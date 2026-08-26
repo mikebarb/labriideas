@@ -2,7 +2,7 @@
 import { get } from 'svelte/store';
 import { trackList, currentTrackStore, statusStore, currentTimeStore } from './playerStore';
 import { buildTrack } from './buildTrack';
-import { downloadTrack } from './downloader';
+import { downloadTrack, type DownloadCallbacks } from './downloader';
 
 /**
  * Centralized logic for Player interactions.
@@ -36,7 +36,10 @@ export function queue(item: any) {
 }
 
 // ─── Download ───
-export function download(item: any, apiBase: string, callbacks?: any) {
+// CHANGED: callbacks is now typed as DownloadCallbacks (was `any`).
+// This lets consumers (e.g. useTrackActions) rely on onStart/onComplete/
+// onError with full type safety. downloadTrack already invokes all three.
+export function download(item: any, apiBase: string, callbacks?: DownloadCallbacks) {
   const track = buildTrack(item);
   downloadTrack(track, apiBase, callbacks);
 }

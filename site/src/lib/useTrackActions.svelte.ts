@@ -19,6 +19,7 @@ export function useTrackActions(getItem: () => any, getApiBase: () => string) {
   let isDownloading = $state(false);
 
   // ─── Action handlers ───
+  // Each stops propagation so card-level click handlers don't also fire.
 
   function handlePlay(event: MouseEvent) {
     event.stopPropagation();
@@ -34,12 +35,13 @@ export function useTrackActions(getItem: () => any, getApiBase: () => string) {
 
   function handleQueue(event: MouseEvent) {
     event.stopPropagation();
+    // Logic: Player controller promotes track to queue
     queue(getItem());
   }
 
   function handleDownload(event: MouseEvent) {
     event.stopPropagation();
-    if (isDownloading) return;
+    if (isDownloading) return; // double-click guard
     isDownloading = true;
     download(getItem(), getApiBase(), {
       onComplete: () => { isDownloading = false; },
@@ -49,6 +51,7 @@ export function useTrackActions(getItem: () => any, getApiBase: () => string) {
 
   return {
     get isDownloading() { return isDownloading; },
+    // Actions
     handlePlay,
     handleQueue,
     handleDownload,

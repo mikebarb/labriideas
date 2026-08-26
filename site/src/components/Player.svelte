@@ -14,6 +14,7 @@
   import { fetchPresignedUrl } from '../lib/downloader.ts';
   import { removeTrackFromOpfs, getTrackBlob, saveTrackToOpfs } from '../lib/opfsStore.ts';
   import { isOnline } from '../lib/connectivityStore.ts';
+  import { setTrackSwitching } from '../lib/transition.svelte.js';
 
   // ─── Controller Integration ───
   // Import the centralized business logic for queue bookmark management
@@ -505,6 +506,7 @@
 
     // CASE 1: Same track → toggle
     if (currentTrack?.filename === track.filename) {
+      setTrackSwitching(false); // No transition occurs — release the switch lock
       await togglePlayPause();
       return;
     }
@@ -538,7 +540,7 @@
       // ─── Update the Queue Bookmark ───
       // We are playing from the queue, so the bookmark moves to this track.
       setBookmark(nextTrack.filename);
-      
+    
       commitQueue(); // ← structural: active-row indicator moves immediately
 
       isSwitching = true; // Suppress listener position-writes during load
@@ -560,6 +562,7 @@
         return; // status/errorMessage already set inside loadTrack
       } finally {
         isSwitching = false; // Always release — success or failure
+        setTrackSwitching(false); // Transition finished — release the switch lock
       }
 
       await performPlay();
@@ -598,6 +601,7 @@
         return; // ← The track is NOT added to the queue. No "ghost" track.
     } finally {
       isSwitching = false;
+      setTrackSwitching(false); // Transition finished — release the switch lock
     }
 
     // Track loaded successfully. Clear spinner.
