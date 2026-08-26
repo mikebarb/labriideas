@@ -1,25 +1,11 @@
 ---
 // src/pages/featured/index.astro
 // REFACTORED: Added Play / Queue / Download actions to featured cards.
-//
-// ARCHITECTURE NOTES:
-// 1. Catalog Hydration: menu.json holds ONLY curation data (filename,
-//    image, colors). All track metadata — critically including the R2
-//    `hash` — is resolved at click-time by looking up the filename in
-//    the catalog (the source of truth, built from R2 scans). This
-//    unlocks OPFS caching and offline resilience for featured tracks.
-// 2. Static Page Pattern: This page is NOT a Svelte island. The inline
-//    script dispatches the same window CustomEvents the Player listens
-//    for ('play-track', 'add-to-queue', 'download-track'), so it shares
-//    all business logic with TrackCard without coupling to the player
-//    stores at build time.
-// 3. The filename is the unique key across R2, the catalog, and
-//    menu.json — an administrator cannot misconfigure it.
+// (See extensive architecture notes below)
 import Layout from '../../layouts/LabriLayout.astro';
 import menuData from '../../data/menu.json';
 import Hero from '../../components/Hero.svelte';
 
-// Pull the featured lectures data (with defensive fallback)
 const featuredData = menuData.featuredLectures ?? { 
   sectionTitle: "Featured Lectures", 
   sectionSubtitle: "", 
@@ -88,7 +74,7 @@ const { sectionTitle, sectionSubtitle, items } = featuredData;
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
             </button>
 
-            <!-- DOWNLOAD BUTTON: shown for admin users only (JS toggles) -->
+            <!-- DOWNLOAD BUTTON (admin only) -->
             <button
               type="button"
               data-action="download"
@@ -104,48 +90,25 @@ const { sectionTitle, sectionSubtitle, items } = featuredData;
   </div>
 
   <script>
-    // ─── Featured Card Controller (Client-Side Only) ───
-    // Translates featured card clicks into the window events the
-    // Player and playerController expect. Mirrors the same business
-    // actions as TrackCard: Play (stream), Queue (promote), Download.
+    // ─── Featured Card Controller (Client-Side) ───
+    // Uses catalog hydration to resolve hashes, dispatches events Player listens for.
 
     import { getCachedCatalog } from '../../lib/catalogStore.js';
     import { buildTrack } from '../../lib/buildTrack.js';
     import { trackList, isAdminStore } from '../../lib/playerStore.js';
 
-    /**
-     * Resolves a complete Track object by looking up the filename in
-     * the catalog (Catalog Hydration pattern).
-     *
-     * The lookup is fast (memory or localStorage decompression, < 5ms)
-     * and returns the genuine R2 `hash`, enabling OPFS caching and
-     * offline playback for featured lectures.
-     *
-     * Falls back to the card's data attributes if the catalog is
-     * unavailable or the filename is not found (e.g. curation lists a
-     * file that was removed from R2 before the next catalog scan).
-     */
     async function resolveFeaturedTrack(card: HTMLElement): Promise<any> {
       const filename = card.dataset.filename || '';
-
       try {
-        // 1. Fast catalog lookup (memory → localStorage → server)
         const { tracks } = await getCachedCatalog();
         const catalogItem = tracks.find((t: any) => t.filename === filename);
-
-        if (catalogItem) {
-          // Full catalog track with genuine hash, duration, and metadata
-          return buildTrack(catalogItem);
-        }
+        if (catalogItem) return buildTrack(catalogItem);
       } catch (e) {
-        console.warn('[Featured] Catalog lookup failed, using fallback attributes', e);
+        console.warn('[Featured] Catalog lookup failed', e);
       }
-
-      // 2. Fallback: build from the card's data attributes.
-      //    hash: '' means no OPFS caching — streaming still works.
       return {
         id: card.dataset.featuredId,
-        filename: filename,
+        filename,
         hash: '',
         metadata: {
           title: card.dataset.title || '',
@@ -158,47 +121,37 @@ const { sectionTitle, sectionSubtitle, items } = featuredData;
       };
     }
 
-    // ─── Event Delegation ───
     document.addEventListener('click', async (event) => {
       const actionBtn = (event.target as HTMLElement).closest('[data-action]') as HTMLElement;
       if (!actionBtn) return;
-
       const card = actionBtn.closest('[data-featured-id]') as HTMLElement;
       if (!card) return;
 
       event.preventDefault();
       const action = actionBtn.dataset.action;
-
-      // Hydrate the track with catalog metadata (incl. hash) before dispatch
       const track = await resolveFeaturedTrack(card);
 
       switch (action) {
         case 'play':
-          // newPlay: stream immediately, no queue modification
           window.dispatchEvent(new CustomEvent('play-track', { detail: track }));
           break;
         case 'queue':
-          // Promotion: add to queue, background-cache to OPFS, no auto-play
           window.dispatchEvent(new CustomEvent('add-to-queue', { detail: track }));
           break;
         case 'download':
-          // Export: library download (requires admin session)
-          window.dispatchEvent(new CustomEvent('download-track', { 
-            detail: { track, apiBase: import.meta.env.PUBLIC_API_BASE_URL } 
+          window.dispatchEvent(new CustomEvent('download-track', {
+            detail: { track, apiBase: import.meta.env.PUBLIC_API_BASE_URL }
           }));
           break;
       }
     });
 
-    // ─── Visual State Sync: "✓ Queued" ───
-    // Subscribes to the shared trackList store so queue buttons stay
-    // in sync even if the track was queued from a TrackCard elsewhere.
+    // ─── Queue button visual sync ───
     trackList.subscribe(tracks => {
       document.querySelectorAll('[data-featured-id]').forEach(card => {
         const filename = (card as HTMLElement).dataset.filename;
         const queueBtn = card.querySelector('.featured-queue-btn') as HTMLButtonElement;
         if (!queueBtn) return;
-
         const isQueued = tracks.some(t => t.filename === filename);
         queueBtn.disabled = isQueued;
         queueBtn.innerHTML = isQueued 
@@ -208,7 +161,7 @@ const { sectionTitle, sectionSubtitle, items } = featuredData;
       });
     });
 
-    // Show download buttons only for admin users
+    // Admin-only download buttons
     isAdminStore.subscribe(isAdmin => {
       document.querySelectorAll('.featured-download-btn').forEach(btn => {
         (btn as HTMLElement).classList.toggle('hidden', !isAdmin);
@@ -218,18 +171,12 @@ const { sectionTitle, sectionSubtitle, items } = featuredData;
 </Layout>
 
 <style>
-  /* Press feedback for featured cards.
-     WHY: Provides instant visual confirmation that the card was clicked.
-     Using :active transition - lightweight, requires no JS, and doesn't
-     interfere with the event dispatch above.
-  */
   [data-featured-id]:active {
     transform: scale(0.98);
     opacity: 0.9;
     transition: transform 0.1s ease, opacity 0.1s ease;
   }
 
-  /* Prevent action buttons from triggering the card press effect */
   .featured-play-btn:active,
   .featured-queue-btn:active,
   .featured-download-btn:active {

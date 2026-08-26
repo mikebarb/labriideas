@@ -1,11 +1,13 @@
 <!-- src/components/TrackCard.svelte -->
 <script lang="ts">
+  //import type { Track } from '../lib/types.ts';
+  import { buildTrack } from '../lib/buildTrack.ts';
   import { sanitizeKeywords } from '../lib/dataUtils.js';
-  import { Download, Pencil, Play, Pause, Loader2, Plus } from 'lucide-svelte';
+  import { downloadTrack } from '../lib/downloader.js';
+  import { Download, Pencil, Play, Pause, Loader2 } from 'lucide-svelte';
 
-  // REFACTOR: Use our new centralized controller
-  import { play, queue, download, isQueued } from '../lib/playerController.js';
-  import { currentTrackStore, statusStore, trackList } from '../lib/playerStore.js';
+  // REFACTOR: Import stores to observe player state
+  import { currentTrackStore, statusStore, trackList } from '../lib/playerStore.ts';
 
   interface Props {
     item: any;
@@ -19,35 +21,53 @@
   let { item, expanded = false, ontoggle, children, apiBase = '', isAdmin = false }: Props = $props();
 
   const keywords = $derived(sanitizeKeywords(item.keywords ?? []));
-  //const keywords = $derived([...new Set(sanitizeKeywords(item.keywords ?? []))]);
   const categoryText = $derived(formatCategory(item.category));
 
-  // Reactive state for the UI
+  // Download state — tracks which filename is currently downloading
+  // so we can show a spinner on the right card.
+  let downloadingFilename: string | null = $state(null);
+
+  // REFACTOR: Derive UI state from stores
+  // isPlaying: true if this track is currently playing
   const isPlaying = $derived($currentTrackStore?.filename === item.filename && $statusStore === 'playing');
+  // isLoading: true if this track is in the queue and still loading
   const isLoading = $derived(!!$trackList.find(t => t.filename === item.filename)?.loading);
-  const queued = $derived(isQueued(item));
+  // isInQueue: (optional) can be used later if needed
+  const isInQueue = $derived(!!$trackList.find(t => t.filename === item.filename));
 
-  // Local spinner for download
-  let isDownloading = $state(false);
+  function handleHeaderClick() {
+    ontoggle?.(item.filename);
+  }
 
+  // REFACTOR: Updated handler to support pause toggle
   function handlePlay(event: MouseEvent) {
     event.stopPropagation();
-     // Logic: Player controller handles the 'newPlay' logic
-    play(item, apiBase);
+    // If already playing, dispatch a new 'toggle-play' event (Player will handle)
+    if (isPlaying) {
+      window.dispatchEvent(new CustomEvent('toggle-play'));
+      return;
+    }
+    const track = buildTrack(item);
+    window.dispatchEvent(new CustomEvent('play-track', { detail: track }));
   }
 
-  function handleQueue(event: MouseEvent) {
-    event.stopPropagation();
-    // Logic: Player controller promotes track to queue
-    queue(item);
-  }
-
+  // CHANGED: Download handler — calls the library function with
+  // the track, apiBase, and lifecycle callbacks.
   function handleDownload(event: MouseEvent) {
     event.stopPropagation();
-    isDownloading = true;
-    download(item, apiBase, {
-      onComplete: () => { isDownloading = false; },
-      onError: () => { isDownloading = false; },
+    
+    // Prevent double-clicking the same file
+    if (downloadingFilename === item.filename) return;
+
+    const track = buildTrack(item);
+    downloadingFilename = track.filename;
+
+    downloadTrack(track, apiBase, {
+      onComplete: () => { downloadingFilename = null; },
+      onError: (err) => {
+        console.error('Download failed:', err);
+        downloadingFilename = null;
+      },
     });
   }
 
@@ -55,7 +75,10 @@
   // how the editor is mounted.
   function handleEdit(event: MouseEvent) {
     event.stopPropagation();
-    window.dispatchEvent(new CustomEvent('edit-track', { detail: { track: item } }));
+    console.log('[TrackCard] Dispatching edit-track', item.filename);
+    window.dispatchEvent(new CustomEvent('edit-track', { 
+      detail: { track: item } 
+    }));
   }
 
   function formatCategory(category: string | string[] | undefined): string {
@@ -72,16 +95,24 @@
     <!-- Expand/collapse arrow (left) -->
     <button
       class="text-gray-400 p-1 rounded hover:bg-gray-200 transition shrink-0"
-    onclick={() => ontoggle?.(item.filename)}>
+      onclick={handleHeaderClick}
+      aria-expanded={expanded}
+      aria-label={expanded ? 'Collapse details' : 'Expand details'}
+    >
       {expanded ? '▼' : '▶'}
     </button>
 
-    <button class="flex-1 min-w-0 text-left" onclick={() => ontoggle?.(item.filename)}>
-      <p class="font-medium text-gray-900 truncate">{item.title ?? item.filename}</p>
-      <p class="text-sm text-gray-500 truncate">{item.speaker}</p>
+    <!-- Title and speaker (clickable to expand) -->
+    <button
+      class="flex-1 min-w-0 text-left"
+      onclick={handleHeaderClick}
+      aria-expanded={expanded}
+    >
+      <p class="font-medium text-gray-900 wrap-break-words">{item.title ?? item.filename}</p>
+      <p class="text-sm text-gray-500 wrap-break-words">{item.speaker}</p>
     </button>
 
-    <!-- NEWPLAY BUTTON -->
+    <!-- REFACTOR: Play button now shows spinner, pause, or play based on state -->
     <button
       onclick={handlePlay}
       disabled={isLoading}
@@ -123,25 +154,11 @@
       
         <!-- Action buttons (right-aligned) -->
         <div class="flex items-center gap-2 shrink-0">
-          <!-- QUEUE BUTTON: Grayed out if already queued
-            QUEUE BUTTON (NEW): Adds the track to the queue drawer and
-            triggers a background download to OPFS. Does NOT auto-play.
-            Grayed out with a checkmark when the track is already queued.
+          <!--
+            CHANGED: Built-in download button for admin users.
+            Renders a spinner while downloading, otherwise shows the
+            Download icon. Disabled state prevents double-clicks.
           -->
-          <button
-            onclick={handleQueue}
-            disabled={queued}
-            class="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition
-                    disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label={queued ? 'Already in queue' : 'Add to queue'}
-          >
-            {#if queued}
-              <span class="text-xs">✓</span>
-            {:else}
-              <Plus size={16} />
-            {/if}
-          </button>
-
           {#if isAdmin}
             <button
               onclick={handleEdit}
@@ -151,19 +168,14 @@
               <Pencil size={16} />
             </button>
             
-            <!--
-            CHANGED: Built-in download button for admin users.
-            Renders a spinner while downloading, otherwise shows the
-            Download icon. Disabled state prevents double-clicks.
-            -->
             <button
               onclick={handleDownload}
-              disabled={isDownloading}
+              disabled={downloadingFilename === item.filename}
               class="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition
                       disabled:opacity-50 disabled:cursor-wait"
               aria-label="Download track"
             >
-              {#if isDownloading}
+              {#if downloadingFilename === item.filename}
                 <div class="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
               {:else}
                 <Download size={16} />

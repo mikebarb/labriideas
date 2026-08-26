@@ -61,18 +61,6 @@
   // fast to warrant effect scheduling.
   let isSwitching = false;
 
-  /**
-   * Failover guard: set true after a successful (or failed) OPFS
-   * hot-swap attempt for the current audio source. Reset whenever a
-   * new track is loaded. Prevents infinite swap loops if the OPFS
-   * blob itself cannot be played.
-   */
-  let failoverAttempted = $state(false);
-
-  /** Timer that delays the failover attempt while buffering,
-   *  so a brief network hiccup doesn't trigger an unnecessary swap. */
-  let bufferingTimer: ReturnType<typeof setTimeout> | null = null;
-
    // ─── Speed Control ───
   let speedLongPressTimer: ReturnType<typeof setTimeout> | null = $state(null);
   let isSpeedLongPressing = $state(false);
@@ -252,11 +240,6 @@
     if (!audioElement) return;
 
     status = 'loading';
-    failoverAttempted = false; // reset failover guard for the new source
-    if (bufferingTimer) { 
-      clearTimeout(bufferingTimer); 
-      bufferingTimer = null; 
-    }
     errorMessage = '';
 
     // ─── TIER 1: Try OPFS (Local Disk Cache) ───
@@ -420,74 +403,7 @@
     });
   }
 
-  /**
-   * Offline Hot-Swap: if the current track is streaming from the
-   * network and a complete copy exists in OPFS, silently swap the
-   * audio source to the local blob and resume at the stall position.
-   *
-   * Returns true if the swap succeeded. Called when the stream
-   * stalls for a sustained period or a MEDIA_ERR_NETWORK occurs.
-   *
-   * Guardrails:
-   *   - Only runs once per loaded source (failoverAttempted).
-   *   - Skips if already playing from a blob: URL (already local).
-   *   - Skips if the track has no hash or no OPFS copy exists.
-   */
-  async function hotSwapToOpfs(): Promise<boolean> {
-    if (!audioElement || !currentTrack || !currentTrack.hash) return false;
-    if (audioElement.src.startsWith('blob:')) return false; // already local
-    if (failoverAttempted) return false;
-    failoverAttempted = true; // claim the attempt immediately (single attempt)
 
-    const cachedBlob = await getTrackBlob(currentTrack.hash);
-    if (!cachedBlob || !audioElement) return false;
-
-    const track = currentTrack;
-    const resumePos = audioElement.currentTime;
-    const wasPlaying = status === 'playing' || status === 'buffering';
-
-    isSwitching = true;
-    try {
-      audioElement.src = URL.createObjectURL(cachedBlob);
-      audioElement.load();
-      audioElement.playbackRate = track.playbackRate ?? 1.0;
-
-      // Wait for seekable data, then restore the stall position.
-      // Mirrors the resume pattern used in waitForMetadata().
-      await new Promise<void>((resolve) => {
-        const el = audioElement!;
-        const doSeek = () => {
-          if (isFinite(el.duration) && el.duration > 0) {
-            el.currentTime = Math.min(resumePos, el.duration - 0.5);
-          }
-          resolve();
-        };
-        if (el.readyState >= 3) {
-          doSeek();
-        } else {
-          const onCanPlay = () => {
-            el.removeEventListener('canplay', onCanPlay);
-            doSeek();
-          };
-          el.addEventListener('canplay', onCanPlay);
-        }
-      });
-
-      currentTime = resumePos;
-      status = 'buffering'; // cleared to 'playing'/'paused' by element events below
-
-      if (wasPlaying) {
-        await audioElement.play();
-      }
-      console.log(`[Player] Hot-swapped ${track.filename} to OPFS copy at ${resumePos.toFixed(1)}s`);
-      return true;
-    } catch (err) {
-      console.warn('[Player] OPFS hot-swap failed:', err);
-      return false;
-    } finally {
-      isSwitching = false;
-    }
-  }
 
   /**
    * Main entry point for playing a track.
@@ -1022,50 +938,7 @@
         playNext();
       });
 
-      //audioElement.addEventListener('error', () => { status = 'error'; errorMessage = 'Playback error'; });
-
-      audioElement.addEventListener('error', () => {
-        // MEDIA_ERR_NETWORK (code 2) = connection lost mid-stream.
-        // Attempt OPFS failover before surfacing an error to the user.
-        if (audioElement?.error?.code === MediaError.MEDIA_ERR_NETWORK && !failoverAttempted) {
-          hotSwapToOpfs().then((ok) => {
-            if (!ok) {
-              status = 'error';
-              errorMessage = 'Connection lost. Track is not queued for offline playback.';
-            }
-          });
-          return;
-        }
-        status = 'error'; 
-        errorMessage = 'Playback error';
-      });
-
-
-      // ─── Offline Hot-Swap Triggers ───
-
-      // Stream stalled waiting for data. Show buffering state, then
-      // give the network a grace period before failing over to OPFS.
-      audioElement.addEventListener('waiting', () => {
-        if (isSwitching) return;
-        status = 'buffering';
-
-        // Offline already → attempt failover quickly; online → grace period
-        const graceMs = navigator.onLine ? 3000 : 500;
-        if (bufferingTimer) clearTimeout(bufferingTimer);
-        bufferingTimer = setTimeout(async () => {
-          if (status !== 'buffering') return; // recovered in the meantime
-          await hotSwapToOpfs();
-          // If swap failed, stay in 'buffering' — playback resumes when
-          // the network recovers and the browser refills the buffer.
-        }, graceMs);
-      });
-
-      // Playback resumed — clear buffering state and cancel any pending failover.
-      audioElement.addEventListener('playing', () => {
-        if (bufferingTimer) { clearTimeout(bufferingTimer); bufferingTimer = null; }
-        if (status === 'buffering') status = 'playing';
-      });
-
+      audioElement.addEventListener('error', () => { status = 'error'; errorMessage = 'Playback error'; });
     }
 
     // External event listeners for QueueDrawer and TrackList

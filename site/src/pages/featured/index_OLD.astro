@@ -1,0 +1,102 @@
+---
+// src/pages/featured/index.astro
+// Added a CSS-only press feedback to the featured cards.
+// WHY: The featured section is a promotional surface, not a state-aware
+// component like TrackCard. We want to give users immediate tactile
+// feedback without coupling these cards to the player stores or adding
+// JS complexity. This uses a simple :active transition - lightweight,
+// no rework, and disappears naturally when the player takes over.
+import Layout from '../../layouts/LabriLayout.astro';
+import menuData from '../../data/menu.json';
+import Hero from '../../components/Hero.svelte';
+
+// Pull the featured lectures data (with defensive fallback)
+const featuredData = menuData.featuredLectures ?? { 
+  sectionTitle: "Featured Lectures", 
+  sectionSubtitle: "", 
+  items: [] 
+};
+const { sectionTitle, sectionSubtitle, items } = featuredData;
+---
+
+<Layout title="Featured Lectures">
+  <Hero
+    title={sectionTitle}
+    subtitle={sectionSubtitle || undefined}
+    backgroundImage={import.meta.env.BASE_URL + "images/featured.avif"}
+    height="h-[300px]"
+    showBrushStroke={false}
+  />
+
+  <div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {items.map(item => (
+        <button 
+          type="button"
+          data-featured-id={item.id}
+          data-filename={item.filename}
+          data-title={item.title}
+          data-speaker={item.speaker}
+          class="block relative h-48 rounded-lg overflow-hidden bg-cover bg-center group w-full text-left cursor-pointer border-0 p-0"
+          style={`background-image: url(${item.image})`}
+        >
+          <div class="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition p-4 flex flex-col justify-end">
+            <h3 class:list={[
+              "text-gray-200 text-sm mt-1 bg-blue-500",
+              item.titleBgColor
+            ]}>{item.speaker}</h3>
+            <h3 class:list={[
+              "text-white text-xl font-bold bg-blue-500",
+              item.titleBgColor
+            ]}>{item.title}</h3>
+          </div>
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      const button = target.closest('[data-featured-id]') as HTMLButtonElement;
+      
+      if (button) {
+        event.preventDefault();
+        // Build a Track object that matches Player.svelte's expectations
+        const track = {
+          id: button.dataset.featuredId,
+          filename: button.dataset.filename,
+          hash: '',     //Not used for featured lectures
+          metadata: {
+            title: button.dataset.title,
+            artist: button.dataset.speaker,
+            speaker: button.dataset.speaker
+          },
+          title: button.dataset.title,
+          artist: button.dataset.speaker,
+          speaker: button.dataset.speaker,
+          playbackRate: 1.0
+        };    
+        
+        // Dispatch the event the Player is already listening for
+        window.dispatchEvent(new CustomEvent('play-track', { 
+          detail: track 
+        }));
+      }
+    });
+  </script>
+</Layout>
+
+<style>
+  /* Added press feedback for featured cards.
+     WHY: Provides instant visual confirmation that the button was clicked.
+     Using :active transition - this is lightweight, requires no JS,
+     and doesn't interfere with the play-track event dispatch.
+     The effect is subtle (scale + opacity) to feel responsive but not jarring. 
+  */
+  [data-featured-id]:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+    transition: transform 0.1s ease, opacity 0.1s ease;
+  }
+</style>

@@ -23,7 +23,7 @@
 // - If we have to fetch from the network, we save the resulting blob to OPFS
 //   so subsequent downloads/plays are instant.
 
-import type { Track } from './types';
+import type { Track } from './types.ts';
 import { getTrackBlob, saveTrackToOpfs } from './opfsStore.ts';
 
 // ---------------------------------------------------------------------------
@@ -149,16 +149,35 @@ export async function downloadTrack(
 /**
  * Background pre-caching. Fetches a track and saves it to OPFS 
  * without playing it. Used for pre-warming the cache.
+ *
+ * CHANGED: Removed the redundant dynamic import of opfsStore —
+ * `getTrackBlob` and `saveTrackToOpfs` are already statically
+ * imported at the top of this file. The dynamic import triggered
+ * a Vite build warning (module in both static and dynamic import
+ * graphs) and provided no code-splitting benefit.
+ 
+* FIXED (empty apiBase bug): previously this function called
+ * fetchPresignedUrl(track.filename, '') — the empty apiBase produced
+ * a request to '/api/download?...' relative to the SITE origin rather
+ * than the API server, so the function could never succeed unless the
+ * site and API shared an origin. The bug was latent because the
+ * function had no callers.
+ *
+ * The apiBase parameter now defaults to PUBLIC_API_BASE_URL — the same
+ * convention used by catalogStore.ts — so callers may omit it, and it
+ * can never silently fall back to an empty string.
  */
-export async function ensureTrackCached(track: Track): Promise<void> {
+export async function ensureTrackCached(
+  track: Track,
+  apiBase: string = import.meta.env.PUBLIC_API_BASE_URL
+): Promise<void> {
   if (!track.hash) return;
-  const { getTrackBlob, saveTrackToOpfs } = await import('./opfsStore');
   
   const alreadyCached = await getTrackBlob(track.hash);
   if (alreadyCached) return;
 
   try {
-    const ticket = await fetchPresignedUrl(track.filename, '');
+    const ticket = await fetchPresignedUrl(track.filename, apiBase);
     const response = await fetch(ticket.url);
     if (!response.ok) throw new Error('Fetch failed');
     const blob = await response.blob();
