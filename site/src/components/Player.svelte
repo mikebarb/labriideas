@@ -1189,10 +1189,12 @@
 
 <audio bind:this={audioElement} preload="auto"></audio>
 
-<!-- DESKTOP LAYOUT -->
-{#if tracks.length > 0 || currentTrack !== null}
+<!-- DESKTOP LAYOUT 
+                             fixed bottom-0 left-0 right-0 z-40
   <div class="hidden md:flex fixed bottom-0 left-0 right-0 h-24 bg-[#0e0e0e] border-t border-neutral-800 items-center px-6 z-40">
-    
+-->
+{#if tracks.length > 0 || currentTrack !== null}
+  <div class="hidden md:flex h-24 bg-[#0e0e0e] border-t border-neutral-800 items-center px-6">     
     <div class="flex-1 min-w-0 flex flex-col justify-center">
       {#if currentTrack}
         <div class="text-sm font-semibold truncate text-white">{currentTrack.title ?? currentTrack.filename}</div>
@@ -1298,48 +1300,57 @@
     via the bar's Playlist toggle or its own X button.
   -->
   <div class="md:hidden">
-    <!-- 1. Persistent bottom bar -->
-    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md h-14 bg-[#181818] border border-neutral-800 rounded-full px-4 flex items-center gap-3 z-60 shadow-2xl">
-      <button onclick={togglePlayPause} class="text-white p-1" aria-label="Play/Pause" disabled={!currentTrack}>
-        {#if status === 'playing'}<Pause size={20} fill="currentColor" />{:else if status === 'loading' || status === 'buffering'}<span class="loading-spinner" style="width:20px;height:20px;">⏳</span>{:else}<Play size={20} fill="currentColor" class="ml-0.5" />{/if}
-      </button>
-      <div class="flex-1 min-w-0">
-        <div class="text-sm font-medium truncate text-white">{currentTrack?.title ?? 'No track'}</div>
-        <div class="text-xs text-neutral-400 truncate">{currentTrack?.speaker ?? ''}</div>
+    <!-- 1. Persistent bottom bar
+         CHANGED: wrapped in an in-flow `relative h-20` container so the
+         pill's space is RESERVED in the layout. The pill keeps its
+         floating visual (absolute, bottom-4, rounded, shadow) but page
+         content now scrolls to a stop above it instead of behind it.
+         z-60 still keeps the pill above the maxPlayer overlay (z-50). 
+         <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md h-14 bg-[#181818] border border-neutral-800 rounded-full px-4 flex items-center gap-3 z-60 shadow-2xl">
+         -->
+    <div class="relative h-20">
+      <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md h-14 bg-[#181818] border border-neutral-800 rounded-full px-4 flex items-center gap-3 z-60 shadow-2xl">
+        <button onclick={togglePlayPause} class="text-white p-1" aria-label="Play/Pause" disabled={!currentTrack}>
+          {#if status === 'playing'}<Pause size={20} fill="currentColor" />{:else if status === 'loading' || status === 'buffering'}<span class="loading-spinner" style="width:20px;height:20px;">⏳</span>{:else}<Play size={20} fill="currentColor" class="ml-0.5" />{/if}
+        </button>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate text-white">{currentTrack?.title ?? 'No track'}</div>
+          <div class="text-xs text-neutral-400 truncate">{currentTrack?.speaker ?? ''}</div>
+        </div>
+
+        <!--
+          Playlist toggle (CHANGED).
+          - On the bar: shows track list (replaces maxPlayer if shown)
+          - In trackList: returns to min
+          - Visual state indicates which view is active
+        -->
+        <button 
+          onclick={togglePlaylist} 
+          class="text-neutral-300 hover:text-white p-2 {$mobileView === 'list' ? 'text-white bg-white/10' : ''} rounded-full" 
+          aria-label="Toggle queue"
+          aria-pressed={$mobileView === 'list'}
+        >
+          <ListMusic size={18} />
+        </button>
+
+        <!--
+          Expand toggle (NEW on mobile bar).
+          - On the bar: shows maxPlayer (replaces trackList if shown)
+          - In maxPlayer: returns to min
+        -->
+        <button 
+          onclick={toggleMaxPlayer} 
+          class="text-neutral-300 hover:text-white p-2 {$mobileView === 'max' ? 'text-white bg-white/10' : ''} rounded-full" 
+          aria-label="Toggle expanded player"
+          aria-pressed={$mobileView === 'max'}
+        >
+          {#if $mobileView === 'max'}
+            <Minimize2 size={18} />
+          {:else}
+            <Maximize2 size={18} />
+          {/if}
+        </button>
       </div>
-
-      <!--
-        Playlist toggle (CHANGED).
-        - On the bar: shows track list (replaces maxPlayer if shown)
-        - In trackList: returns to min
-        - Visual state indicates which view is active
-      -->
-      <button 
-        onclick={togglePlaylist} 
-        class="text-neutral-300 hover:text-white p-2 {$mobileView === 'list' ? 'text-white bg-white/10' : ''} rounded-full" 
-        aria-label="Toggle queue"
-        aria-pressed={$mobileView === 'list'}
-      >
-        <ListMusic size={18} />
-      </button>
-
-      <!--
-        Expand toggle (NEW on mobile bar).
-        - On the bar: shows maxPlayer (replaces trackList if shown)
-        - In maxPlayer: returns to min
-      -->
-      <button 
-        onclick={toggleMaxPlayer} 
-        class="text-neutral-300 hover:text-white p-2 {$mobileView === 'max' ? 'text-white bg-white/10' : ''} rounded-full" 
-        aria-label="Toggle expanded player"
-        aria-pressed={$mobileView === 'max'}
-      >
-        {#if $mobileView === 'max'}
-          <Minimize2 size={18} />
-        {:else}
-          <Maximize2 size={18} />
-        {/if}
-      </button>
     </div>
 
     <!-- 2. maxPlayer view (only when active) -->

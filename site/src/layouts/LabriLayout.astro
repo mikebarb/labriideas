@@ -61,6 +61,31 @@ const showMegaMenu = isHome;
 			- `z-50`: keeps it above scrolling page content.
 			- `transition:persist`: ensures audio doesn't stop/reload on navigation.
 		-->
+
+		<!-- 
+			PLAYER: Visible on all pages, controls its own visibility.
+			
+			CHANGED: Bare wrapper — no positioning, no styling. The Player
+			component renders its own backgrounds (dark desktop bar, floating
+			mobile pill) and is now an in-flow flex child, so the body column
+			gives AppShell exactly the remaining height: page content and the
+			queue drawer end at the player's top edge, nothing occluded.
+			When no track is loaded, Player renders nothing and this wrapper
+			collapses to zero height (no phantom border).
+			
+			`transition:persist`: moves this DOM node across navigations,
+			keeping audio alive — independent of positioning.
+		-->
+		<div transition:persist="audio-player">
+			<Player 
+			client:load 
+			showTracklist={false} 
+			apiBase={import.meta.env.PUBLIC_API_BASE_URL} 
+			isAdmin={true} 
+			/>
+		</div>
+
+        <!-- 
 		<div transition:persist="audio-player" class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
 			<Player 
 			client:load 
@@ -69,5 +94,6 @@ const showMegaMenu = isHome;
 			isAdmin={true} 
 			/>
 		</div>
+		-->
 	</body>
 </html>

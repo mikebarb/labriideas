@@ -1,7 +1,7 @@
 <!-- src/components/AppShell.svelte -->
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { mobileView, desktopQueueOpen, trackList } from '../lib/playerStore.js';
+  import { mobileView, desktopQueueOpen } from '../lib/playerStore.js';
   import { onMount } from 'svelte';
   import QueueDrawer from './QueueDrawer.svelte';
   import MetadataEditor from './MetadataEditor.svelte';
@@ -13,8 +13,11 @@
   }
   let { children, apiBase }: Props = $props();
   
-  // The player takes 96px (h-24) when showing, 0px when hidden
-  let mainPaddingBottom = $derived($trackList.length > 0 ? 'pb-24' : 'pb-0');
+  // CHANGED: Removed mainPaddingBottom (pb-24) workaround.
+  // The player is now an in-flow flex sibling (LabriLayout), so AppShell's
+  // available height already ends at the player's top edge — padding the
+  // scrollable content would create a phantom 96px of blank space instead
+  // of clearing a fixed overlay.
 
   // CHANGED: Close drawer handler for mobile overlay
   function closeMobileDrawer() {
@@ -57,11 +60,16 @@
   });
 </script>
 
-<div class="flex h-full w-full overflow-hidden">
+<!--
+  CHANGED: root container is now `relative` so the mobile queue overlay
+  can be positioned `absolute inset-0` — covering the app area only,
+  ending exactly at the in-flow player's top edge.
+-->
+<div class="relative flex h-full w-full overflow-hidden">
   
-  <!-- Main Content: Reactive margin and padding -->
+  <!-- Main Content -->
   <main 
-    class="flex-1 overflow-auto transition-all duration-300 {mainPaddingBottom}"
+    class="flex-1 overflow-auto transition-all duration-300"
   >
     {@render children()}
   </main>
@@ -80,13 +88,16 @@
   </div>
 
   <!--
-    MOBILE: Full-screen overlay (< md breakpoint)
+    MOBILE: Overlay (< md breakpoint)
     Only visible when mobileView === 'list'.
-    The persistent player bar at the bottom (z-50) remains visible above
-    the drawer (z-40) so users always have the toggle buttons.
+    CHANGED: `absolute inset-0` (was `fixed inset-0 z-40`) — the overlay
+    now fills AppShell's area only and ends at the player's top edge.
+    The in-flow player bar below remains visible by geometry, no longer
+    relying on z-index stacking (player z-50 > drawer z-40) which broke
+    when the player moved into the document flow.
   -->
   {#if $mobileView === 'list'}
-    <div class="md:hidden fixed inset-0 z-40 bg-[#0e0e0e] flex flex-col">
+    <div class="md:hidden absolute inset-0 z-40 bg-[#0e0e0e] flex flex-col">
       <div class="flex items-center justify-end p-2 border-b border-neutral-800">
         <button
           onclick={closeMobileDrawer}
