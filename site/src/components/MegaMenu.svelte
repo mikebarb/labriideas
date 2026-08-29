@@ -2,6 +2,7 @@
 <script lang="ts">
   // Direct JSON import - Vite will bundle this client-side
   import menuData from '../data/menu.json';
+  import { slugify } from '../lib/slugify.ts';
   
   // === TYPE DEFINITIONS ===
   
@@ -9,12 +10,6 @@
     subtopic: string;
     altName?: string;
     category: string;
-  }
-
-  interface FeaturedItem {
-    title: string;
-    speaker: string;
-    url: string;
   }
 
   interface FeaturedItem {
@@ -38,15 +33,9 @@
  // === EXTRACT DATA INTERNALLY ===
   
   const topicsSubMenu = menuData.subMenus.find(s => s.subMenu === 'Topics');
-  //if (!topicsSubMenu || !topicsSubMenu.hierarchy) {
   if (!topicsSubMenu) {
     throw new Error('Configuration error: "Topics" subMenu not found in menu.json');
   }
-  // Type guard: explicitly check the subMenu name
-  //if (topicsSubMenu.subMenu !== 'Topics') {
-  //  throw new Error('Expected Topics subMenu');
-  //}
-
 
   // Cast to our explicit TopicsData shape
   // This tells TypeScript: "trust me, this is the Topics variant"
@@ -95,7 +84,8 @@
   };
 </script>
 
-<nav class="bg-gray-50 border-b border-gray-200 py-4" onmouseleave={handleMouseLeave}>
+<!--<nav class="bg-gray-50 border-b border-gray-200 py-4" onmouseleave={handleMouseLeave}>-->
+<nav class="relative bg-gray-50 border-b border-gray-200 py-4" onmouseleave={handleMouseLeave}>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
       <button
@@ -118,7 +108,10 @@
     </div>
 
     {#if activeRoot}
-      <div class="absolute left-0 right-0 z-40 bg-white shadow-xl border-t border-gray-100 grid grid-cols-2 md:grid-cols-4 mt-4 -mx-4 sm:-mx-6 lg:-mx-8" role="menu">
+      <!--<div class="absolute left-0 right-0 z-40 bg-white shadow-xl border-t border-gray-100 grid grid-cols-2 md:grid-cols-4 mt-4 -mx-4 sm:-mx-6 lg:-mx-8" role="menu">-->
+      <div class="absolute left-0 right-0 top-full z-40 bg-white shadow-xl border-t border-gray-100 
+                  grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 
+                  max-h-[70vh] md:max-h-[80vh] overflow-y-auto" role="menu">
         
         <!-- COLUMN 1: Categories -->
         <div class="col-span-1 bg-gray-50 p-6 border-r border-b md:border-b-0">
@@ -139,7 +132,7 @@
             <div class="flex flex-col gap-1">
               {#each hierarchy[activeRoot][activeSub] as item}
                 <a 
-                  href="/topics/{item.category}?label={encodeURIComponent(getLabel(item))}" 
+                  href={`/topics/${slugify(item.category)}?label=${encodeURIComponent(getLabel(item))}`}
                   class="text-sm text-gray-700 hover:text-orange-600 py-1"
                 >
                   {getLabel(item)}

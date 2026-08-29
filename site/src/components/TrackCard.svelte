@@ -78,11 +78,18 @@
     onclick={() => ontoggle?.(item.filename)}>
       {expanded ? '▼' : '▶'}
     </button>
-
+    
+    <!--
     <button class="flex-1 min-w-0 text-left" onclick={() => ontoggle?.(item.filename)}>
-      <p class="font-medium text-gray-900 truncate">{item.title ?? item.filename}</p>
+      <p class="font-medium text-gray-900 wrap-break-words line-clamp-2">{item.title ?? item.filename}</p>
       <p class="text-sm text-gray-500 truncate">{item.speaker}</p>
     </button>
+    -->
+    <button class="flex-1 min-w-0 text-left" onclick={() => ontoggle?.(item.filename)}>
+      <p class="font-medium text-base text-gray-900 leading-snug pb-0 line-clamp-2">{item.title ?? item.filename}</p>
+      <p class="text-sm text-gray-500 truncate pb-0">{item.speaker}</p>
+    </button>
+
 
     <!-- NEWPLAY BUTTON -->
     <button

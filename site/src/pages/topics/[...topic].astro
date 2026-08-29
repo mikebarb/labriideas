@@ -1,0 +1,190 @@
+---
+import LabriLayout from '../../layouts/LabriLayout.astro';
+import TrackList from '../../components/TrackList.svelte';
+import { slugify } from '../../lib/slugify.ts';
+import menuData from '../../data/menu.json';
+
+export async function getStaticPaths() {
+  // FIXED: data extraction lives INSIDE getStaticPaths. Astro evaluates
+  // this function in its own module scope during the build — variables
+  // defined elsewhere in the frontmatter are NOT visible to it.
+  const topicsSubMenu: any = menuData.subMenus.find((s: any) => s.subMenu === 'Topics') || {};
+  const hierarchy: Record<string, Record<string, any[]>> = topicsSubMenu.hierarchy || {};
+
+  // Explicit route shape — keeps TypeScript happy end to end.
+  interface TopicRoute {
+    params: { topic: string };
+    props: {
+      topicName: string;
+      filterTopic: string;
+      isMajor: boolean;
+      majorSlug: string | null;
+      majorLabel: string | null;
+      subCategories: Array<{ name: string; slug: string }>;
+    };
+  }
+
+  const paths: TopicRoute[] = [];
+
+  // Collision guards — one map per route LEVEL.
+  const seenFlat = new Map<string, string>();
+  const seenRoots = new Map<string, string>();
+
+  const claim = (map: Map<string, string>, slug: string, original: string, context: string): string => {
+    const existing = map.get(slug);
+    if (existing !== undefined && existing !== original) {
+      throw new Error(
+        `Slug collision (${context}): "${original}" and "${existing}" both map to "${slug}". ` +
+        `Rename one of these in menu.json.`
+      );
+    }
+    map.set(slug, original);
+    return slug;
+  };
+
+  for (const rootKey of Object.keys(hierarchy)) {
+    const rootSlug = claim(seenRoots, slugify(rootKey), rootKey, 'major theme');
+
+    // Collect this root's sub-categories (for the major page's link cloud)
+    const subCategories: Array<{ name: string; slug: string }> = [];
+    for (const category of Object.keys(hierarchy[rootKey] || {})) {
+      subCategories.push({ name: category, slug: slugify(category) });
+    }
+
+    // ── LEVEL 1: Major theme → /topics/{rootSlug} ──
+    paths.push({
+      params: { topic: rootSlug },
+      props: {
+        topicName: rootKey,
+        filterTopic: rootKey,
+        isMajor: true,
+        majorSlug: rootSlug,
+        majorLabel: rootKey,
+        subCategories
+      }
+    });
+
+    // ── LEVEL 2: Nested category → /topics/{rootSlug}/{categorySlug} ──
+    const perRoot = new Map<string, string>();
+    for (const category of Object.keys(hierarchy[rootKey] || {})) {
+      const leaves = hierarchy[rootKey][category] || [];
+      const label = (leaves[0] && leaves[0].subtopic) || category;
+      const catSlug = claim(perRoot, slugify(category), category, `nested under "${rootKey}"`);
+
+      paths.push({
+        params: { topic: `${rootSlug}/${catSlug}` },
+        props: {
+          topicName: category,
+          filterTopic: category,
+          isMajor: false,
+          majorSlug: rootSlug,
+          majorLabel: rootKey,
+          subCategories: []
+        }
+      });
+
+      // ── Flat structural route (may be superseded by a leaf route below) ──
+      const flatSlug = slugify(category);
+      if (!seenFlat.has(flatSlug)) {
+        claim(seenFlat, flatSlug, category, 'flat category');
+        paths.push({
+          params: { topic: flatSlug },
+          props: {
+            topicName: label,
+            filterTopic: category,
+            isMajor: false,
+            majorSlug: null,
+            majorLabel: null,
+            subCategories: []
+          }
+        });
+      }
+    }
+  }
+
+  // ── LEAF-LEVEL FLAT ROUTES: the pages MegaMenu links to ──
+  // MegaMenu links using each leaf item's `category` field
+  // ("What Does It Mean To Be Human?" etc.) — the old [slug].astro
+  // built routes from these. Where a leaf category slug-matches a
+  // structural flat route, the LEAF wins (it's the page users click).
+  const leafMap = new Map<string, string>();  // raw leaf category -> label
+  for (const rootKey of Object.keys(hierarchy)) {
+    for (const category of Object.keys(hierarchy[rootKey] || {})) {
+      const leaves = hierarchy[rootKey][category] || [];
+      for (const item of leaves) {
+        if (item && item.category && !leafMap.has(item.category)) {
+          leafMap.set(item.category, item.subtopic || item.category);
+        }
+      }
+    }
+  }
+
+  const leafSlugs = new Set<string>();
+  for (const rawCategory of leafMap.keys()) leafSlugs.add(slugify(rawCategory));
+
+  const filteredPaths: TopicRoute[] = paths.filter((p: TopicRoute): boolean => {
+    // Keep: nested (two-segment) routes, major themes, and flat
+    // structural routes whose slug no leaf category claims.
+    if (p.params.topic.includes('/')) return true;
+    if (p.props.isMajor) return true;
+    return !leafSlugs.has(p.params.topic);
+  });
+
+  for (const [rawCategory, label] of leafMap.entries()) {
+    const slug = claim(seenFlat, slugify(rawCategory), rawCategory, 'leaf category');
+    filteredPaths.push({
+      params: { topic: slug },
+      props: {
+        topicName: label,
+        filterTopic: rawCategory,
+        isMajor: false,
+        majorSlug: null,
+        majorLabel: null,
+        subCategories: []
+      }
+    });
+  }
+
+  return filteredPaths;
+}
+
+const { topicName, filterTopic, isMajor, majorSlug, majorLabel, subCategories } = Astro.props;
+const apiBase = import.meta.env.PUBLIC_API_BASE_URL;
+---
+
+<LabriLayout title={topicName}>
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Breadcrumb: Topics / [Major Theme /] Current -->
+    <nav class="text-sm text-gray-500 mb-4">
+      <a href="/topics" class="hover:text-orange-600">Topics</a>
+      {majorSlug && (
+        <Fragment>
+          <span> / </span>
+          <a href={`/topics/${majorSlug}`} class="hover:text-orange-600">{majorLabel}</a>
+        </Fragment>
+      )}
+      <span> / </span>
+      <span class="text-gray-300">{topicName}</span>
+    </nav>
+
+    <h1 class="text-3xl font-bold mb-2">{topicName}</h1>
+
+    {isMajor && subCategories.length > 0 && (
+      <div class="mb-8">
+        <p class="text-gray-500 mb-4">Explore sub-categories below or browse all tracks.</p>
+        <div class="flex flex-wrap gap-2">
+          {subCategories.map((sub) => (
+            <a
+              href={`/topics/${majorSlug}/${sub.slug}`}
+              class="text-sm bg-gray-100 hover:bg-orange-100 text-gray-700 px-3 py-1 rounded-full border border-gray-200"
+            >
+              {sub.name}
+            </a>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <TrackList topic={filterTopic} {apiBase} client:load />
+  </div>
+</LabriLayout>

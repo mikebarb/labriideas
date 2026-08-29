@@ -538,7 +538,12 @@
       const nextTrack = tracks[existingIndex];
       currentTrack = nextTrack;
       // ─── Update the Queue Bookmark ───
-      // We are playing from the queue, so the bookmark moves to this track.
+      // FIXED: setBookmark() only updates the STORE. commitQueue() below
+      // overwrites the store with local `tracks`, so the bookmark change
+      // must ALSO be mirrored into local state — otherwise the bookmark
+      // silently reverts to the last handleAddToQueue assignment, and
+      // detour-mode SkipBack returns to the wrong track.
+      tracks = tracks.map(t => ({ ...t, isActive: t.filename === nextTrack.filename }));
       setBookmark(nextTrack.filename);
     
       commitQueue(); // ← structural: active-row indicator moves immediately
@@ -1192,9 +1197,9 @@
 <!-- DESKTOP LAYOUT 
                              fixed bottom-0 left-0 right-0 z-40
   <div class="hidden md:flex fixed bottom-0 left-0 right-0 h-24 bg-[#0e0e0e] border-t border-neutral-800 items-center px-6 z-40">
--->
+  -->
 {#if tracks.length > 0 || currentTrack !== null}
-  <div class="hidden md:flex h-24 bg-[#0e0e0e] border-t border-neutral-800 items-center px-6">     
+  <div class="hidden md:flex h-24 bg-[#0e0e0e] border-t border-neutral-800 items-center px-6 pb-[env(safe-area-inset-bottom,0px)]">     
     <div class="flex-1 min-w-0 flex flex-col justify-center">
       {#if currentTrack}
         <div class="text-sm font-semibold truncate text-white">{currentTrack.title ?? currentTrack.filename}</div>
@@ -1206,7 +1211,8 @@
 
     <div class="flex-1 max-w-2xl flex flex-col items-center gap-2">
       <div class="flex items-center gap-4">
-        <button onclick={playPrev} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10 disabled:opacity-30" aria-label="Previous" disabled={!currentTrack}>
+        <!--<button onclick={playPrev} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10 disabled:opacity-30" aria-label="Previous" disabled={!currentTrack}> -->
+        <button onclick={playPrev} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10 disabled:opacity-30" aria-label="Previous" disabled={!currentTrack || (isCurrentTrackInQueue && tracks.findIndex(t => t.filename === currentTrack?.filename) === 0 && currentTime <= 3)}>
           <SkipBack size={20} />
         </button>
         <button onclick={() => jump(-15)} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10 disabled:opacity-30" aria-label="Back 15s" disabled={!currentTrack}>
@@ -1406,7 +1412,8 @@
               <span class="text-[10px] mt-0.5">15</span>
             </div>
           </button>
-          <button onclick={playPrev} class="text-white p-3" aria-label="Previous" disabled={!currentTrack}>
+          <!--<button onclick={playPrev} class="text-white p-3" aria-label="Previous" disabled={!currentTrack}> -->
+          <button onclick={playPrev} class="text-white p-3" aria-label="Previous" disabled={!currentTrack || (isCurrentTrackInQueue && tracks.findIndex(t => t.filename === currentTrack?.filename) === 0 && currentTime <= 3)}>
             <SkipBack size={32} />
           </button>
           <button onclick={togglePlayPause} class="bg-white text-black rounded-full w-20 h-20 flex items-center justify-center shadow-xl" aria-label="Play/Pause" disabled={!currentTrack}>
