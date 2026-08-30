@@ -51,7 +51,7 @@
   // Plain (non-reactive) flag: true while playTrack() is transitioning
   // between tracks. During the async loadTrack() window, the audio element
   // still holds the OUTGOING track's audio — but `currentTrack` may already
-  // point at the INCOMING track (CASE 2 reassigns it before the load).
+  // point at the INCOMING track (CASE 2/3 reassign it before the load).
   // Any timeupdate / pause / ended / durationchange event in that window
   // would attribute the old element's state to the WRONG track, corrupting
   // saved resume positions (e.g. the 'pause' fired by audioElement.load()
@@ -244,10 +244,22 @@
    * PRIORITY ORDER (Local-First):
    *   1. OPFS (local disk cache) — instant, works offline
    *   2. In-memory valid presigned URL — avoids a network call
-   *   3. Network fetch — only if online and not cached
+   *   3. Network — STREAM DIRECTLY from the presigned URL
    * 
-   * On a network fetch, we also save the blob to OPFS so that the 
-   * NEXT play of this track is instant and offline-capable.
+   * FIXED (WebKitBlobResource error 3 on iPadOS): the network tier
+   * previously downloaded the FULL audio file into one in-memory blob
+   * and played it via a blob: URL ("single fetch" for playback +
+   * caching). Safari/iPadOS — notably older devices under memory
+   * pressure — fails to load large blob: URL media with
+   * "WebKitBlobResource error 3", so playback silently died on the
+   * affected iPad while working on Chrome/other devices.
+   * 
+   * The network tier now streams the presigned URL DIRECTLY into the
+   * <audio> element. Safari/Chrome natively use HTTP Range requests:
+   * playback starts as soon as the first chunk arrives, RAM usage is
+   * near zero, and only the listened-to portion is downloaded.
+   * The OPFS cache fetch runs as a SEPARATE background download so
+   * offline-first behavior is fully preserved.
    */
   async function loadTrack(track: Track): Promise<void> {
     if (!audioElement) return;
@@ -261,6 +273,8 @@
     errorMessage = '';
 
     // ─── TIER 1: Try OPFS (Local Disk Cache) ───
+    // Local blobs are small-risk (already on disk) and are how queued /
+    // previously-cached tracks play offline. This tier is unchanged.
     if (track.hash) {
       const cachedBlob = await getTrackBlob(track.hash);
       if (cachedBlob) {
@@ -276,7 +290,7 @@
       }
     }
 
-    // ─── TIER 2: Deep Network Check ───
+    // ─── TIER 2: Network — STREAM DIRECT ───
     // We don't pre-check $isOnline. The actual fetch IS the test.
     // If the user is offline OR the server is down, fetchPresignedUrl 
     // will throw. We catch it and inhibit all further progress.
@@ -289,36 +303,39 @@
       }
       const finalUrl = track.url!;
 
-      // ─── SINGLE FETCH: One network call serves both playback and caching ───
-      const audioResponse = await fetch(finalUrl);
-      if (!audioResponse.ok) throw new Error(`Audio fetch failed: ${audioResponse.status}`);
-      
-      const audioBlob = await audioResponse.blob();
-
       // FIXED (race): same listener-before-load ordering as the OPFS tier.
       const metaReady = waitForMetadata(track);
-      // Use the blob for immediate playback
-      audioElement.src = URL.createObjectURL(audioBlob);
+      // CHANGED (stream-direct): give the element the presigned URL
+      // directly. The browser streams via HTTP Range requests —
+      // near-zero RAM, instant start, only the listened-to portion
+      // downloaded. No in-memory blob, no blob: URL.
+      audioElement.src = finalUrl;
       audioElement.load();
       audioElement.playbackRate = track.playbackRate ?? 1.0;
       // ─── METADATA FIRST: Let the browser process the audio ───
       // The audio element needs the event loop free to parse the 
-      // audio header and fire 'loadedmetadata'. If we block the 
-      // thread with a 23MB OPFS write first, the event never fires.
+      // audio header and fire 'loadedmetadata'. We await that here;
+      // with stream-direct this is fast (just the header bytes).
       await metaReady;
 
-      // ─── BACKGROUND CACHE: Save to OPFS AFTER metadata loads ───
-      // The user is already playing at this point. The OPFS write 
-      // is now truly "background" — the user has heard the first 
-      // second of audio before we even start the disk write.
+      // ─── BACKGROUND CACHE: Separate fetch, AFTER playback starts ───
+      // CHANGED: the OPFS cache is now populated by its own background
+      // download rather than sharing the playback fetch (there is no
+      // playback fetch to share anymore — the browser streams internally).
+      // Fire-and-forget: a cache failure can never affect playback.
       if (track.hash) {
+        (async () => {
         try {
-          await saveTrackToOpfs(track.hash, audioBlob);
-          //console.log(`[Player] Cached to OPFS: ${track.filename}`);
+            const res = await fetch(finalUrl);
+            if (!res.ok) return;
+            const blob = await res.blob();
+            await saveTrackToOpfs(track.hash!, blob);
+            //console.log(`[Player] Background OPFS cache complete: ${track.filename}`);
         } catch (e) {
-          // Cache failed, but playback will still work this time.
+            // Cache failed, but playback still works this session.
           console.warn(`[Player] Background OPFS cache failed:`, e);
         }
+        })();
       }
 
     } catch (err) {
@@ -333,10 +350,11 @@
       console.error('[Player] Error message:', err instanceof Error ? err.message : String(err));
       console.error('[Player] Error stack:', err instanceof Error ? err.stack : 'no stack');
 
-      console.error('[Player] Server unreachable or request failed:', err);
       status = 'error';
       errorMessage = 'Library server unreachable. Please check your connection.';
-      // Stop progress: no audio.src set, no caching attempted.
+      // Stop progress: no caching attempted. currentTrack REMAINS set —
+      // the caller decides whether to revert the selection (CASE 2) or
+      // show the error state in the bar (CASE 3).
       throw err;
     }
   }
@@ -433,6 +451,9 @@
    *   - Only runs once per loaded source (failoverAttempted).
    *   - Skips if already playing from a blob: URL (already local).
    *   - Skips if the track has no hash or no OPFS copy exists.
+   *
+   * NOTE (stream-direct compatibility): a direct https:// src
+   * correctly qualifies for failover — only blob: sources are skipped.
    */
   async function hotSwapToOpfs(): Promise<boolean> {
     if (!audioElement || !currentTrack || !currentTrack.hash) return false;
@@ -545,7 +566,6 @@
       // detour-mode SkipBack returns to the wrong track.
       tracks = tracks.map(t => ({ ...t, isActive: t.filename === nextTrack.filename }));
       setBookmark(nextTrack.filename);
-    
       commitQueue(); // ← structural: active-row indicator moves immediately
 
       isSwitching = true; // Suppress listener position-writes during load
@@ -589,21 +609,32 @@
       }
     }
 
+    // ─── SET STATE (EARLY) ───
+    // FIXED: currentTrack was previously assigned only AFTER loadTrack()
+    // completed, so the player bar did not appear until the entire load
+    // finished — and if the load stalled or failed (notably Safari/iPadOS),
+    // the bar never appeared at all. Setting state first shows the bar
+    // (with the loading spinner) immediately. The isSwitching guard below
+    // already protects listeners from misattributing the outgoing track.
+    // On load failure, currentTrack stays set so the bar displays the
+    // error state — the user gets visible feedback, not silence.
+    currentTrack = track;
+    currentTime = track.position ?? 0;
+    duration = track.duration ?? 0;
+
     track.loading = true;          // Trigger spinner
-    //tracks = [...tracks, track];   // Add to queue
-    //commitQueue();
 
     isSwitching = true;            // Suppress listener position-writes during load
-    try {                         // Download and load the track (may throw if offline or server unreachable)
+    try {                          // Stream the track (may throw if offline or server unreachable)
       await loadTrack(track);
       } catch (err: any) {
-        // ─── INHIBIT: The resolution failed. Abort everything. ───
+      // ─── INHIBIT: The resolution failed. Abort playback. ───
         console.error('[Player] loadTrack failed, inhibiting track:', err);
-        tracks = tracks.filter(t => t.filename !== track.filename);
-        commitQueue();
         status = 'error';
         errorMessage = err.message || 'Track is not available.'; 
+      track.loading = false;
         return; // ← The track is NOT added to the queue. No "ghost" track.
+               // currentTrack stays set: the bar shows the error state.
     } finally {
       isSwitching = false;
       setTrackSwitching(false); // Transition finished — release the switch lock
@@ -611,17 +642,6 @@
 
     // Track loaded successfully. Clear spinner.
     track.loading = false;
-    //const idx = tracks.findIndex(t => t.filename === track.filename);
-    //if (idx !== -1) {
-    //  tracks[idx].loading = false;  // clear spinner
-    //}
-    //commitQueue();
-
-    // ─── SET STATE ───
-    currentTrack = track;
-    currentTime = track.position ?? 0;
-    duration = track.duration ?? 0;
-    //commitQueue();
     
     await performPlay(); // Trigger play
   }
@@ -795,7 +815,6 @@
 
   /**
    * Reorder the queue. Triggered by QueueDrawer's drag-and-drop.
-   * No-op until DnD is wired up in a follow-up commit.
    */
   function reorderQueue(filename: string, newIndex: number): void {
     const idx = tracks.findIndex(t => t.filename === filename);
@@ -819,8 +838,8 @@
   }
 
   // ─── Speed Control ───
-  // Changed from a toggle to +/- buttons with 0.1 increments.
-  // Middle button shows current speed; long-press to reset to 1.0x.
+  // Three-button cluster: − decreases by 0.1, + increases by 0.1,
+  // middle button shows current speed; long-press (~500ms) resets to 1.0x.
   function setPlaybackRate(rate: number) {
     if (!currentTrack) return;
     // Clamp to reasonable bounds (0.25–3.0)
@@ -1031,8 +1050,6 @@
         playNext();
       });
 
-      //audioElement.addEventListener('error', () => { status = 'error'; errorMessage = 'Playback error'; });
-
       audioElement.addEventListener('error', () => {
         // MEDIA_ERR_NETWORK (code 2) = connection lost mid-stream.
         // Attempt OPFS failover before surfacing an error to the user.
@@ -1048,7 +1065,6 @@
         status = 'error'; 
         errorMessage = 'Playback error';
       });
-
 
       // ─── Offline Hot-Swap Triggers ───
 
@@ -1086,7 +1102,7 @@
     };
 
     /**
-     * NEW: Handle "add-to-queue" event from the controller.
+     * Handle "add-to-queue" event from the controller.
      *
      * Adds the track to the queue, sets the bookmark, and triggers
      * background OPFS caching. Does NOT auto-play — the user must
@@ -1194,14 +1210,19 @@
 
 <audio bind:this={audioElement} preload="auto"></audio>
 
-<!-- DESKTOP LAYOUT 
-                             fixed bottom-0 left-0 right-0 z-40
-  <div class="hidden md:flex fixed bottom-0 left-0 right-0 h-24 bg-[#0e0e0e] border-t border-neutral-800 items-center px-6 z-40">
-  -->
+<!-- DESKTOP LAYOUT -->
 {#if tracks.length > 0 || currentTrack !== null}
-  <div class="hidden md:flex h-24 bg-[#0e0e0e] border-t border-neutral-800 items-center px-6 pb-[env(safe-area-inset-bottom,0px)]">     
+  <!-- CHANGED: removed `fixed bottom-0 left-0 right-0 z-40` — the bar
+       is now an in-flow flex child (LabriLayout body column). AppShell
+       sizes itself to end at this bar's top edge. -->
+  <div class="hidden md:flex h-24 bg-[#0e0e0e] border-t border-neutral-800 items-center px-6">
+    
     <div class="flex-1 min-w-0 flex flex-col justify-center">
-      {#if currentTrack}
+      {#if status === 'error' && errorMessage}
+        <!-- NEW: visible error state — failures were previously silent -->
+        <div class="text-sm font-semibold truncate text-red-400">{errorMessage}</div>
+        <div class="text-xs text-neutral-500 truncate">Playback unavailable</div>
+      {:else if currentTrack}
         <div class="text-sm font-semibold truncate text-white">{currentTrack.title ?? currentTrack.filename}</div>
         <div class="text-xs text-neutral-400 truncate">{currentTrack.speaker ?? 'Unknown Speaker'}</div>
       {:else}
@@ -1211,7 +1232,8 @@
 
     <div class="flex-1 max-w-2xl flex flex-col items-center gap-2">
       <div class="flex items-center gap-4">
-        <!--<button onclick={playPrev} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10 disabled:opacity-30" aria-label="Previous" disabled={!currentTrack}> -->
+        <!-- CHANGED: Previous now disables on the first queue track when
+             ≤3s in (the only state where playPrev is a true no-op). -->
         <button onclick={playPrev} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10 disabled:opacity-30" aria-label="Previous" disabled={!currentTrack || (isCurrentTrackInQueue && tracks.findIndex(t => t.filename === currentTrack?.filename) === 0 && currentTime <= 3)}>
           <SkipBack size={20} />
         </button>
@@ -1247,8 +1269,7 @@
 
     <div class="flex-1 flex items-center justify-end gap-3">
       <!--
-        CHANGED: Speed control redesigned from a single toggle button
-        to a three-button cluster:
+        Speed control: three-button cluster.
           - = decreases speed by 0.1
           [1.0x] = shows current speed; LONG-PRESS to reset to 1.0x
           + = increases speed by 0.1
@@ -1287,12 +1308,6 @@
       <button onclick={() => desktopQueueOpen.update(v => !v)} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10" aria-label="Toggle queue">
         <ListMusic size={20} />
       </button>
-
-      <!-- {#if isAdmin && currentTrack}
-        <button onclick={() => downloadTrack(currentTrack!)} class="text-neutral-300 hover:text-white p-1.5 rounded-full hover:bg-white/10" aria-label="Download">
-          <Download size={18} />
-        </button>
-      {/if} -->
     </div>
   </div>
 
@@ -1307,21 +1322,24 @@
   -->
   <div class="md:hidden">
     <!-- 1. Persistent bottom bar
-         CHANGED: wrapped in an in-flow `relative h-20` container so the
-         pill's space is RESERVED in the layout. The pill keeps its
-         floating visual (absolute, bottom-4, rounded, shadow) but page
-         content now scrolls to a stop above it instead of behind it.
-         z-60 still keeps the pill above the maxPlayer overlay (z-50). 
-         <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md h-14 bg-[#181818] border border-neutral-800 rounded-full px-4 flex items-center gap-3 z-60 shadow-2xl">
-         -->
+         The pill keeps its floating visual (absolute, bottom-4, rounded,
+         shadow) inside an in-flow `relative h-20` container so its space
+         is RESERVED in the layout — page content scrolls to a stop above
+         it. z-60 keeps the pill above the maxPlayer overlay (z-50). -->
     <div class="relative h-20">
-      <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md h-14 bg-[#181818] border border-neutral-800 rounded-full px-4 flex items-center gap-3 z-60 shadow-2xl">
+      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md h-14 bg-[#181818] border border-neutral-800 rounded-full px-4 flex items-center gap-3 z-60 shadow-2xl">
         <button onclick={togglePlayPause} class="text-white p-1" aria-label="Play/Pause" disabled={!currentTrack}>
           {#if status === 'playing'}<Pause size={20} fill="currentColor" />{:else if status === 'loading' || status === 'buffering'}<span class="loading-spinner" style="width:20px;height:20px;">⏳</span>{:else}<Play size={20} fill="currentColor" class="ml-0.5" />{/if}
         </button>
         <div class="flex-1 min-w-0">
-          <div class="text-sm font-medium truncate text-white">{currentTrack?.title ?? 'No track'}</div>
-          <div class="text-xs text-neutral-400 truncate">{currentTrack?.speaker ?? ''}</div>
+          {#if status === 'error' && errorMessage}
+            <!-- NEW: visible error state — failures were previously silent -->
+            <div class="text-sm font-medium truncate text-red-400">{errorMessage}</div>
+            <div class="text-xs text-neutral-500 truncate">Playback unavailable</div>
+          {:else}
+            <div class="text-sm font-medium truncate text-white">{currentTrack?.title ?? 'No track'}</div>
+            <div class="text-xs text-neutral-400 truncate">{currentTrack?.speaker ?? ''}</div>
+          {/if}
         </div>
 
         <!--
@@ -1340,7 +1358,7 @@
         </button>
 
         <!--
-          Expand toggle (NEW on mobile bar).
+          Expand toggle.
           - On the bar: shows maxPlayer (replaces trackList if shown)
           - In maxPlayer: returns to min
         -->
@@ -1362,10 +1380,8 @@
     <!-- 2. maxPlayer view (only when active) -->
     {#if $mobileView === 'max'}
       <div class="fixed inset-0 bg-[#0e0e0e] z-50 flex flex-col p-6 pb-20">
-        <!-- ... existing max player content ... (unchanged) -->
         <div class="flex items-center justify-between mb-8">
           <h2 class="text-sm font-semibold uppercase tracking-wider text-neutral-400">Now Playing</h2>
-          <!-- CHANGED: X close button on header. Same effect as the bar's Expand toggle. -->
           <button 
             onclick={toggleMaxPlayer} 
             class="text-neutral-300 hover:text-white p-2 rounded-full hover:bg-white/10" 
@@ -1380,6 +1396,10 @@
             {currentTrack?.title ?? 'No track selected'}
           </h1>
           <p class="text-base text-neutral-400">{currentTrack?.speaker ?? ''}</p>
+          <!-- NEW: visible error state in the expanded player -->
+          {#if status === 'error' && errorMessage}
+            <p class="text-sm text-red-400 mt-2">{errorMessage}</p>
+          {/if}
         </div>
 
         <div class="mb-8 px-2">
@@ -1412,8 +1432,7 @@
               <span class="text-[10px] mt-0.5">15</span>
             </div>
           </button>
-          <!--<button onclick={playPrev} class="text-white p-3" aria-label="Previous" disabled={!currentTrack}> -->
-          <button onclick={playPrev} class="text-white p-3" aria-label="Previous" disabled={!currentTrack || (isCurrentTrackInQueue && tracks.findIndex(t => t.filename === currentTrack?.filename) === 0 && currentTime <= 3)}>
+          <button onclick={playPrev} class="text-white p-3" aria-label="Previous" disabled={!currentTrack}>
             <SkipBack size={32} />
           </button>
           <button onclick={togglePlayPause} class="bg-white text-black rounded-full w-20 h-20 flex items-center justify-center shadow-xl" aria-label="Play/Pause" disabled={!currentTrack}>
