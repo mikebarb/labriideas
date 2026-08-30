@@ -273,20 +273,33 @@
     errorMessage = '';
 
     // ─── TIER 1: Try OPFS (Local Disk Cache) ───
-    // Local blobs are small-risk (already on disk) and are how queued /
-    // previously-cached tracks play offline. This tier is unchanged.
+    // FIXED (Safari blob playback): some iPads cannot load large blob:
+    // URL media at all ("WebKitBlobResource error 3") — the same device
+    // limitation that broke the old network-blob playback. When the OPFS
+    // blob fails to load, we now FALL THROUGH to Tier 2 (network
+    // streaming) instead of hanging on a dead source.
+    // The OPFS copy is NOT purged: the blob is likely valid — the device
+    // simply can't play it. Other devices and future sessions still get
+    // offline playback.
     if (track.hash) {
       const cachedBlob = await getTrackBlob(track.hash);
-      if (cachedBlob) {
-        // FIXED (race): waitForMetadata now attaches its 'loadedmetadata'
-        // listener BEFORE we call load() below, so a fast local-blob
-        // metadata parse can no longer slip past the listener.
+      // Validate: a real lecture file is megabytes; anything ≤1KB is a
+      // corrupt/partial OPFS write (observed on iPadOS) — skip it.
+      if (cachedBlob && cachedBlob.size <= 1024) {
+        console.warn(`[Player] OPFS cache for ${track.filename} is ${cachedBlob.size} bytes — treating as corrupt, streaming instead.`);
+      }
+      if (cachedBlob && cachedBlob.size > 1024) {
+        try {
         const metaReady = waitForMetadata(track);
         audioElement.src = URL.createObjectURL(cachedBlob);
         audioElement.load();
         audioElement.playbackRate = track.playbackRate ?? 1.0;
         await metaReady;
         return; // Successfully loaded from cache — done.
+        } catch {
+          // Blob source failed on THIS device — fall through to Tier 2.
+          console.warn(`[Player] OPFS blob playback failed for ${track.filename} — falling back to streaming.`);
+        }
       }
     }
 
@@ -386,7 +399,7 @@
    * await the returned promise after load() is invoked.
    */
   function waitForMetadata(track: Track): Promise<void> {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       if (!audioElement) { resolve(); return; }
       const el = audioElement;
 
@@ -396,8 +409,23 @@
           ? track.position
           : null;
 
+      const cleanup = () => {
+        el.removeEventListener('loadedmetadata', onMeta);
+        el.removeEventListener('error', onErr);
+      };
+
+      // FIXED (hang): if the source fails to load, 'loadedmetadata' never
+      // fires and this promise previously NEVER resolved — loadTrack hung
+      // forever. Reject on 'error' so callers can react (Tier 1 falls back
+      // to streaming; Tier 2 surfaces the unreachable-server error).
+      const onErr = () => {
+        cleanup();
+        reject(new Error('Audio source failed to load'));
+      };
+
       const onMeta = () => {
         el.removeEventListener('loadedmetadata', onMeta);
+        el.removeEventListener('error', onErr);
 
         if (isFinite(el.duration) && el.duration > 0) {
           track.duration = el.duration;
@@ -436,6 +464,7 @@
       };
 
       el.addEventListener('loadedmetadata', onMeta);
+      el.addEventListener('error', onErr);
     });
   }
 
