@@ -1002,12 +1002,17 @@
     // 2. Restore the Active Track (handled by the reactive $effect above)
     // 3. Bind Audio Element Listeners
     // 4. Bind External Event Listeners
+
     const savedQueue = localStorage.getItem('labri_queue');
     if (savedQueue) {
       try {
         const parsed = JSON.parse(savedQueue);
         if (Array.isArray(parsed)) {
-          tracks = parsed;
+          // SANITIZE: filter out null/invalid entries. Older sessions may
+          // have persisted a null (pre-guard add-to-queue), which crashed
+          // QueueDrawer on every reload. This self-heals poisoned queues.
+          tracks = parsed.filter((t: any) => t && t.filename);
+          //tracks = parsed;
         }
       } catch (e) {
         console.error("[Player] Failed to restore queue from localStorage", e);
@@ -1123,7 +1128,12 @@
     }
 
     // External event listeners for QueueDrawer and TrackList
-    const handlePlay = (e: Event) => playTrack((e as CustomEvent).detail);
+    const handlePlay = (e: Event) => {
+      const track = (e as CustomEvent).detail;
+      // GUARD: ignore malformed events
+      if (!track || !track.filename) return;
+      playTrack(track);
+    };
     const handleRemove = (e: Event) => removeFromQueue((e as CustomEvent).detail.filename);
     const handleReorder = (e: Event) => {
       const { filename, newIndex } = (e as CustomEvent).detail;
@@ -1143,6 +1153,11 @@
      */
     const handleAddToQueue = (e: Event) => {
       const track = (e as CustomEvent).detail as Track;
+
+      // GUARD: reject malformed events (null/undefined detail — e.g. a
+      // page script dispatching after a failed catalog lookup). A null
+      // pushed here crashes QueueDrawer's each block on next render.
+      if (!track || !track.filename) return;
       
       // Prevent duplicate queue entries
       if (tracks.some(t => t.filename === track.filename)) return;

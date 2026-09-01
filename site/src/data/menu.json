@@ -350,19 +350,19 @@
       },
       "featured": {
         "Theology & Worldview": [
-          { "title": "The Five Themes of L'Abri", "speaker": "Dick Keyes", "url": "/lectures/themes" },
-          { "title": "An Introduction to Francis Schaeffer", "speaker": "Jerram Barrs", "url": "/lectures/intro-schaeffer" },
-          { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "url": "/lectures/comprehensive-spirituality" }
+          { "title": "The Five Themes of L'Abri", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
+          { "title": "An Introduction to Francis Schaeffer", "speaker": "Jerram Barrs", "filename": "An Introduction To Francis Schaeffer & his Writings - Jerram Barrs___100.mp3" },
+          { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
         ],
         "Culture and Society": [
-          { "title": "Art & The Bible", "speaker": "Francis Schaeffer", "url": "/lectures/art-bible" },
-          { "title": "Les Misérables", "speaker": "John Hodges", "url": "/lectures/les-miserables" },
-          { "title": "On Saving Leonardo", "speaker": "Nancy Pearcey", "url": "/lectures/saving-leonardo" }
+          { "title": "Art & The Bible", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" },
+          { "title": "Les Misérables", "speaker": "John Hodges", "filename": "Les Miserables - John Hodges___1128.mp3" },
+          { "title": "On Saving Leonardo", "speaker": "Nancy Pearcey", "filename": "On Saving Leonardo From the Clutches of Secularism - Nancy Pearcey___1326.mp3" }
         ],
         "Personal - Identity & Relationships": [
-          { "title": "What is a 'Personal Relationship with God'?", "speaker": "Jim Paul", "url": "/lectures/personal-relationship" },
-          { "title": "Community As A Subversion of Modernity", "speaker": "Andrew Fellows", "url": "/lectures/community-subversion" },
-          { "title": "Navigating Relationships", "speaker": "Jerram Barrs", "url": "/lectures/navigating-relationships" }
+          { "title": "What is a 'Personal Relationship with God'?", "speaker": "Jim Paul", "filename": "What is a __Personal Relationship with God__^ - Jim Paul___2273.mp3" },
+          { "title": "Community As A Subversion of Modernity", "speaker": "Andrew Fellows", "filename": "Community as Subversion of Modernity - Andrew Fellows___354.mp3" },
+          { "title": "Navigating Relationships", "speaker": "Jerram Barrs", "filename": "What is a __Personal Relationship with God__^ - Jim Paul___2273x.mp3" }
         ]
       }
     }

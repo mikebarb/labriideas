@@ -33,6 +33,13 @@
   const isCurrent = $derived($currentTrackStore?.filename === item.filename);
   const isPlayerLoading = $derived($statusStore === 'loading' || $statusStore === 'buffering');
   const queued = $derived(!!$trackList.find(t => t.filename === item.filename));
+  // ─── Hydration contract (set by FeaturedGrid's derived overlay) ───
+  // NEW: three-state support. Pre-hydration disables actions; a confirmed
+  // catalog miss (file doesn't exist) shows "Lecture not available." and
+  // disables everything. Fully-hydrated cards behave exactly as before.
+  const isUnavailable = $derived(item.unavailable === true);
+  const isHydrating = $derived(item.pendingHydration === true);
+  const actionsDisabled = $derived(isUnavailable || isHydrating);
 
   // ─── Loading state: the bulletproof switch-lock logic ───
   let isPending = $state(false);
@@ -73,6 +80,9 @@
         "text-white text-xl font-bold bg-blue-500 w-fit px-1",
         item.titleBgColor
       ]}>{item.title}</h3>
+      {#if isUnavailable}
+        <p class="text-xs text-gray-300 italic mt-1">Lecture not available.</p>
+      {/if}
     </div>
   </button>
 
@@ -82,7 +92,7 @@
          pause icon while this track is the active playing track -->
     <button
       onclick={handlePlayLocal}
-      disabled={isLoading}
+      disabled={actionsDisabled || isLoading}
       class="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg transition
              disabled:opacity-60 disabled:cursor-not-allowed"
       aria-label={isPlaying ? 'Pause track' : 'Play track'}
@@ -101,7 +111,7 @@
          NOT auto-play. -->
     <button
       onclick={handleQueue}
-      disabled={queued}
+      disabled={actionsDisabled || queued}
       class="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition
              disabled:opacity-50 disabled:cursor-not-allowed"
       aria-label={queued ? 'Already in queue' : 'Add to queue'}
@@ -117,7 +127,7 @@
     {#if isAdmin}
       <button
         onclick={handleDownload}
-        disabled={isDownloading}
+        disabled={actionsDisabled || isDownloading}
         class="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition
                disabled:opacity-50 disabled:cursor-wait"
         aria-label="Download track"
