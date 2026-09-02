@@ -4,26 +4,33 @@ import TrackList from '../../components/TrackList.svelte';
 import { slugify } from '../../lib/slugify.ts';
 import menuData from '../../data/menu.json';
 
-export async function getStaticPaths() {
+// Explicit route shape — keeps TypeScript happy end to end.
+// NOTE: declared at frontmatter top level (not inside getStaticPaths)
+// so it can be referenced in the function's return-type annotation.
+// This is TYPE-ONLY — unlike the earlier "hierarchy is not defined"
+// bug (a runtime data issue), types are erased at build time, so
+// Astro's getStaticPaths isolation is unaffected.
+interface TopicRoute {
+  params: { topic: string };
+  props: {
+    topicName: string;
+    filterTopic: string;
+    isMajor: boolean;
+    majorSlug: string | null;
+    majorLabel: string | null;
+    subCategories: Array<{ name: string; slug: string }>;
+  };
+}
+
+export async function getStaticPaths(): Promise<TopicRoute[]> {
   // FIXED: data extraction lives INSIDE getStaticPaths. Astro evaluates
   // this function in its own module scope during the build — variables
   // defined elsewhere in the frontmatter are NOT visible to it.
   const topicsSubMenu: any = menuData.subMenus.find((s: any) => s.subMenu === 'Topics') || {};
-  const hierarchy: Record<string, Record<string, any[]>> = topicsSubMenu.hierarchy || {};
-
-  // Explicit route shape — keeps TypeScript happy end to end.
-  interface TopicRoute {
-    params: { topic: string };
-    props: {
-      topicName: string;
-      filterTopic: string;
-      isMajor: boolean;
-      majorSlug: string | null;
-      majorLabel: string | null;
-      subCategories: Array<{ name: string; slug: string }>;
-    };
-  }
-
+  //const hierarchy: Record<string, Record<string, any[]>> = topicsSubMenu.hierarchy || {};
+  // CHANGED: hierarchy values are now sub-category NODES ({ lectures, featured? }),
+  // not bare leaf arrays.
+  const hierarchy: Record<string, Record<string, any>> = topicsSubMenu.hierarchy || {};
   const paths: TopicRoute[] = [];
 
   // Collision guards — one map per route LEVEL.
@@ -48,6 +55,9 @@ export async function getStaticPaths() {
     // Collect this root's sub-categories (for the major page's link cloud)
     const subCategories: Array<{ name: string; slug: string }> = [];
     for (const category of Object.keys(hierarchy[rootKey] || {})) {
+      // SKIP: 'featured' is curation data inside the node, not a
+      // navigable category — it must not generate routes.
+      if (category === 'featured') continue;
       subCategories.push({ name: category, slug: slugify(category) });
     }
 
@@ -67,7 +77,11 @@ export async function getStaticPaths() {
     // ── LEVEL 2: Nested category → /topics/{rootSlug}/{categorySlug} ──
     const perRoot = new Map<string, string>();
     for (const category of Object.keys(hierarchy[rootKey] || {})) {
-      const leaves = hierarchy[rootKey][category] || [];
+      // SKIP: 'featured' is curation data inside the node, not a
+      // navigable category — it must not generate routes.
+      if (category === 'featured') continue;
+      const node = hierarchy[rootKey][category];
+      const leaves: any[] = Array.isArray(node) ? node : (node?.lectures ?? []);
       const label = (leaves[0] && leaves[0].subtopic) || category;
       const catSlug = claim(perRoot, slugify(category), category, `nested under "${rootKey}"`);
 
@@ -110,7 +124,11 @@ export async function getStaticPaths() {
   const leafMap = new Map<string, string>();  // raw leaf category -> label
   for (const rootKey of Object.keys(hierarchy)) {
     for (const category of Object.keys(hierarchy[rootKey] || {})) {
-      const leaves = hierarchy[rootKey][category] || [];
+      // SKIP: 'featured' is curation data inside the node, not a
+      // navigable category — it must not generate routes.
+      if (category === 'featured') continue;
+      const node = hierarchy[rootKey][category];
+      const leaves: any[] = Array.isArray(node) ? node : (node?.lectures ?? []);
       for (const item of leaves) {
         if (item && item.category && !leafMap.has(item.category)) {
           leafMap.set(item.category, item.subtopic || item.category);
@@ -173,7 +191,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE_URL;
       <div class="mb-8">
         <p class="text-gray-500 mb-4">Explore sub-categories below or browse all tracks.</p>
         <div class="flex flex-wrap gap-2">
-          {subCategories.map((sub) => (
+          {subCategories.map((sub: { name: string; slug: string }) => (
             <a
               href={`/topics/${majorSlug}/${sub.slug}`}
               class="text-sm bg-gray-100 hover:bg-orange-100 text-gray-700 px-3 py-1 rounded-full border border-gray-200"

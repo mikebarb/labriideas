@@ -252,118 +252,199 @@
       "subMenu": "Topics",
       "hierarchy": {
         "Theology & Worldview": {
-          "L'Abri": [
-            { "subtopic": "Introduction to L'Abri", "altName": "Introduction", "category": "Introduction to L'Abri" },
-            { "subtopic": "Core Ideas of L'Abri", "altName": "Core Ideas", "category": "The Core Ideas of L'Abri" }
-          ],
-          "Doctrine": [
-            { "subtopic": "Big Questions in Theology", "altName": "Big Questions", "category": "Important Questions in Christian Doctrine" },
-            { "subtopic": "Jesus", "altName": "", "category": "The Life and Work of Jesus" },
-            { "subtopic": "The Holy Spirit", "altName": "", "category": "The Work of the Holy Spirit" },
-            { "subtopic": "Sin and Evil", "altName": "", "category": "Sin, Evil, and the Fall" },
-            { "subtopic": "Being Human", "altName": "", "category": "What Does It Mean To Be Human?" },
-            { "subtopic": "The Law", "altName": "", "category": "Thinking About God's Law" },
-            { "subtopic": "Prayer and Worship", "altName": "Prayer & Worship", "category": "Prayer and Worship" },
-            { "subtopic": "Prophecy and the Future", "altName": "Prophecy & Future", "category": "Important Questions in Christian Doctrine" },
-            { "subtopic": "Church and Sacraments", "altName": "Church & Sacraments", "category": "The Church and the Sacraments" },
-            { "subtopic": "Spiritual Growth", "altName": "", "category": "Christian Spirituality and Growth" }
-          ],
-          "Bible": [
-            { "subtopic": "New Testament", "altName": "", "category": "The Bible - Exploring the New Testament" },
-            { "subtopic": "Old Testament", "altName": "", "category": "The Bible - Exploring the Old Testament" },
-            { "subtopic": "Interpretation", "altName": "", "category": "The Bible - How to Interpret Scripture" },
-            { "subtopic": "Inspiration", "altName": "", "category": "The Bible - Inspiration and Authority" },
-            { "subtopic": "Canon", "altName": "", "category": "The Bible - The Canon" }
-          ],
-          "Apologetics": [
-            { "subtopic": "Exploring Christianity", "altName": "", "category": "Apologetics: Exploring the Truth of Christianity" },
-            { "subtopic": "Sharing Your Faith", "altName": "", "category": "How to Share Your Faith" },
-            { "subtopic": "Modern Questions, Ancient Answers", "altName": "Common Questions", "category": "Ancient Answers to Modern Questions" }
-          ],
-          "History": [
-            { "subtopic": "Church History", "altName": "", "category": "History of Christianity" },
-            { "subtopic": "Catholicism", "altName": "", "category": "Catholicism" },
-            { "subtopic": "Liberalism", "altName": "", "category": "Christianity and Liberalism" }
-          ],
-          "Other": [
-            { "subtopic": "Ethics and Morality", "altName": "Ethics & Morality", "category": "Apologetics: Exploring the Truth of Christianity" },
-            { "subtopic": "Eastern Religion and the New Age", "altName": "Eastern Religion", "category": "Eastern Religion and the New Age" },
-            { "subtopic": "Cults ad the Occult", "altName": "Cults & Occult", "category": "Sects, Cults, and the Occult" }
-          ]
+          "L'Abri": {
+            "lectures": [
+              { "subtopic": "Introduction to L'Abri", "altName": "Introduction", "category": "Introduction to L'Abri" },
+              { "subtopic": "Core Ideas of L'Abri", "altName": "Core Ideas", "category": "The Core Ideas of L'Abri" }
+            ],
+            "featured": [
+              { "title": "The Five Themes of L'Abri - L'Abri", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
+              { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
+            ]
+          },
+          "Doctrine": {
+            "lectures": [
+              { "subtopic": "Big Questions in Theology", "altName": "Big Questions", "category": "Important Questions in Christian Doctrine" },
+              { "subtopic": "Jesus", "altName": "", "category": "The Life and Work of Jesus" },
+              { "subtopic": "The Holy Spirit", "altName": "", "category": "The Work of the Holy Spirit" },
+              { "subtopic": "Sin and Evil", "altName": "", "category": "Sin, Evil, and the Fall" },
+              { "subtopic": "Being Human", "altName": "", "category": "What Does It Mean To Be Human?" },
+              { "subtopic": "The Law", "altName": "", "category": "Thinking About God's Law" },
+              { "subtopic": "Prayer and Worship", "altName": "Prayer & Worship", "category": "Prayer and Worship" },
+              { "subtopic": "Prophecy and the Future", "altName": "Prophecy & Future", "category": "Important Questions in Christian Doctrine" },
+              { "subtopic": "Church and Sacraments", "altName": "Church & Sacraments", "category": "The Church and the Sacraments" },
+              { "subtopic": "Spiritual Growth", "altName": "", "category": "Christian Spirituality and Growth" }
+            ],
+            "featured": [
+              { "title": "The Five Themes of L'Abri - doctrine", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
+              { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
+            ]
+          },
+          "Bible": {
+            "lectures": [
+              { "subtopic": "New Testament", "altName": "", "category": "The Bible - Exploring the New Testament" },
+              { "subtopic": "Old Testament", "altName": "", "category": "The Bible - Exploring the Old Testament" },
+              { "subtopic": "Interpretation", "altName": "", "category": "The Bible - How to Interpret Scripture" },
+              { "subtopic": "Inspiration", "altName": "", "category": "The Bible - Inspiration and Authority" },
+              { "subtopic": "Canon", "altName": "", "category": "The Bible - The Canon" }
+            ],
+            "featured": [
+              { "title": "The Five Themes of L'Abri - Bible", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
+              { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
+            ]
+          },
+          "Apologetics": {
+            "lectures": [
+              { "subtopic": "Exploring Christianity", "altName": "", "category": "Apologetics: Exploring the Truth of Christianity" },
+              { "subtopic": "Sharing Your Faith", "altName": "", "category": "How to Share Your Faith" },
+              { "subtopic": "Modern Questions, Ancient Answers", "altName": "Common Questions", "category": "Ancient Answers to Modern Questions" }
+            ],
+            "featured": [
+              { "title": "The Five Themes of L'Abri - Apologetics", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
+              { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
+            ]
+          },
+          "History": {
+            "lectures": [
+              { "subtopic": "Church History", "altName": "", "category": "History of Christianity" },
+              { "subtopic": "Catholicism", "altName": "", "category": "Catholicism" },
+              { "subtopic": "Liberalism", "altName": "", "category": "Christianity and Liberalism" }
+            ],
+            "featured": [
+              { "title": "The Five Themes of L'Abri - History", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
+              { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
+            ]
+          },
+          "Other": {
+            "lectures": [
+              { "subtopic": "Ethics and Morality", "altName": "Ethics & Morality", "category": "Apologetics: Exploring the Truth of Christianity" },
+              { "subtopic": "Eastern Religion and the New Age", "altName": "Eastern Religion", "category": "Eastern Religion and the New Age" },
+              { "subtopic": "Cults ad the Occult", "altName": "Cults & Occult", "category": "Sects, Cults, and the Occult" }
+            ],
+            "featured": [
+              { "title": "The Five Themes of L'Abri - Other", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
+              { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
+            ]
+          }
         },
         "Culture and Society": {
-          "Arts": [
-            { "subtopic": "Theology of Art", "altName": "Theology", "category": "Christianity and Art" },
-            { "subtopic": "Literature and Poetry", "altName": "Literature & Poetry", "category": "Literature and Poetry" },
-            { "subtopic": "Film", "altName": "", "category": "Christianity and Film" },
-            { "subtopic": "Modern Art", "altName": "", "category": "Painting & Modern Art" },
-            { "subtopic": "Theater and the Stage", "altName": "Theatre & Stage", "category": "Theatre and the Stage" },
-            { "subtopic": "Classical Music", "altName": "", "category": "Christianity and Music: Classical music" },
-            { "subtopic": "Popular Music", "altName": "", "category": "Christianity and Music: Popular music" },
-            { "subtopic": "Music: General", "altName": "", "category": "Christianity and Music: General" }
-          ],
-          "Science": [{ "subtopic": "Science and Faith", "altName": "", "category": "science and faith" }],
-          "Technology": [{ "subtopic": "Technology and the Future", "altName": "", "category": "Technology and the Future" }],
-          "Philosophy": [{ "subtopic": "Engaging Philosophy", "altName": "Christianity & Philosophy", "category": "Philosophy" }],
-          "The Church and Modernity": [
-            { "subtopic": "Christianity and the Modern Age", "altName": "Christianity & Modernity", "category": "Christianity in the Modern Age" },
-            { "subtopic": "Reflections on Modern Culture", "altName": "Christianity & Culture", "category": "Reflections on Modern Culture" }
-          ],
-          "Other": [
-            { "subtopic": "History of Thought", "altName": "", "category": "The History of Secular Thought" },
-            { "subtopic": "Politics", "altName": "", "category": "Politics and Economics" },
-            { "subtopic": "Economics", "altName": "", "category": "Politics and Economics" },
-            { "subtopic": "Race", "altName": "", "category": "Race & racism" },
-            { "subtopic": "War", "altName": "", "category": "War & Peace" },
-            { "subtopic": "Education", "altName": "", "category": "Education" },
-            { "subtopic": "Medical Ethics", "altName": "", "category": "Medical ethics and the Modern Age" },
-            { "subtopic": "Leasure and Games", "altName": "Leisure & Games", "category": "Games, Sports, and Leisure" },
-            { "subtopic": "Ecology", "altName": "", "category": "Nature & ecology" },
-            { "subtopic": "Work", "altName": "", "category": "Theology of Work" }
+          "Arts": {
+            "lectures": [
+              { "subtopic": "Theology of Art", "altName": "Theology", "category": "Christianity and Art" },
+              { "subtopic": "Literature and Poetry", "altName": "Literature & Poetry", "category": "Literature and Poetry" },
+              { "subtopic": "Film", "altName": "", "category": "Christianity and Film" },
+              { "subtopic": "Modern Art", "altName": "", "category": "Painting & Modern Art" },
+              { "subtopic": "Theater and the Stage", "altName": "Theatre & Stage", "category": "Theatre and the Stage" },
+              { "subtopic": "Classical Music", "altName": "", "category": "Christianity and Music: Classical music" },
+              { "subtopic": "Popular Music", "altName": "", "category": "Christianity and Music: Popular music" },
+              { "subtopic": "Music: General", "altName": "", "category": "Christianity and Music: General" }
+            ],
+            "featured": [
+              { "title": "Art & The Bible - Arts", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" },
+              { "title": "On Saving Leonardo", "speaker": "Nancy Pearcey", "filename": "On Saving Leonardo From the Clutches of Secularism - Nancy Pearcey___1326.mp3" }
+            ]
+          },
+          "Science": {
+            "lectures": [
+              { "subtopic": "Science and Faith", "altName": "", "category": "science and faith" }
+            ],
+            "featured": [
+              { "title": "Art & The Bible - Science", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
           ]
+          },
+          "Technology": {
+            "lectures": [
+              { "subtopic": "Technology and the Future", "altName": "", "category": "Technology and the Futre" }
+            ],
+            "featured": [
+              { "title": "Art & The Bible - Technology", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+            ]
+          },
+          "Philosophy": {
+            "lectures": [
+              { "subtopic": "Engaging Philosophy", "altName": "Christianity & Philosophy", "category": "Philosophy" }
+            ],
+            "featured": [
+              { "title": "Art & The Bible - Philosophy", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+            ]
+          },
+          "The Church and Modernity": {
+            "lectures": [
+              { "subtopic": "Christianity and the Modern Age", "altName": "Christianity & Modernity", "category": "Christianity in the Modern Age" },
+              { "subtopic": "Reflections on Modern Culture", "altName": "Christianity & Culture", "category": "Reflections on Modern Culture" }
+            ],
+            "featured": [
+              { "title": "Art & The Bible", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+            ]
+          },
+          "Other": {
+            "lectures": [
+              { "subtopic": "History of Thought", "altName": "", "category": "The History of Secular Thought" },
+              { "subtopic": "Politics", "altName": "", "category": "Politics and Economics" },
+              { "subtopic": "Economics", "altName": "", "category": "Politics and Economics" },
+              { "subtopic": "Race", "altName": "", "category": "Race & racism" },
+              { "subtopic": "War", "altName": "", "category": "War & Peace" },
+              { "subtopic": "Education", "altName": "", "category": "Education" },
+              { "subtopic": "Medical Ethics", "altName": "", "category": "Medical ethics and the Modern Age" },
+              { "subtopic": "Leisure and Games", "altName": "Leisure & Games", "category": "Games, Sports, and Leisure" },
+              { "subtopic": "Ecology", "altName": "", "category": "Nature & ecology" },
+              { "subtopic": "Work", "altName": "", "category": "Theology of Work" }
+            ],
+            "featured": [
+              { "title": "Art & The Bible - Other", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+            ]
+          }
         },
         "Personal - Identity & Relationships": {
-          "Relationships": [
-            { "subtopic": "Community", "altName": "", "category": "Community and Relationships" },
-            { "subtopic": "Hospitality", "altName": "", "category": "Hospitality" },
-            { "subtopic": "Marriage", "altName": "", "category": "Marriage" },
-            { "subtopic": "Family", "altName": "", "category": "Family" },
-            { "subtopic": "Singleness", "altName": "", "category": "Singleness" }
-          ],
-          "Self": [
-            { "subtopic": "Identity", "altName": "", "category": "Identity and the Self" },
-            { "subtopic": "Psychology", "altName": "", "category": "Psychology & counseling" },
-            { "subtopic": "Emotions", "altName": "", "category": "Emotions and Forgiveness" }
-          ],
-          "Sex and Gender": [
-            { "subtopic": "Sexuality, Gender, and Feminism", "altName": "Christianity & Sexuality", "category": "Sexuality, Gender, and the Bible" }
-          ],
-          "Suffering": [
-            { "subtopic": "Suffering, Pain, and Healing", "altName": "Suffering, Pain, and Healing", "category": "Suffering, Pain, and Healing" }
-          ],
-          "Other": [
-            { "subtopic": "Making Decisions", "altName": "", "category": "Guidance and Decision Making" },
-            { "subtopic": "Food and Eating", "altName": "Food", "category": "Food and Eating" },
-            { "subtopic": "Ethics", "altName": "", "category": "Ethics and Morality" }
-          ]
+          "Relationships": {
+            "lectures": [
+              { "subtopic": "Community", "altName": "", "category": "Community and Relationships" },
+              { "subtopic": "Hospitality", "altName": "", "category": "Hospitality" },
+              { "subtopic": "Marriage", "altName": "", "category": "Marriage" },
+              { "subtopic": "Family", "altName": "", "category": "Family" },
+              { "subtopic": "Singleness", "altName": "", "category": "Singleness" }
+            ],
+            "featured": [
+              { "title": "Art & The Bible - Relationships", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+            ]
+          },
+          "Self": {
+            "lectures": [
+              { "subtopic": "Identity", "altName": "", "category": "Identity and the Self" },
+              { "subtopic": "Psychology", "altName": "", "category": "Psychology & counseling" },
+              { "subtopic": "Emotions", "altName": "", "category": "Emotions and Forgiveness" }
+            ],
+            "featured": [
+              { "title": "Art & The Bible - Self", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+            ]
+          },
+          "Sex and Gender": {
+            "lectures": [
+              { "subtopic": "Sexuality, Gender, and Feminism", "altName": "Christianity & Sexuality", "category": "Sexuality, Gender, and the Bible" }
+            ],
+            "featured": [
+              { "title": "Art & The Bible", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+            ]
+          },
+          "Suffering": {
+            "lectures": [
+              { "subtopic": "Suffering, Pain, and Healing", "altName": "Suffering, Pain, and Healing", "category": "Suffering, Pain, and Healing" }
+            ],
+            "featured": [
+              { "title": "Art & The Bible - Suffering", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+            ]
+          },
+          "Other": {
+            "lectures": [
+              { "subtopic": "Making Decisions", "altName": "", "category": "Guidance and Decision Making" },
+              { "subtopic": "Food and Eating", "altName": "Food", "category": "Food and Eating" },
+              { "subtopic": "Ethics", "altName": "", "category": "Ethics and Morality" }
+            ],
+            "featured": [
+              { "title": "Art & The Bible - Other", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+            ]
+          }
         }
-      },
-      "featured": {
-        "Theology & Worldview": [
-          { "title": "The Five Themes of L'Abri", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
-          { "title": "An Introduction to Francis Schaeffer", "speaker": "Jerram Barrs", "filename": "An Introduction To Francis Schaeffer & his Writings - Jerram Barrs___100.mp3" },
-          { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
-        ],
-        "Culture and Society": [
-          { "title": "Art & The Bible", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" },
-          { "title": "Les Misérables", "speaker": "John Hodges", "filename": "Les Miserables - John Hodges___1128.mp3" },
-          { "title": "On Saving Leonardo", "speaker": "Nancy Pearcey", "filename": "On Saving Leonardo From the Clutches of Secularism - Nancy Pearcey___1326.mp3" }
-        ],
-        "Personal - Identity & Relationships": [
-          { "title": "What is a 'Personal Relationship with God'?", "speaker": "Jim Paul", "filename": "What is a __Personal Relationship with God__^ - Jim Paul___2273.mp3" },
-          { "title": "Community As A Subversion of Modernity", "speaker": "Andrew Fellows", "filename": "Community as Subversion of Modernity - Andrew Fellows___354.mp3" },
-          { "title": "Navigating Relationships", "speaker": "Jerram Barrs", "filename": "What is a __Personal Relationship with God__^ - Jim Paul___2273x.mp3" }
-        ]
       }
     }
   ],

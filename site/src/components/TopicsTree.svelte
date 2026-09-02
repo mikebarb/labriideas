@@ -11,6 +11,17 @@
     category: string;
   }
 
+  // NEW: sub-category node shape after the menu.json rework.
+  // Migrated: { lectures, featured? }. Legacy bare arrays are still
+  // accepted so the JSON can be migrated section by section.
+  type SubCategoryNode = { lectures?: LeafItem[]; featured?: unknown[] } | LeafItem[];
+
+  // NEW: leaf accessor — accepts both shapes, defaults to [].
+  function getLeaves(node: SubCategoryNode | undefined): LeafItem[] {
+    if (Array.isArray(node)) return node;
+    return node?.lectures ?? [];
+  }
+
   // Find the Topics menu (this returns 'SubMenu | undefined')
   const topicsSubMenu = menuData.subMenus.find(s => s.subMenu === 'Topics');
   
@@ -222,13 +233,29 @@
   function getKey(major: string, minor: string) {
     return `${major}-${minor}`;
   }
-
+ 
+  /*
   function expandAll() {
     const allOpen: Record<string, boolean> = {};
     for (const [majorTheme, minorMap] of Object.entries(hierarchy)) {
       allOpen[majorTheme] = true; // Open the major
       for (const minorTheme of Object.keys(minorMap)) {
         allOpen[getKey(majorTheme, minorTheme)] = true; // Open the minor
+      }
+    }
+    openSections = allOpen;
+  }
+  */
+
+  function expandAll() {
+    const allOpen: Record<string, boolean> = {};
+    for (const [majorTheme, minorMap] of Object.entries(hierarchy)) {
+      allOpen[majorTheme] = true; // Open the major
+      // CHANGED: skip 'featured' — it's curation data inside the node,
+      // not a navigable sub-category, and must not gain a tree section.
+      for (const minorTheme of Object.keys(minorMap)) {
+        if (minorTheme === 'featured') continue;
+        allOpen[getKey(majorTheme, minorTheme)] = true;
       }
     }
     openSections = allOpen;
@@ -293,7 +320,8 @@
       <!-- MAJOR THEME CONTENT (Only shows when expanded) -->
       {#if openSections[majorTheme]}
         <div class="ml-6 border-l-2 border-gray-200 pl-4">
-          {#each Object.entries(minorMap) as [minorTheme, leaves]}
+          <!-- {#each Object.entries(minorMap) as [minorTheme, leaves]} -->
+          {#each Object.entries(minorMap).filter(([k]) => k !== 'featured') as [minorTheme, node]}
             {@const sectionId = getKey(majorTheme, minorTheme)}
             <div class="mb-2">
               <button 
@@ -310,7 +338,8 @@
               
               {#if openSections[sectionId]}
                 <ul class="ml-6 border-l border-gray-200 pl-3 py-1">
-                  {#each leaves as item}
+                  <!-- {#each leaves as item} -->
+                  {#each getLeaves(node as SubCategoryNode) as item}
                     <li>
                       <!-- onclick snapshot: saves the scroll position before the
                            browser navigates away. Does NOT preventDefault, so
