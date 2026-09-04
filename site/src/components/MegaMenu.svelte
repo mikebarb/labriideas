@@ -245,7 +245,7 @@
         </div>
 
         <!-- COLUMN 3: Featured Lectures — CONTEXT-SENSITIVE -->
-        <!-- CHANGED: featured now follows the sub-category hovered in
+        <!-- Featured now follows the sub-category hovered in
              Column 2 (activeSub), reading that sub-category's own
              `featured` array from menu.json. Empty/missing featured
              lists show the empty state. Cards receive the hydrated item
@@ -254,7 +254,10 @@
           <h4 class="text-xs font-bold uppercase text-orange-600 mb-4 tracking-wider">Featured Lectures</h4>
           <div class="flex flex-col gap-4">
             {#if activeSub && getFeaturedItems(activeRoot, activeSub).length > 0}
-              {#each getFeaturedItems(activeRoot, activeSub) as item (item.filename)}
+              <!-- Compound key (`${item.filename}-${i}`) prevents Svelte 
+                   runtime crash (each_key_duplicate) when draft/placeholder items 
+                   share identical filenames like "xxx.mp3". -->
+              {#each getFeaturedItems(activeRoot, activeSub) as item, i (`${item.filename}-${i}`)}
                 <TopicFeaturedCard item={hydrateItem(item)} {apiBase} {isAdmin} />
               {/each}
             {:else}

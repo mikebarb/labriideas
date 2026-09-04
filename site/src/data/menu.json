@@ -259,7 +259,22 @@
             ],
             "featured": [
               { "title": "The Five Themes of L'Abri - L'Abri", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
+              { "title": "An Introduction to Francis Schaeffer", "speaker": "Jerram Barrs", "filename": "An Introduction To Francis Schaeffer & his Writings - Jerram Barrs___100.mp3" },
               { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
+            ]
+          },
+          "Bible": {
+            "lectures": [
+              { "subtopic": "New Testament", "altName": "", "category": "The Bible - Exploring the New Testament" },
+              { "subtopic": "Old Testament", "altName": "", "category": "The Bible - Exploring the Old Testament" },
+              { "subtopic": "Interpretation", "altName": "", "category": "The Bible - How to Interpret Scripture" },
+              { "subtopic": "Inspiration", "altName": "", "category": "The Bible - Inspiration and Authority" },
+              { "subtopic": "Canon", "altName": "", "category": "The Bible - The Canon" }
+            ],
+            "featured": [
+              { "title": "The Conquest of Canaan", "speaker": "Sandra Richter", "filename": "xxx.mp3" },
+              { "title": "Paul and Greek philosophy", "speaker": "Edwin Judge", "filename": "xxx.mp3" },
+              { "title": "How did we Get the Gospels?", "speaker": "Joshua Chestnut", "filename": "From the Gospel to the Gospels Part 1_ What is a Gospel & how did we get them^ - Joshua Chestnut___653.mp3" }
             ]
           },
           "Doctrine": {
@@ -276,21 +291,9 @@
               { "subtopic": "Spiritual Growth", "altName": "", "category": "Christian Spirituality and Growth" }
             ],
             "featured": [
-              { "title": "The Five Themes of L'Abri - doctrine", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
-              { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
-            ]
-          },
-          "Bible": {
-            "lectures": [
-              { "subtopic": "New Testament", "altName": "", "category": "The Bible - Exploring the New Testament" },
-              { "subtopic": "Old Testament", "altName": "", "category": "The Bible - Exploring the Old Testament" },
-              { "subtopic": "Interpretation", "altName": "", "category": "The Bible - How to Interpret Scripture" },
-              { "subtopic": "Inspiration", "altName": "", "category": "The Bible - Inspiration and Authority" },
-              { "subtopic": "Canon", "altName": "", "category": "The Bible - The Canon" }
-            ],
-            "featured": [
-              { "title": "The Five Themes of L'Abri - Bible", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
-              { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
+              { "title": "The Sacrament of the Present Moment", "speaker": "Andrew Fellows", "filename": "The Sacrament of the Present Moment - Andrew Fellows___2105.mp3" },
+              { "title": "Being Human", "speaker": "Ranald Macauley", "filename": "Being Human - Ranald Macaulay___176.mp3" },
+              { "title": "22 Things I Have Learned in Life", "speaker": "Donald Drew", "filename": "Twenty-Two Things I Have Learned in Life - Donald Drew___2212.mp3" }
             ]
           },
           "Apologetics": {
@@ -300,8 +303,9 @@
               { "subtopic": "Modern Questions, Ancient Answers", "altName": "Common Questions", "category": "Ancient Answers to Modern Questions" }
             ],
             "featured": [
-              { "title": "The Five Themes of L'Abri - Apologetics", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
-              { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
+              { "title": "Monotheism in a Pluralistic Society", "speaker": "Sandra Richer", "filename": "xxx.mp3" },
+              { "title": "Apologetics with a Human Face", "speaker": "Jim Paul", "filename": "Apologetics With a Human Face - Jim Paul___119.mp3" },
+              { "title": "The Importance of Asking Questions", "speaker": "Ellis Potter", "filename": "The Importance of Asking Questions - Ellis Potter___1946.mp3" }
             ]
           },
           "History": {
@@ -311,19 +315,21 @@
               { "subtopic": "Liberalism", "altName": "", "category": "Christianity and Liberalism" }
             ],
             "featured": [
-              { "title": "The Five Themes of L'Abri - History", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
-              { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
+              { "title": "How Europe Lost Its Faith", "speaker": "Ian Cooper", "filename": "How Europe Lost Its Faith - Ian Cooper___810.mp3" },
+              { "title": "Who Was John Calvin?", "speaker": "Stefan Lindholm", "filename": "An Introduction to John Calvin - Stefan Lindholm___103.mp3" },
+              { "title": "The Church and the Roman Empire", "speaker": "Mardi Keyes", "filename": "xxx.mp3" }
             ]
           },
           "Other": {
             "lectures": [
               { "subtopic": "Ethics and Morality", "altName": "Ethics & Morality", "category": "Apologetics: Exploring the Truth of Christianity" },
-              { "subtopic": "Eastern Religion and the New Age", "altName": "Eastern Religion", "category": "Eastern Religion and the New Age" },
-              { "subtopic": "Cults ad the Occult", "altName": "Cults & Occult", "category": "Sects, Cults, and the Occult" }
+              { "subtopic": "Cults ad the Occult", "altName": "Cults & Occult", "category": "Sects, Cults, and the Occult" },
+              { "subtopic": "Eastern Religion and the New Age", "altName": "Eastern Religion", "category": "Eastern Religion and the New Age" }
             ],
             "featured": [
-              { "title": "The Five Themes of L'Abri - Other", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
-              { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
+              { "title": "Who is the New Age Jesus?", "speaker": "Richard Winter", "filename": "Who Is The New Age Jesus^ - Richard Winter___2330.mp3" },
+              { "title": "Is God Necessary for Morality?", "speaker": "Dick Keyes", "filename": "Is God Necessary for Morality^ - Dick Keyes___963.mp3" },
+              { "title": "Three Theories of Everything", "speaker": "Ellis Potter", "filename": "Three Theories of Everything - Ellis Potter___2151.mp3" }
             ]
           }
         },
@@ -340,32 +346,9 @@
               { "subtopic": "Music: General", "altName": "", "category": "Christianity and Music: General" }
             ],
             "featured": [
-              { "title": "Art & The Bible - Arts", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" },
-              { "title": "On Saving Leonardo", "speaker": "Nancy Pearcey", "filename": "On Saving Leonardo From the Clutches of Secularism - Nancy Pearcey___1326.mp3" }
-            ]
-          },
-          "Science": {
-            "lectures": [
-              { "subtopic": "Science and Faith", "altName": "", "category": "science and faith" }
-            ],
-            "featured": [
-              { "title": "Art & The Bible - Science", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
-          ]
-          },
-          "Technology": {
-            "lectures": [
-              { "subtopic": "Technology and the Future", "altName": "", "category": "Technology and the Futre" }
-            ],
-            "featured": [
-              { "title": "Art & The Bible - Technology", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
-            ]
-          },
-          "Philosophy": {
-            "lectures": [
-              { "subtopic": "Engaging Philosophy", "altName": "Christianity & Philosophy", "category": "Philosophy" }
-            ],
-            "featured": [
-              { "title": "Art & The Bible - Philosophy", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+              { "title": "Art Needs No Justification", "speaker": "Hans Rookmaaker", "filename": "Art Needs No Justification - Hans Rookmaaker___142.mp3" },
+              { "title": "Creation, Creativity, and the Artist", "speaker": "John Hodges", "filename": "xxx.mp3" },
+              { "title": "Art in the Bible", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
             ]
           },
           "The Church and Modernity": {
@@ -374,7 +357,39 @@
               { "subtopic": "Reflections on Modern Culture", "altName": "Christianity & Culture", "category": "Reflections on Modern Culture" }
             ],
             "featured": [
-              { "title": "Art & The Bible", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+              { "title": "Religion and Violence", "speaker": "Dick Keyes", "filename": "Religion & Violence 1_ Everyone is Religious - Dick Keyes___1518.mp3" },
+              { "title": "The Making of Modernity", "speaker": "Andrew Fellows", "filename": "The Making of Modernity - Andrew Fellows___2001.mp3" },
+              { "title": "The Faith of the Unbeliever", "speaker": "Robb Ludwick", "filename": "The Faith of the Unbeliever - Robb Ludwick___1895.mp3" }
+            ]
+          },
+          "Science": {
+            "lectures": [
+              { "subtopic": "Science and Faith", "altName": "", "category": "science and faith" }
+            ],
+            "featured": [
+              { "title": "Scientists and True Spirituality", "speaker": "Arend Jan Poelarends", "filename": "xxx.mp3" },
+              { "title": "Miracles, Science, and the God of the Gaps", "speaker": "Jack Collins", "filename": "xxx.mp3" },
+              { "title": "Conversations Between Christianity & Science", "speaker": "John Lennox", "filename": "Conversations Between Christianity & Science - John Lennox___369.mp3" }
+          ]
+          },
+          "Technology": {
+            "lectures": [
+              { "subtopic": "Technology and the Future", "altName": "", "category": "Technology and the Futre" }
+            ],
+            "featured": [
+              { "title": "Finding Rest in a Technological World", "speaker": "Denis Haack", "filename": "xxx.mp3" },
+              { "title": "How Technology Behaves", "speaker": "Andy Patton", "filename": "How Technology Behaves (Part 2) - Andy Patton___824.mp3" },
+              { "title": "Technology and the Gospel", "speaker": "Bruce Little", "filename": "xxx.mp3" }
+            ]
+          },
+          "Philosophy": {
+            "lectures": [
+              { "subtopic": "Engaging Philosophy", "altName": "Christianity & Philosophy", "category": "Philosophy" }
+            ],
+            "featured": [
+              { "title": "How Do You Know That?", "speaker": "Ellis Potter", "filename": "How Do You Know That^ - Ellis Potter___806.mp3" },
+              { "title": "Is Reality Socially Created?", "speaker": "Jim Paul", "filename": "Is Reality Socially Created^ - Jim Paul___968.mp3" },
+              { "title": "Who's Afraid of Postmoderism", "speaker": "James k. A. Smith", "filename": "xxx.mp3" }
             ]
           },
           "Other": {
@@ -391,7 +406,9 @@
               { "subtopic": "Work", "altName": "", "category": "Theology of Work" }
             ],
             "featured": [
-              { "title": "Art & The Bible - Other", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+              { "title": "Staying Human In a Culture of Busyness", "speaker": "Mary Frances Giles", "filename": "Staying Human in a Culture of Busyness - Mary Frances Giles___1665.mp3" },
+              { "title": "Common Grace", "speaker": "Jerram Barrs", "filename": "Common Grace - Jerram Barrs___348.mp3" },
+              { "title": "Work", "speaker": "Ranald Macauley", "filename": "Being Human 3_ Thankfulness for the Work of Christ - xxx.mp3" }
             ]
           }
         },
@@ -405,7 +422,9 @@
               { "subtopic": "Singleness", "altName": "", "category": "Singleness" }
             ],
             "featured": [
-              { "title": "Art & The Bible - Relationships", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+              { "title": "Active Passivity in Relationships", "speaker": "Jim Paul", "filename": "Making Room For One Another_ Practising Active Passivity In Our Relationships - Jim Paul___1197.mp3" },
+              { "title": "Marriage Redeemed", "speaker": "Mardi Keyes", "filename": "Marriage Redeemed - Mardi Keyes___1214.mp3" },
+              { "title": "Saving Friendship from the 21st Century", "speaker": "Mary Frances Giles", "filename": "You Have a Friend Request_ Saving Friendship From The 21st Century - Mary Frances Giles___2379.mp3" }
             ]
           },
           "Self": {
@@ -415,7 +434,9 @@
               { "subtopic": "Emotions", "altName": "", "category": "Emotions and Forgiveness" }
             ],
             "featured": [
-              { "title": "Art & The Bible - Self", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+              { "title": "Me, My Selfie, and I", "speaker": "Andrew Fellows", "filename": "Me, My-Selfie & I - Andrew Fellows___1223.mp3" },
+              { "title": "Shame, Contempt, and Guilt", "speaker": "Henrik Gustavsson", "filename": "xxx.mp3" },
+              { "title": "Perfecting Ourselves to Death", "speaker": "Richard Winter", "filename": "Perfecting Ourselves to Death_ The Pursuit of Excellence & the Perils of Perfectionism - Richard Winter___1355.mp3" }
             ]
           },
           "Sex and Gender": {
@@ -423,7 +444,9 @@
               { "subtopic": "Sexuality, Gender, and Feminism", "altName": "Christianity & Sexuality", "category": "Sexuality, Gender, and the Bible" }
             ],
             "featured": [
-              { "title": "Art & The Bible", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+              { "title": "Christianity and Feminism", "speaker": "Mardi Keyes", "filename": "Are Christianity & Feminism Compatible^ - vs. 1 - Mardi Keyes___122.mp3" },
+              { "title": "The Bible's View of Women", "speaker": "Jerram Barrs", "filename": "The Bible__s View of Women - Jerram Barrs___1762.mp3" },
+              { "title": "The Power of Pornography", "speaker": "Richard Winter", "filename": "The Power of Pornography - Richard Winter___2045.mp3" }
             ]
           },
           "Suffering": {
@@ -431,7 +454,9 @@
               { "subtopic": "Suffering, Pain, and Healing", "altName": "Suffering, Pain, and Healing", "category": "Suffering, Pain, and Healing" }
             ],
             "featured": [
-              { "title": "Art & The Bible - Suffering", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+              { "title": "Affliction and the Goodness of God", "speaker": "Edith Schaeffer", "filename": "Affliction (Part 1) - Edith Schaeffer___76.mp3" },
+              { "title": "Finding Yourself In Your Suffering", "speaker": "Dick Keyes", "filename": "Finding Yourself in Your Own Suffering - Dick Keyes___615.mp3" },
+              { "title": "What Happens When God Doesn't Deliver", "speaker": "Mark Ryan", "filename": "From Bad to Worse_ What Happens When God Doesn__t Exactly Deliver^ - Mark Ryan___649.mp3" }
             ]
           },
           "Other": {
@@ -441,7 +466,9 @@
               { "subtopic": "Ethics", "altName": "", "category": "Ethics and Morality" }
             ],
             "featured": [
-              { "title": "Art & The Bible - Other", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
+              { "title": "Calling and Vocation", "speaker": "Denis Haack", "filename": "" },
+              { "title": "The Gospel and Eating Disorders", "speaker": "Emma Scrivener", "filename": "xxx.mp3" },
+              { "title": "Making Decisions", "speaker": "Jim Paul", "filename": "Making Decisions part 1_ Decision-Making Today - Jim Paul___1193.mp3" }
             ]
           }
         }

@@ -78,7 +78,9 @@
 </script>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {#each hydratedItems as item (item.id ?? item.filename)}
+    <!-- Compound fallback key (`${item.filename}-${i}`) ensures 
+         draft/placeholder lectures without distinct IDs never collide. -->
+    {#each hydratedItems as item, i (item.id ?? `${item.filename}-${i}`)}
       <FeaturedCard {item} {apiBase} {isAdmin} />
     {/each}
   </div>
