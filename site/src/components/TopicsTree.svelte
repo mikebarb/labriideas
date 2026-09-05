@@ -233,19 +233,6 @@
   function getKey(major: string, minor: string) {
     return `${major}-${minor}`;
   }
- 
-  /*
-  function expandAll() {
-    const allOpen: Record<string, boolean> = {};
-    for (const [majorTheme, minorMap] of Object.entries(hierarchy)) {
-      allOpen[majorTheme] = true; // Open the major
-      for (const minorTheme of Object.keys(minorMap)) {
-        allOpen[getKey(majorTheme, minorTheme)] = true; // Open the minor
-      }
-    }
-    openSections = allOpen;
-  }
-  */
 
   function expandAll() {
     const allOpen: Record<string, boolean> = {};
@@ -320,7 +307,6 @@
       <!-- MAJOR THEME CONTENT (Only shows when expanded) -->
       {#if openSections[majorTheme]}
         <div class="ml-6 border-l-2 border-gray-200 pl-4">
-          <!-- {#each Object.entries(minorMap) as [minorTheme, leaves]} -->
           {#each Object.entries(minorMap).filter(([k]) => k !== 'featured') as [minorTheme, node]}
             {@const sectionId = getKey(majorTheme, minorTheme)}
             <div class="mb-2">
@@ -335,10 +321,8 @@
                 {/if}
                 <span>{minorTheme}</span>
               </button>
-              
               {#if openSections[sectionId]}
                 <ul class="ml-6 border-l border-gray-200 pl-3 py-1">
-                  <!-- {#each leaves as item} -->
                   {#each getLeaves(node as SubCategoryNode) as item}
                     <li>
                       <!-- onclick snapshot: saves the scroll position before the
@@ -352,7 +336,7 @@
                       >
                         <Search size={14} class="opacity-50 shrink-0" />
                         <span>{item.subtopic}</span>
-                    </a>
+                      </a>
                     </li>
                   {/each}
                 </ul>

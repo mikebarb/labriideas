@@ -9,9 +9,10 @@
     tracks?: Array<{ displayTitle: string; filename: string }>;
     topic?: string;
     speaker?: string;
+    categories?: string[];
   }
 
-  let { apiBase, tracks: trackRefs = [], topic = '', speaker = '' }: Props = $props();
+  let { apiBase, tracks: trackRefs = [], topic = '', speaker = '', categories = [] }: Props = $props();
   let playableTracks: any[] = $state([]);
   let isLoading: boolean = $state(true);
 
@@ -28,6 +29,21 @@
             return { ...full, displayTitle: ref.displayTitle };
           })
           .filter(Boolean);
+      } else if (categories.length > 0) {
+        // NEW: UNION-FILTER MODE (Major/Nested topic pages)
+        // [...topic].astro aggregates every leaf category under a major
+        // theme or sub-category and passes the raw strings here. A track
+        // matches if ANY of its categories equals ANY entry in the list
+        // (case-insensitive) — handles the catalog's category being a
+        // plain string OR an array, same robustness as TOPICS MODE.
+        const searchTags = categories.map(c => c.toLowerCase());
+        playableTracks = catalog.filter((t: any) => {
+          if (!t.category) return false;
+          if (Array.isArray(t.category)) {
+            return t.category.some((c: string) => searchTags.includes(c.toLowerCase()));
+          }
+          return searchTags.includes(t.category.toLowerCase());
+        });
       } else if (topic) {
         // TOPICS MODE
         const searchTag = topic.toLowerCase();

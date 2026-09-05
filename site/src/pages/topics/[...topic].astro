@@ -14,7 +14,7 @@ interface TopicRoute {
   params: { topic: string };
   props: {
     topicName: string;
-    filterTopic: string;
+    filterCategories: string[];
     isMajor: boolean;
     majorSlug: string | null;
     majorLabel: string | null;
@@ -31,6 +31,36 @@ export async function getStaticPaths(): Promise<TopicRoute[]> {
   // CHANGED: hierarchy values are now sub-category NODES ({ lectures, featured? }),
   // not bare leaf arrays.
   const hierarchy: Record<string, Record<string, any>> = topicsSubMenu.hierarchy || {};
+
+  // ── UNION-FILTER HELPERS ──
+  // Collect every raw leaf `category` string beneath a sub-category node,
+  // deduplicated. Handles both node shapes ({ lectures, featured? } or
+  // legacy bare array). 'featured' never appears here because these walk
+  // `lectures` only.
+  const collectLeafCategories = (node: any): string[] => {
+    const leaves: any[] = Array.isArray(node) ? node : (node?.lectures ?? []);
+    const out: string[] = [];
+    for (const leaf of leaves) {
+      if (leaf && leaf.category && !out.includes(leaf.category)) {
+        out.push(leaf.category);
+      }
+    }
+    return out;
+  };
+
+  // Union of ALL leaf categories across every sub-category under a major
+  // theme — the aggregate list the major-theme page displays.
+  const collectRootCategories = (rootKey: string): string[] => {
+    const out: string[] = [];
+    for (const category of Object.keys(hierarchy[rootKey] || {})) {
+      if (category === 'featured') continue;
+      for (const c of collectLeafCategories(hierarchy[rootKey][category])) {
+        if (!out.includes(c)) out.push(c);
+      }
+    }
+    return out;
+  };
+
   const paths: TopicRoute[] = [];
 
   // Collision guards — one map per route LEVEL.
@@ -66,7 +96,7 @@ export async function getStaticPaths(): Promise<TopicRoute[]> {
       params: { topic: rootSlug },
       props: {
         topicName: rootKey,
-        filterTopic: rootKey,
+        filterCategories: collectRootCategories(rootKey),
         isMajor: true,
         majorSlug: rootSlug,
         majorLabel: rootKey,
@@ -89,7 +119,7 @@ export async function getStaticPaths(): Promise<TopicRoute[]> {
         params: { topic: `${rootSlug}/${catSlug}` },
         props: {
           topicName: category,
-          filterTopic: category,
+          filterCategories: collectLeafCategories(node),
           isMajor: false,
           majorSlug: rootSlug,
           majorLabel: rootKey,
@@ -105,7 +135,8 @@ export async function getStaticPaths(): Promise<TopicRoute[]> {
           params: { topic: flatSlug },
           props: {
             topicName: label,
-            filterTopic: category,
+            filterCategories: collectLeafCategories(node),
+            //filterTopic: category,
             isMajor: false,
             majorSlug: null,
             majorLabel: null,
@@ -154,7 +185,7 @@ export async function getStaticPaths(): Promise<TopicRoute[]> {
       params: { topic: slug },
       props: {
         topicName: label,
-        filterTopic: rawCategory,
+        filterCategories: [rawCategory],
         isMajor: false,
         majorSlug: null,
         majorLabel: null,
@@ -166,7 +197,9 @@ export async function getStaticPaths(): Promise<TopicRoute[]> {
   return filteredPaths;
 }
 
-const { topicName, filterTopic, isMajor, majorSlug, majorLabel, subCategories } = Astro.props;
+//const { topicName, filterTopic, isMajor, majorSlug, majorLabel, subCategories } = Astro.props;
+const { topicName, filterCategories, isMajor, majorSlug, majorLabel, subCategories } = Astro.props;
+
 const apiBase = import.meta.env.PUBLIC_API_BASE_URL;
 ---
 
@@ -202,7 +235,6 @@ const apiBase = import.meta.env.PUBLIC_API_BASE_URL;
         </div>
       </div>
     )}
-
-    <TrackList topic={filterTopic} {apiBase} client:load />
+    <TrackList categories={filterCategories} {apiBase} client:load />
   </div>
 </LabriLayout>
