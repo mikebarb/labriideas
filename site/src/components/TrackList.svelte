@@ -14,6 +14,11 @@
 
   let { apiBase, tracks: trackRefs = [], topic = '', speaker = '', categories = [] }: Props = $props();
   let playableTracks: any[] = $state([]);
+  // NEW: playlist entries whose filename missed the catalog. We keep the
+  // menu.json displayTitle so the page can show a disabled "Lecture not
+  // available." row — visible feedback for admins curating menu.json,
+  // who won't have the console open.
+  let missingTracks: Array<{ displayTitle: string; filename: string }> = $state([]);
   let isLoading: boolean = $state(true);
 
   onMount(async () => {
@@ -22,13 +27,22 @@
 
       if (trackRefs && trackRefs.length > 0) {
         // PLAYLIST MODE
-        playableTracks = trackRefs
-          .map(ref => {
+        // CHANGED: catalog misses are now RETAINED and rendered as disabled
+        // "Lecture not available." rows below the playable list (see
+        // template) instead of being silently dropped. The page itself is
+        // the admin's feedback channel — they see the missing lecture while
+        // editing, not just the console. Still warns with the exact filename.
+        playableTracks = [];
+        missingTracks = [];
+        for (const ref of trackRefs) {
             const full = catalog.find((t: any) => t.filename === ref.filename);
-            if (!full) return null;
-            return { ...full, displayTitle: ref.displayTitle };
-          })
-          .filter(Boolean);
+          if (full) {
+            playableTracks.push({ ...full, displayTitle: ref.displayTitle });
+          } else {
+            console.warn(`[Playlist] Track filename not found in catalog: "${ref.filename}"`);
+            missingTracks.push({ displayTitle: ref.displayTitle, filename: ref.filename });
+          }
+        }
       } else if (categories.length > 0) {
         // NEW: UNION-FILTER MODE (Major/Nested topic pages)
         // [...topic].astro aggregates every leaf category under a major
@@ -73,8 +87,27 @@
 
 {#if isLoading}
   <p class="text-gray-400 italic py-4">Loading tracks…</p>
-{:else if playableTracks.length === 0}
+{:else if playableTracks.length === 0 && missingTracks.length === 0}
   <p class="text-gray-400 italic py-4">No tracks found.</p>
 {:else}
-  <TrackCardGroup items={playableTracks } {apiBase}/>
+  {#if playableTracks.length > 0}
+    <TrackCardGroup items={playableTracks } {apiBase}/>
+  {/if}
+
+  <!-- NEW: disabled rows for catalog misses (playlist mode). Styled to sit
+       visually alongside TrackCards. Compound key guards against duplicate
+       placeholder filenames, consistent with MegaMenu/FeaturedGrid. -->
+  {#if missingTracks.length > 0}
+    <div class="mt-2 space-y-2">
+      {#each missingTracks as miss, i (`${miss.filename}-${i}`)}
+        <div class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-md opacity-70">
+          <span class="text-xs font-bold text-red-500 uppercase tracking-wide shrink-0">Unavailable</span>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-gray-900 pb-0 wrap-break-word">{miss.displayTitle}</p>
+            <p class="text-xs text-gray-400 italic pb-0">Lecture not available.</p>
+          </div>
+        </div>
+      {/each}
+    </div>
+  {/if}
 {/if}

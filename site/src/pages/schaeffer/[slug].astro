@@ -1,13 +1,14 @@
 ---
 import LabriLayout from '../../layouts/LabriLayout.astro';
 import TrackList from '../../components/TrackList.svelte';
-import menuData from '../../data/menu.json';
 
 // Generate static paths for each person in the collection
 export async function getStaticPaths() {
   const data = (await import('../../data/menu.json')).default;
   const people = data.schaefferCollection?.people ?? {};
-  
+    if (Object.keys(people).length === 0) {
+    throw new Error('Configuration error: "schaefferCollection.people" missing or empty in menu.json');
+  }
   // One path per person (e.g., /schaeffer/francis, /schaeffer/edith)
   return Object.keys(people).map(slug => ({
     params: { slug },
@@ -16,11 +17,6 @@ export async function getStaticPaths() {
 }
 
 const { person } = Astro.props;
-
-if (!person) {
-  return Astro.redirect('/404');
-}
-
 const apiBase = import.meta.env.PUBLIC_API_BASE_URL;
 ---
 
@@ -32,7 +28,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE_URL;
       <span class="text-gray-300">{person.speakerName}</span>
     </nav>
     
-    <h1 class="text-3xl font-bold mb-6 text-white">{person.speakerName}</h1>
+    <h1 class="text-3xl font-bold mb-6 text-gray-900">{person.speakerName}</h1>
     <p class="text-sm text-gray-500 mb-6">
       All lectures and sermons by {person.speakerName}
     </p>
