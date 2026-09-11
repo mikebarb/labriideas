@@ -5,8 +5,8 @@
   export let isAdmin = true;
 
   import { onMount } from 'svelte';
-  import MetadataEditor from '../components/MetadataEditor.svelte';
-  import { getCatalog } from '../lib/catalogStore';
+  import MetadataEditor from '../MetadataEditor.svelte';
+  import { getCatalog } from '../../lib/catalogStore';
 
   let selectedTrack = null;
 

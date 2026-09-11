@@ -1,8 +1,8 @@
 <script>
   import SparkMD5 from 'spark-md5';
   import { onMount, onDestroy } from 'svelte';
-  import MetadataForm from './MetadataForm.svelte'; // Update path if needed
-  import { getCatalog, clearCatalogMemoryCache } from '../lib/catalogStore'; // Import the store!
+  import MetadataForm from '../MetadataForm.svelte'; // Update path if needed
+  import { getCatalog, clearCatalogMemoryCache } from '../../lib/catalogStore'; // Import the store!
 
   export let catalog = { tracks: [] }; // Passed in from parent
   let isCatalogLoading = true; // NEW: Start as true
