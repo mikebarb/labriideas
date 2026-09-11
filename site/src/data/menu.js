@@ -13,17 +13,13 @@ export const navItems = [
   },
   { 
     id: 'learn', 
-    label: 'LEARN', 
+    label: 'LEARN',
     dropdown: [
       { label: 'Topics', href: '/topics/' },
       { label: 'Featured', href: '/featured/' },
       { label: 'Playlists', href: '/playlists/' },
       { label: 'Schaeffer Collection', href: '/schaeffer/' },
-      { label: 'Search', href: '/search/search3/' },
-      { label: 'Search-base', href: '/search/search/' },
-      { label: 'Search-ranked', href: '/search/search-ranked/' },
-      { label: 'Search-scoped', href: '/search/search-scoped/' },
-      { label: 'Search-filtered', href: '/search/search2/' }
+      { label: 'Search', href: '/search/search3/' }
     ]
   },
   { id: 'contact', 
@@ -35,5 +31,17 @@ export const navItems = [
     ]
   },
   { id: 'external', label: 'L\'ABRI.ORG', href: 'https://labri.org' },
-  { id: 'dev', label: 'DEV', href: '/admin' }
-];
+  { id: 'dev', label: 'DEV', href: '/admin' },
+  { id: 'misc', 
+      label: 'Misc', 
+      dropdown: [
+        { label: 'Search', href: '/search/search3/' },
+        { label: 'Search-base', href: '/searches/search/' },
+        { label: 'Search-ranked', href: '/searches/search-ranked/' },
+        { label: 'Search-scoped', href: '/searches/search-scoped/' },
+        { label: 'Search-filtered', href: '/searches/search2/' },
+        { label: 'Report An Error', href: 'https://labriideaslibrary.typeform.com/to/cYY0DA' },
+        { label: 'Admin', href: '/admin' }
+      ]
+    }
+  ];
