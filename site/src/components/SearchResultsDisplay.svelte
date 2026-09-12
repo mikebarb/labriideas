@@ -1,11 +1,9 @@
 <!-- src/components/SearchResultsDisplay.svelte -->
 <script lang="ts">
-  import type { Track } from '../lib/types.ts';
   //import { sanitizeKeywords } from '../lib/dataUtils.ts';
   import TrackCardGroup from './TrackCardGroup.svelte';
 
   interface Props {
-    //tracks: Track[];
     tracks: any[];   // still accepts the same prop name and type as before
     apiBase: string;
   }

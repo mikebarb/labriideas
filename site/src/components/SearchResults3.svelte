@@ -3,7 +3,6 @@
   import { onMount } from 'svelte';
   import { getCachedCatalog } from '../lib/catalogStore.js';
   import { filterTracksMulti } from '../lib/searchEngine.ts';
-  import { isAdmin as isAdminStore } from '../lib/appStatusStore';
   import SearchResultsDisplay from './SearchResultsDisplay.svelte';
   import type { Track } from '../lib/types';
 
@@ -84,5 +83,5 @@
     <div class="text-sm text-gray-500 italic">Loading catalog...</div>
   </div>
 {:else}
-  <SearchResultsDisplay tracks={filteredTracks} {apiBase} isAdmin={$isAdminStore} />
+  <SearchResultsDisplay tracks={filteredTracks} {apiBase} />
 {/if}

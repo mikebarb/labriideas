@@ -4,7 +4,6 @@
   import { getCachedCatalog } from '../lib/catalogStore.js';
   import { rankedSearch } from '../lib/rankedEngine.js';
   import { sanitizeKeywords } from '../lib/dataUtils.js';
-  import { isAdmin as isAdminStore } from '../lib/appStatusStore';
   import SearchResultsDisplay from './SearchResultsDisplay.svelte';
   import type { Track } from '../lib/types';
 
@@ -85,16 +84,10 @@
   }
 
 </script>
-<!--
-//  Pass apiBase and $isAdminStore to SearchResultsDisplay.
-//  $isAdminStore comes from the player store (set by Player.svelte 
-//  when the isAdmin prop is true). This means the download button 
-//  automatically appears/hides based on the admin status passed to Player.
--->
 {#if isLoading}
   <div class="text-center py-8">
     <div class="text-sm text-gray-500 italic">Loading catalog...</div>
   </div>
 {:else}
-  <SearchResultsDisplay tracks={filteredTracks} {apiBase} isAdmin={$isAdminStore} />
+  <SearchResultsDisplay tracks={filteredTracks} {apiBase} />
 {/if}
