@@ -32,11 +32,10 @@
 
   interface Props {
     people: Record<string, Person>;
-    apiBase?: string;    // NEW: forwarded to TopicFeaturedCard
-    isAdmin?: boolean;   // NEW: gates the download button
+    apiBase?: string;    // forwarded to TopicFeaturedCard
   }
 
-  let { people, apiBase = '', isAdmin = false }: Props = $props();
+  let { people, apiBase = '' }: Props = $props();
 
   // Catalog tracks (null until the background lookup completes).
   // Only THIS is $state — per-item hydration is computed on demand below.
@@ -100,7 +99,7 @@
              key (filename-index) guards against duplicate placeholder
              filenames in menu.json, consistent with MegaMenu/FeaturedGrid. -->
         {#each person.items as item, i (`${item.filename}-${i}`)}
-          <TopicFeaturedCard item={hydrateItem(item, person.speakerName)} {apiBase} {isAdmin} />
+          <TopicFeaturedCard item={hydrateItem(item, person.speakerName)} {apiBase} />
         {/each}
       </div>
 

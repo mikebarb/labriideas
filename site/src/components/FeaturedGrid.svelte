@@ -23,10 +23,9 @@
   interface Props {
     items: any[];       // Curation entries from menu.json
     apiBase?: string;
-    isAdmin?: boolean;
   }
 
-  let { items, apiBase = '', isAdmin = false }: Props = $props();
+  let { items, apiBase = '' }: Props = $props();
 
   // Catalog tracks (null until the background lookup completes).
   // NOTE: only THIS is $state — we no longer snapshot merged items.
@@ -81,6 +80,6 @@
     <!-- Compound fallback key (`${item.filename}-${i}`) ensures 
          draft/placeholder lectures without distinct IDs never collide. -->
     {#each hydratedItems as item, i (item.id ?? `${item.filename}-${i}`)}
-      <FeaturedCard {item} {apiBase} {isAdmin} />
+      <FeaturedCard {item} {apiBase} />
     {/each}
   </div>

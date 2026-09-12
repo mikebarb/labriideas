@@ -71,12 +71,11 @@
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   // Props — apiBase is forwarded to TopicFeaturedCard (play/download
-  // need it); isAdmin gates the download button.
+  // need it)
   interface Props {
     apiBase?: string;
-    isAdmin?: boolean;
   }
-  let { apiBase = '', isAdmin = false }: Props = $props();
+  let { apiBase = '' }: Props = $props();
 
   // Catalog tracks (null until loaded). Only THIS is $state —
   // the hydration result is computed per-item on demand (see hydrateItem),
@@ -258,7 +257,7 @@
                    runtime crash (each_key_duplicate) when draft/placeholder items 
                    share identical filenames like "xxx.mp3". -->
               {#each getFeaturedItems(activeRoot, activeSub) as item, i (`${item.filename}-${i}`)}
-                <TopicFeaturedCard item={hydrateItem(item)} {apiBase} {isAdmin} />
+                <TopicFeaturedCard item={hydrateItem(item)} {apiBase} />
               {/each}
             {:else}
               <p class="text-xs text-gray-400 italic">No featured lectures for this category.</p>

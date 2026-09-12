@@ -1,12 +1,13 @@
 <!-- src/components/QueueDrawer.svelte -->
 <script lang="ts">
   import { Play, Pause, X, Download, Music, GripVertical } from 'lucide-svelte';
- import { 
+  import { 
     mobileView, desktopQueueOpen, 
-    trackList, currentTrackStore, statusStore, isAdminStore,
+    trackList, currentTrackStore, statusStore,
     currentTimeStore, durationStore
   } from '../lib/playerStore.ts';
   import type { Track } from '../lib/types.ts';
+  import { isAdmin as isAdminStore } from '../lib/appStatusStore';
 
   // CHANGED: Import the download function from the new library location.
   // Previously, downloads were triggered via a custom DOM event to Player.

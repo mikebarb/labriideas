@@ -6,10 +6,9 @@
     items: any[];                                     // array of catalog items
     children?: import('svelte').Snippet<[any]>;        // optional actions snippet
     apiBase: string;
-    isAdmin?: boolean;
   }
 
-  let { items, children, apiBase, isAdmin = false }: Props = $props();
+  let { items, children, apiBase }: Props = $props();
 
   // Filter out null entries so we don't blow up on `item.filename`
   const safeItems = $derived(items.filter((item): item is any => item != null));
@@ -29,7 +28,6 @@
       expanded={expandedFilename === item.filename}
       ontoggle={handleToggle}
       {apiBase}
-      {isAdmin}
     >
       {#if children}
         {@render children(item)}

@@ -1,28 +1,24 @@
-<script>
- // --- Security Placeholder ---
-  // Later, Astro will pass true/false here based on the user's JWT cookie.
-  // For now, we can default it to true just so we can see the UI while developing.
-  export let isAdmin = true;
-
+<script lang="ts">
   import { onMount } from 'svelte';
   import MetadataEditor from '../MetadataEditor.svelte';
   import { getCatalog } from '../../lib/catalogStore';
+  import { isAdmin as isAdminStore } from '../../lib/appStatusStore';
 
-  let selectedTrack = null;
+  // State converted to Runes
+  let selectedTrack = $state(null);
+  let catalog = $state([]);
+  let status = $state("Checking for updates...");
+  let isLoading = $state(true);
+  let currentPage = $state(1);
 
-  // Catalog here is a list of tracks, not the json calalog.json content.
-  let catalog = []; 
-  let status = "Checking for updates...";  
-  let isLoading = true;
-
-  let currentPage = 1;
   const itemsPerPage = 5; 
 
-  $: totalPages = Math.ceil(catalog.length / itemsPerPage);
-  $: paginatedCatalog = catalog.slice(
+  // Derived state converted to Runes
+  let totalPages = $derived(Math.ceil(catalog.length / itemsPerPage));
+  let paginatedCatalog = $derived(catalog.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
-  );
+  ));
 
   function nextPage() { if (currentPage < totalPages) currentPage += 1; }
   function prevPage() { if (currentPage > 1) currentPage -= 1; }
@@ -54,18 +50,13 @@
   // ----------------------------------------------------------------------------------     
   async function loadCatalog() {
     isLoading = true;
-    status = "Checking for catalog updates...";
-    
-    // Get our stored ETag/Version from local storage / cache
-    const clientVersion = localStorage.getItem('catalog_version') || "";
+    status = "Checking for catalog updates...";  
     try{
       // Ask the service for the catalog. 
       // It will either return the memory cache instantly, or run the pipeline.
       const loadedCatalog = await getCatalog();
-
       catalog = loadedCatalog;
       status = `Catalog loaded (${catalog.length} tracks)`;
-
     } catch (err) {
       status = "Failed to load catalog.";
     } finally {
@@ -93,41 +84,34 @@
     <!-- We loop over 'paginatedCatalog' instead of 'catalog' -->
     <ul class="space-y-2 mb-6">
       {#each paginatedCatalog as track}
-        <!-- <li class="bg-slate-900 p-3 rounded border border-slate-600 flex justify-between"> -->
         <div class="flex justify-between p-2 bg-slate-700 rounded">
           <span class="text-white">{track.filename}</span>
           <span class="text-slate-400">{track.title}</span>
           <span class="text-slate-400">{track.artist}</span>
-          <!-- 
+          
           <button 
-            on:click={() => currentTrack = track} 
-            class="bg-cyan-500 hover:bg-cyan-400 px-3 py-1 rounded text-black font-bold">
-            ▶ Play
-          </button>
-          -->
-          <button 
-            on:click={() => window.dispatchEvent(new CustomEvent('play-track', { detail: track }))} 
+            onclick={() => window.dispatchEvent(new CustomEvent('play-track', { detail: track }))} 
             class="bg-cyan-500 hover:bg-cyan-400 px-3 py-1 rounded text-black font-bold">
               ▶ Play
           </button>
-          {#if isAdmin}
-            <button on:click={() => selectedTrack = track} class="bg-slate-600 hover:bg-slate-500 px-3 py-1 rounded text-white">
+          
+          {#if $isAdminStore}
+            <button onclick={() => selectedTrack = track} class="bg-slate-600 hover:bg-slate-500 px-3 py-1 rounded text-white">
               edit
             </button>
           {/if}
         </div>
-        <!-- </li> -->
       {/each}
     </ul>
   
-    {#if isAdmin}
+    {#if $isAdminStore}
       <MetadataEditor track={selectedTrack} onClose={closeEditor} />
     {/if}
 
     <!-- PAGINATION CONTROLS -->
     <div class="flex items-center justify-between bg-slate-900 p-3 rounded border border-slate-600">
       <button 
-        on:click={prevPage} 
+        onclick={prevPage} 
         disabled={currentPage === 1}
         class="px-4 py-2 bg-slate-700 rounded disabled:opacity-40 hover:bg-slate-600 transition-colors text-sm font-semibold"
       >
@@ -139,7 +123,7 @@
       </span>
 
       <button 
-        on:click={nextPage} 
+        onclick={nextPage} 
         disabled={currentPage === totalPages}
         class="px-4 py-2 bg-slate-700 rounded disabled:opacity-40 hover:bg-slate-600 transition-colors text-sm font-semibold"
       >

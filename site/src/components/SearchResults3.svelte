@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { getCachedCatalog } from '../lib/catalogStore.js';
   import { filterTracksMulti } from '../lib/searchEngine.ts';
-  import { isAdminStore } from '../lib/playerStore.js';
+  import { isAdmin as isAdminStore } from '../lib/appStatusStore';
   import SearchResultsDisplay from './SearchResultsDisplay.svelte';
   import type { Track } from '../lib/types';
 

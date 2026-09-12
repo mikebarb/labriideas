@@ -4,7 +4,7 @@
   import { getCachedCatalog } from '../lib/catalogStore.js';
   import { rankedSearch } from '../lib/rankedEngine.js';
   import { sanitizeKeywords } from '../lib/dataUtils.js';
-  import { isAdminStore } from '../lib/playerStore.js';
+  import { isAdmin as isAdminStore } from '../lib/appStatusStore';
   import SearchResultsDisplay from './SearchResultsDisplay.svelte';
   import type { Track } from '../lib/types';
 

@@ -8,10 +8,9 @@
     //tracks: Track[];
     tracks: any[];   // still accepts the same prop name and type as before
     apiBase: string;
-    isAdmin?: boolean;
   }
 
-   let { tracks, apiBase, isAdmin = false }: Props = $props();
+   let { tracks, apiBase }: Props = $props();
 
 </script>
 
@@ -24,6 +23,6 @@
     <p class="text-sm text-gray-500 mb-4">
       {tracks.length} {tracks.length === 1 ? 'track' : 'tracks'} found
     </p>
-   <TrackCardGroup items={tracks} {apiBase} {isAdmin} />
+   <TrackCardGroup items={tracks} {apiBase} />
   {/if}
 </div>

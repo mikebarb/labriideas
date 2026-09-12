@@ -17,14 +17,14 @@
   import { useTrackActions } from '../lib/useTrackActions.svelte.js';
   import { isTrackSwitching } from '../lib/transition.svelte.js';
   import { currentTrackStore, statusStore, trackList } from '../lib/playerStore.js';
+  import { isAdmin as isAdminStore } from '../lib/appStatusStore';
 
   interface Props {
     item: any;
     apiBase?: string;
-    isAdmin?: boolean;
   }
 
-  let { item, apiBase = '', isAdmin = false }: Props = $props();
+  let { item, apiBase = '' }: Props = $props();
 
 
 
@@ -124,7 +124,7 @@
     </button>
 
     <!-- DOWNLOAD BUTTON: admin only. Spinner while downloading. -->
-    {#if isAdmin}
+    {#if $isAdminStore}
       <button
         onclick={handleDownload}
         disabled={actionsDisabled || isDownloading}

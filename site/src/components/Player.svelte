@@ -7,7 +7,7 @@
   } from 'lucide-svelte';
   import { 
     mobileView, desktopQueueOpen,
-    trackList, currentTrackStore, statusStore, isAdminStore,
+    trackList, currentTrackStore, statusStore,
     currentTimeStore, durationStore
   } from '../lib/playerStore.js';
   import type { Track } from '../lib/types.ts';
@@ -25,9 +25,8 @@
   interface Props {
     apiBase?: string;
     showTracklist?: boolean;
-    isAdmin?: boolean;
   }
-  let { apiBase = '', showTracklist = true, isAdmin = false }: Props = $props();
+  let { apiBase = '', showTracklist = true }: Props = $props();
 
   // ─── State ───
   // The tracks array is the source of truth. Each track holds its own
@@ -101,7 +100,6 @@
   // indicator* (which row is active), not for any per-tick progress.
   $effect(() => { currentTrackStore.set(currentTrack); });
   $effect(() => { statusStore.set(status); });
-  $effect(() => { isAdminStore.set(isAdmin); });
   $effect(() => { currentTimeStore.set(currentTime); });
   $effect(() => { durationStore.set(duration); });
 
