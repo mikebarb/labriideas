@@ -2,6 +2,7 @@
 <script lang="ts">
   import { sanitizeKeywords } from '../lib/dataUtils.js';
   import { Download, Pencil, Play, Pause, Loader2, Plus } from 'lucide-svelte';
+  import { isAdmin as isAdminStore } from '../lib/appStatusStore';
 
   // Actions + download spinner come from the shared composable.
   import { useTrackActions } from '../lib/useTrackActions.svelte.js';
@@ -15,10 +16,9 @@
     ontoggle?: (filename: string) => void;
     children?: import('svelte').Snippet<[any]>;
     apiBase?: string;
-    isAdmin?: boolean;
   }
 
-  let { item, expanded = false, ontoggle, children, apiBase = '', isAdmin = false }: Props = $props();
+  let { item, expanded = false, ontoggle, children, apiBase = '' }: Props = $props();
 
   const keywords = $derived(sanitizeKeywords(item.keywords ?? []));
   const categoryText = $derived(formatCategory(item.category));
@@ -152,7 +152,7 @@
             {/if}
           </button>
 
-          {#if isAdmin}
+          {#if $isAdminStore}
             <button
               onclick={handleEdit}
               class="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition"

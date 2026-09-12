@@ -57,6 +57,14 @@ func main() {
 	if err != nil {
 		log.Println("No .env file found, relying on system env vars")
 	}
+	// --- NEW: Initialize Auth system ---
+	InitAuth()
+	if len(adminPasswords()) == 0 {
+		log.Println("⚠️  WARNING: ADMIN_PASSWORDS is empty — browser login will fail.")
+	}
+	if len(adminAPITokens()) == 0 {
+		log.Println("⚠️  WARNING: ADMIN_API_TOKENS is empty — CLI tools will be rejected.")
+	}
 
 	accessKey := os.Getenv("R2_ACCESS_KEY_ID")
 	secretKey := os.Getenv("R2_SECRET_ACCESS_KEY")
@@ -89,15 +97,25 @@ func main() {
 
 	// Setup HTTP Routes
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/download", corsMiddleware(downloadHandler))
-	mux.HandleFunc("/api/upload", corsMiddleware(uploadHandler))
+
+	// --- Public endpoints (no token required) ---
 	mux.HandleFunc("/api/catalog", corsMiddleware(catalogHandler))
-	mux.HandleFunc("/api/update-metadata", corsMiddleware(updateMetadataHandler))
-	mux.HandleFunc("/api/upload-track", corsMiddleware(uploadTrackHandler))
-	mux.HandleFunc("/api/get-upload-url", corsMiddleware(getSignedUploadURLHandler))
-	mux.HandleFunc("/api/start-crawl", corsMiddleware(startCrawlHandler))
-	mux.HandleFunc("/api/crawl-status", corsMiddleware(crawlStatusHandler))
-	mux.HandleFunc("/api/delete-track", corsMiddleware(deleteTrackHandler))
+	mux.HandleFunc("/api/download", corsMiddleware(downloadHandler))
+
+	// --- Auth endpoints (must be reachable without a token) ---
+	mux.HandleFunc("/api/auth/login", corsMiddleware(loginHandler))
+	mux.HandleFunc("/api/auth/logout", corsMiddleware(logoutHandler))
+	mux.HandleFunc("/api/auth/status", corsMiddleware(authStatusHandler))
+
+	// --- Admin endpoints (Protected: Bearer token or Cookie session required) ---
+	// Middleware order: CORS runs first (handles headers/preflight), then Auth (gates access)
+	mux.HandleFunc("/api/upload", corsMiddleware(authMiddleware(uploadHandler)))
+	mux.HandleFunc("/api/upload-track", corsMiddleware(authMiddleware(uploadTrackHandler)))
+	mux.HandleFunc("/api/update-metadata", corsMiddleware(authMiddleware(updateMetadataHandler)))
+	mux.HandleFunc("/api/delete-track", corsMiddleware(authMiddleware(deleteTrackHandler)))
+	mux.HandleFunc("/api/get-upload-url", corsMiddleware(authMiddleware(getSignedUploadURLHandler)))
+	mux.HandleFunc("/api/start-crawl", corsMiddleware(authMiddleware(startCrawlHandler)))
+	mux.HandleFunc("/api/crawl-status", corsMiddleware(authMiddleware(crawlStatusHandler)))
 
 	// BACKGROUND CACHE WARMUP
 	go func() {

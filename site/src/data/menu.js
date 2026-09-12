@@ -31,7 +31,6 @@ export const navItems = [
     ]
   },
   { id: 'external', label: 'L\'ABRI.ORG', href: 'https://labri.org' },
-  { id: 'dev', label: 'DEV', href: '/admin' },
   { id: 'misc', 
       label: 'Misc', 
       dropdown: [

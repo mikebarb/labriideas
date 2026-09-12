@@ -3,6 +3,8 @@
   import type { Snippet } from 'svelte';
   import { mobileView, desktopQueueOpen } from '../lib/playerStore.js';
   import { onMount } from 'svelte';
+  import { refreshAuth } from '../lib/appStatusStore'; 
+  import { authClient } from '../lib/authClient';
   import QueueDrawer from './QueueDrawer.svelte';
   import MetadataEditor from './MetadataEditor.svelte';
   import { getCachedCatalog } from '../lib/catalogStore.js';

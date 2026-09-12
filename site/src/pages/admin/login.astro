@@ -1,0 +1,17 @@
+---
+// src/pages/admin/login.astro
+import AdminLoginForm from '../../components/admin/AdminLoginForm.svelte';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Sign In — L'Abri Ideas</title>
+  </head>
+  <body class="bg-slate-900">
+    <main class="flex min-h-screen items-center justify-center p-4">
+      <AdminLoginForm client:load />
+    </main>
+  </body>
+</html>
