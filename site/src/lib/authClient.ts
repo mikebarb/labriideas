@@ -2,6 +2,9 @@
 const TOKEN_KEY = 'admin_token';
 const API_BASE = import.meta.env.PUBLIC_API_BASE_URL;
 
+
+
+
 export const authClient = {
     // 1. Login
     // Exchange a password for a session token. Server response:
@@ -80,5 +83,20 @@ export const authClient = {
     // 4. Check if we have a token
     hasToken(): boolean {
         return !!sessionStorage.getItem(TOKEN_KEY);
+    },
+
+    // Header set for callers that can't use authClient.fetch — notably
+    // XMLHttpRequest uploads, which need progress events. Keeps token
+    // access encapsulated here rather than scattered across components.
+    authHeader(): Record<string, string> {
+      const token = sessionStorage.getItem(TOKEN_KEY);
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    },
+
+    // Clear the local token after a server-side rejection (401), mirroring
+    // the auto-logout behaviour in fetch(). Callers should prompt re-login.
+    clearToken() {
+      sessionStorage.removeItem(TOKEN_KEY);
     }
+
 };

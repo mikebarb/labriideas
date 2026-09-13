@@ -203,10 +203,11 @@ func (l *loginAttempts) clear(ip string) {
 	delete(l.failures, ip)
 }
 
-// clientIP extracts the caller's address for rate limiting. Behind Render's
-// proxy the direct peer is the load balancer, so X-Forwarded-For is the
-// authoritative source. Only trustworthy while the server is not directly
-// exposed; do not reuse this helper if that ever changes.
+// clientIP extracts the caller's address for rate limiting AND statistics.
+// Behind Render's proxy the direct peer is the load balancer, so
+// X-Forwarded-For is the authoritative source. Only trustworthy while the
+// server is not directly exposed; do not reuse this helper if that ever
+// changes.
 func clientIP(r *http.Request) string {
 	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
 		if i := strings.Index(fwd, ","); i >= 0 {
@@ -307,6 +308,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		loginGuard.recordFailure(ip)
 		log.Printf("Failed admin login from %s", ip)
+		// Stats: failed login attempt. IP ONLY — the attempted password is
+		// never recorded, anywhere.
+		stats.Record(Event{Kind: "admin_login_failed", IP: ip})
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "invalid credentials"})
@@ -314,6 +318,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	loginGuard.clear(ip)
+	// Stats: successful login, attributed to the resolved UserID.
+	stats.Record(Event{Kind: "admin_login", UserID: userID, IP: ip})
 
 	token, err := newSessionToken()
 	if err != nil {
@@ -356,8 +362,16 @@ func authStatusHandler(w http.ResponseWriter, r *http.Request) {
 // Static CLI tokens cannot be revoked here — they are config, not state.
 // POST /api/auth/logout   (Authorization: Bearer <token>)
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	// CHANGED: resolve the identity BEFORE deleting the session, so the
+	// logout can be attributed in stats. A logout presented with a static
+	// CLI token is a no-op server-side (nothing to delete) but still
+	// resolves — and is recorded — as that user.
+	userID, _ := authorize(r)
 	if token := bearerToken(r); token != "" {
 		sessionStore.Delete(token)
+	}
+	if userID != "" {
+		stats.Record(Event{Kind: "admin_logout", UserID: userID, IP: clientIP(r)})
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]bool{"isAdmin": false})
@@ -387,6 +401,12 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		// Never log the token itself — only the resolved identity.
 		log.Printf("[ADMIN] user=%s %s %s", userID, r.Method, r.URL.Path)
+
+		// Stats: the structured, persistent version of the console line
+		// above. RecordAdminRequest internally skips operational endpoints
+		// (crawl orchestration — machine overhead, not admin actions; the
+		// crawl-status poller would otherwise flood the stats stream).
+		stats.RecordAdminRequest(userID, r.Method, r.URL.Path, clientIP(r))
 
 		ctx := context.WithValue(r.Context(), userIDContextKey, userID)
 		next(w, r.WithContext(ctx))

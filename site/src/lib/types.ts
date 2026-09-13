@@ -37,7 +37,14 @@ export interface Track {
    * Used by the Player to restore the active track on page reload 
    * or when returning from a "Detour" (streaming) session.
    */
-  isActive?: boolean;       
+  isActive?: boolean;
+  /**
+   * TRANSIENT (preview only): blob URL of a local, not-yet-uploaded file.
+   * Set by UploadManager's preview dispatch; consumed exclusively by
+   * Tier 0 in Player.loadTrack(). Must NEVER be persisted (it is a
+   * session-scoped browser reference) and must never enter the queue.
+   */
+  localBlob?: string;
 }
 
 // Previous value

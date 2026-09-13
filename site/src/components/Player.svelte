@@ -270,6 +270,37 @@
     }
     errorMessage = '';
 
+    // ─── TIER 0: Local Blob (Transient Preview) ───
+    // A track carrying localBlob is an UploadManager preview — the audio
+    // exists ONLY in the browser (a not-yet-uploaded local file), so it is
+    // in neither OPFS nor R2 and every other tier is unreachable by
+    // definition. The early return also guarantees the background OPFS
+    // cache (Tier 2 tail) never runs for a preview: an unuploaded file
+    // must never enter the offline cache.
+    //
+    // The dispatched track deliberately carries NO hash — a second layer
+    // of defense, since both the OPFS tiers and the cache block are
+    // `if (track.hash)` gated.
+    //
+    // Known limitation (recorded in design): Safari/iPadOS can fail on
+    // large blob: URL media (WebKitBlobResource error 3, same as Tier 1's
+    // documented issue). There is no fallback tier for a preview — the
+    // file has no server copy. Accepted: this is an admin desktop tool.
+    // If preview-on-iPad becomes a requirement, the escape hatch is a
+    // scoped <audio> element in UploadManager instead of this path.
+    if (track.localBlob) {
+      // Listener-before-load discipline, same contract as Tiers 1 and 2:
+      // waitForMetadata resolves on the NEW source's 'loadedmetadata' and
+      // restores any saved position (previews have none, but the contract
+      // is uniform and harmless here).
+      const metaReady = waitForMetadata(track);
+      audioElement.src = track.localBlob;
+      audioElement.load();
+      audioElement.playbackRate = track.playbackRate ?? 1.0;
+      await metaReady;
+      return; // Load-bearing: skips OPFS, presigned fetch, and caching.
+    }
+
     // ─── TIER 1: Try OPFS (Local Disk Cache) ───
     // FIXED (Safari blob playback): some iPads cannot load large blob:
     // URL media at all ("WebKitBlobResource error 3") — the same device
@@ -1237,6 +1268,33 @@
     const handleTogglePlay = () => togglePlayPause();
     window.addEventListener('toggle-play', handleTogglePlay);
 
+    /**
+     * Handle "preview-discarded" from UploadManager.
+     *
+     * When UploadManager discards a file (new selection or cancel), it
+     * revokes the blob URL and notifies us here. Revocation alone does
+     * NOT stop playback — the audio element already holds the loaded
+     * resource (revokeObjectURL only blocks future fetches of the URL).
+     * So the discard is explicit: if the CURRENT track is the discarded
+     * preview, stop it cleanly; if the user has since moved on to a
+     * catalog track, the guard fails and nothing happens.
+     */
+    const handlePreviewDiscarded = (e: Event) => {
+      const { filename } = (e as CustomEvent).detail;
+      if (!currentTrack || !currentTrack.localBlob || currentTrack.filename !== filename) return;
+
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.removeAttribute('src');
+        audioElement.load(); // releases the (already-revoked) blob reference
+      }
+      currentTrack = null;
+      status = 'idle';
+      currentTime = 0;
+      duration = 0;
+    };
+    window.addEventListener('preview-discarded', handlePreviewDiscarded);
+
     return () => {
       window.removeEventListener('play-track', handlePlay);
       window.removeEventListener('add-to-queue', handleAddToQueue);
@@ -1246,6 +1304,7 @@
       window.removeEventListener('pagehide', flushPosition);
       window.removeEventListener('beforeunload', flushPosition);
       window.removeEventListener('toggle-play', handleTogglePlay);
+      window.removeEventListener('preview-discarded', handlePreviewDiscarded);
     };
   });
 </script>

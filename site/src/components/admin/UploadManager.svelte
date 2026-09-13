@@ -1,26 +1,32 @@
 <script>
   import SparkMD5 from 'spark-md5';
   import { onMount, onDestroy } from 'svelte';
-  import MetadataForm from '../MetadataForm.svelte'; // Update path if needed
-  import { getCatalog, clearCatalogMemoryCache } from '../../lib/catalogStore'; // Import the store!
+  import MetadataForm from '../MetadataForm.svelte';
+  import { getCatalog, clearCatalogMemoryCache } from '../../lib/catalogStore';
+  // NEW: authenticated transport. /api/upload-track is behind authMiddleware,
+  // so the upload MUST carry the Bearer token or it 401s at the gate.
+  import { authClient } from '../../lib/authClient';
 
-  export let catalog = { tracks: [] }; // Passed in from parent
-  let isCatalogLoading = true; // NEW: Start as true
+  // Catalog is internal state (the .astro page passes nothing in) —
+  // loaded via the store on mount, used for duplicate checks and as the
+  // metadata-form template.
+  let catalog = $state({ tracks: [] });
+  let isCatalogLoading = $state(true);
 
   let fileInput; // Reference to the HTML file input
 
-  let selectedFile = null;
-  let fileAudioHash = "";
-  let isCalculatingHash = false;
-  let duplicateWarning = "";
+  let selectedFile = $state(null);
+  let fileAudioHash = $state("");
+  let isCalculatingHash = $state(false);
+  let duplicateWarning = $state("");
 
-  let metadata = {};
-  let isUploading = false;
-  let uploadProgress = 0;
-  let statusMessage = "";
+  let metadata = $state({});
+  let isUploading = $state(false);
+  let uploadProgress = $state(0);
+  let statusMessage = $state("");
 
-  let previewUrl = ""; // Stores the temporary local blob URL
-  let previewTrack = null; // Stores the temporary track object for the player
+  let previewUrl = $state(""); // Stores the temporary local blob URL
+  let previewTrack = $state(null); // Stores the temporary track object for the player
 
   // Fetch the catalog as soon as the component loads
   onMount(async () => {
@@ -37,8 +43,13 @@
     }
   });
 
-  //  on destroy, revoke the URL so you don’t leak memory
+  // On destroy, stop audio and revoke the URL so you don't leak memory
   onDestroy(() => {
+    if (previewTrack) {
+      window.dispatchEvent(new CustomEvent('preview-discarded', {
+        detail: { filename: previewTrack.filename }
+      }));
+    }
     if (previewUrl) URL.revokeObjectURL(previewUrl);
   });
 
@@ -70,13 +81,29 @@
 
   // Reset the uploader to its initial state
   function handleCancelUpload() {
+    // Stop the preview BEFORE revoking: an already-loaded element keeps
+    // playing a revoked blob (the player handles the explicit stop).
+    if (previewTrack) {
+      window.dispatchEvent(new CustomEvent('preview-discarded', {
+        detail: { filename: previewTrack.filename }
+      }));
+    }
+
+    // Release the preview blob URL BEFORE clearing state. If a preview is
+    // playing, its source dies here and playback stops — intended: the
+    // user has discarded the file. (Player will show its generic error
+    // state briefly; the next play action replaces it.)
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = "";
+    previewTrack = null;
+
     selectedFile = null;
     metadata = {};
     duplicateWarning = "";
     statusMessage = "";
     isCalculatingHash = false;
-    
-    // Crucial: Reset the native HTML file input so it's ready for a new selection
+
+    // Reset the native HTML file input so it's ready for a new selection
     if (fileInput) {
       fileInput.value = '';
     }
@@ -91,7 +118,6 @@
     console.log("Selected file:", selectedFile.name);
 
     duplicateWarning = "";
-    let isDuplicate = false;
      try {
       statusMessage = "Calculating file hash...";
       isCalculatingHash = true;
@@ -124,14 +150,9 @@
         } else if (matchedByHash) {
           duplicateWarning = `⚠️ Warning: The audio content of this file is identical to an existing track: "${matchedByHash.filename}"!`;
         }
-        console.log("Duplicate check:", isDuplicate);
-      }
-      //if (isDuplicate) {
-      //  duplicateWarning = "⚠️ Warning: A track with this filename or hash already exists in the catalog!";
-      //}
+              }
     } catch (error) {
       console.error("❌ ERROR during file processing:", error);
-      isCalculatingHash = false;
       statusMessage = "";
       duplicateWarning = "⚠️ Could not calculate audio hash. Duplicate check skipped.";
       fileAudioHash = "error"; // Set a fallback so metadata still populates
@@ -139,25 +160,69 @@
     } finally {
        // ALWAYS reset the loading state
       isCalculatingHash = false;
-      //duplicateWarning = ""; // clear for testing.
 
       // 3. Pre-fill dynamic metadata form (Guaranteed to run!)
        metadata = generateBlankMetadata(selectedFile.name, fileAudioHash || "unknown");
 
-      // Create a temporary Blob URL for local playback
+      // Create a temporary Blob URL for the local preview.
+      // References the in-memory File directly — zero-copy, instant,
+      // seekable. Revoking the previous URL (if a preview was already
+      // playing) stops that audio: the blob source dies, Player's error
+      // listener shows the generic playback-error state. That is the
+      // CORRECT outcome — the form has moved on to a new file.
       if (previewUrl) URL.revokeObjectURL(previewUrl); // Clean up old one if exists
       previewUrl = URL.createObjectURL(selectedFile);
 
-      // Construct a temporary Track object to send to the player
+      // Tell the player to stop the OLD preview before we kill its URL.
+      // Revocation alone doesn't stop an already-loaded element (see
+      // Player's preview-discarded handler), so the stop is explicit.
+      if (previewTrack) {
+        window.dispatchEvent(new CustomEvent('preview-discarded', {
+          detail: { filename: previewTrack.filename }
+        }));
+      }
+      if (previewUrl) URL.revokeObjectURL(previewUrl); // Clean up old one if exists
+      previewUrl = URL.createObjectURL(selectedFile);
+
+      // Construct the Virtual Track for the global player's preview.
+      //
+      // CONTRACT (see Player.loadTrack Tier 0 + the preview design doc):
+      //   - filename: 'preview-' prefix. Player's playTrack() dispatches
+      //     on filename equality (CASE 1 toggle / CASE 2 queue-hit); the
+      //     prefix can never collide with a catalog or queued track, so
+      //     the preview always lands in CASE 3 (streaming detour) —
+      //     queue untouched, bookmark untouched, nothing persisted.
+      //   - localBlob: the audio source. Tier 0 consumes it and returns
+      //     before any OPFS/presigned logic runs.
+      //   - NO hash: both OPFS tiers and the background cache are
+      //     `if (track.hash)` gated — an unuploaded file must never
+      //     enter the offline cache under any hash.
+      //   - NO position/playbackRate: nothing to resume.
+      //   - UploadManager owns the URL lifecycle: revoke on new-file
+      //     select, cancel, or unmount (onDestroy). NOT on upload
+      //     success — the File stays valid and the admin may keep
+      //     listening while preparing the next upload.
       previewTrack = {
-        id: metadata.filename,
-        filename: metadata.filename,
-        hash: fileAudioHash || "unknown",
-        title: metadata.title,
-        artist: metadata.artist,
-        metadata: metadata,
-        localPreviewUrl: previewUrl // <-- The magic key!
+        filename: `preview-${selectedFile.name}`,
+        title: metadata.title || selectedFile.name,
+        speaker: metadata.artist || 'Local preview',
+        localBlob: previewUrl
       };
+
+      // Create a temporary Blob URL for local playback
+      //if (previewUrl) URL.revokeObjectURL(previewUrl); // Clean up old one if exists
+      //previewUrl = URL.createObjectURL(selectedFile);
+
+      // Construct a temporary Track object to send to the player
+      //previewTrack = {
+      //  id: metadata.filename,
+      //  filename: metadata.filename,
+      //  hash: fileAudioHash || "unknown",
+      //  title: metadata.title,
+      //  artist: metadata.artist,
+      //  metadata: metadata,
+      //  localPreviewUrl: previewUrl // <-- The magic key!
+      //};
     }
   }
  
@@ -232,8 +297,15 @@
         statusMessage = "✅ Upload complete! Catalog updated.";
          // This forces the store to re-fetch the fresh catalog from the server
         clearCatalogMemoryCache(); 
+      } else if (xhr.status === 401) {
+        // NEW: the session died mid-work (TTL expiry or server restart).
+        // Clear the token so the guard redirects on next navigation, and
+        // tell the admin plainly — a generic "upload failed" here would
+        // send them debugging their file instead of their session.
+        authClient.clearToken();
+        statusMessage = "🔒 Session expired — sign in again. Your metadata is still filled in; re-login then press Upload.";
       } else {
-        statusMessage = "❌ Upload failed.";
+        statusMessage = `❌ Upload failed (server returned ${xhr.status}).`;
       }
       isUploading = false;
     };
@@ -243,7 +315,13 @@
       isUploading = false;
     };
 
+    // NEW: open() first, then set headers — setRequestHeader throws if
+    // called before the connection is opened. The Bearer token here is
+    // what carries the request through authMiddleware.
     xhr.open("POST", `${import.meta.env.PUBLIC_API_BASE_URL}/api/upload-track`);
+    for (const [key, value] of Object.entries(authClient.authHeader())) {
+      xhr.setRequestHeader(key, value);
+    }
     xhr.send(formData);
   }
 </script>
@@ -256,7 +334,7 @@
     <input 
       type="file" 
       accept="audio/mpeg"
-      on:change={handleFileChange}
+      onchange={handleFileChange}
       disabled={isCatalogLoading}
       bind:this={fileInput}
       class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-cyan-500 file:text-slate-900 hover:file:bg-cyan-400 cursor-pointer"
@@ -266,7 +344,7 @@
   {#if previewTrack}
     <div class="mb-4">
       <button 
-        on:click={() => window.dispatchEvent(new CustomEvent('play-track', { detail: previewTrack }))} 
+        onclick={() => window.dispatchEvent(new CustomEvent('play-track', { detail: previewTrack }))}
         class="bg-emerald-500 hover:bg-emerald-400 px-4 py-2 rounded text-slate-900 font-bold text-sm transition-colors">
         ▶ Preview Audio Locally
       </button>
@@ -284,12 +362,9 @@
   {/if}
 
   <!-- 3. Dynamic Metadata Form -->
-    <!-- Make filename read-only so it can be viewed/copied but not changed -->
-    <!-- Apply locked styling only to the filename -->
-     <!-- class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white" -->
+  <!-- Filename and audio-hash are visible but locked. id/hash are hidden. -->
   {#if metadata.filename}
     <!-- SHARED COMPONENT -->
-    <!-- Filename and audio-hash are visible but locked. id/hash are hidden. -->
     <div class="mb-6">
       <MetadataForm 
         bind:metadata 
@@ -301,14 +376,14 @@
     <!-- 4. Upload & Cancel Buttons & Progress -->
     <div class="flex gap-4">
        <button 
-        on:click={handleCancelUpload}
+        onclick={handleCancelUpload}
         disabled={isUploading}
         class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-2 px-4 rounded transition-colors">
         Cancel
       </button>
 
       <button 
-        on:click={handleUpload} 
+        onclick={handleUpload}
         disabled={isUploading || isCatalogLoading || duplicateWarning}
         class="flex-1 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-slate-900 font-bold py-2 px-4 rounded transition-colors">
         {isUploading ? `Uploading... ${uploadProgress}%` : '🚀 Upload Track'}
@@ -326,5 +401,3 @@
     {/if}
   {/if}
 </div>
-
-
