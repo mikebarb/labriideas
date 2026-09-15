@@ -120,6 +120,7 @@ func main() {
 	mux.HandleFunc("/api/get-upload-url", corsMiddleware(authMiddleware(getSignedUploadURLHandler)))
 	mux.HandleFunc("/api/start-crawl", corsMiddleware(authMiddleware(startCrawlHandler)))
 	mux.HandleFunc("/api/crawl-status", corsMiddleware(authMiddleware(crawlStatusHandler)))
+	mux.HandleFunc("/api/schema/menu", corsMiddleware(menuSchemaHandler))
 
 	// BACKGROUND CACHE WARMUP
 	go func() {
@@ -217,6 +218,12 @@ func main() {
 			log.Printf("Forcing listener close: %v", err)
 		}
 	}
+}
+
+// --- MENU SCHEMA HANDLER ---
+func menuSchemaHandler(w http.ResponseWriter, r *http.Request) {
+	// Serve the file directly from your source tree
+	http.ServeFile(w, r, "pkg/schema/menu.schema.json")
 }
 
 // --- CATALOG HANDLER ---
