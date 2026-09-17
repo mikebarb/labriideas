@@ -1,611 +1,1359 @@
 {
+  "featuredLectures": {
+    "items": [
+      {
+        "filename": "What is a __Personal Relationship with God__^ - Jim Paul___2273.mp3",
+        "id": "1",
+        "image": "/images/featured/jim_paul.avif",
+        "speaker": "Jim Paul",
+        "title": "What is a \"Personal Relationship with God\"?",
+        "titleBgColor": "rgb(140,189,171)"
+      },
+      {
+        "filename": "Community as Subversion of Modernity - Andrew Fellows___354.mp3",
+        "id": "2",
+        "image": "/images/featured/andrew_fellows.avif",
+        "speaker": "Andrew Fellows",
+        "title": "Community As A Subversion of Modernity",
+        "titleBgColor": "bg-lime-700"
+      },
+      {
+        "filename": "How We Got the Bible - Andy Patton___834.mp3",
+        "id": "3",
+        "image": "/images/featured/andy_patton.avif",
+        "speaker": "Andy Patton",
+        "title": "How We Got The Bible",
+        "titleBgColor": "bg-sky-400"
+      },
+      {
+        "filename": "Les Miserables - John Hodges___1128.mp3",
+        "id": "4",
+        "image": "/images/featured/john_hodges.avif",
+        "speaker": "John Hodges",
+        "title": "Les Miserables",
+        "titleBgColor": "bg-orange-400"
+      },
+      {
+        "filename": "Imagination, Habit \u0026 Hope in a Pornified Society - Joshua Chestnut___882.mp3",
+        "id": "5",
+        "image": "/images/featured/josuha_chestnut.avif",
+        "speaker": "Josuha Chestnut",
+        "title": "Imagination, Habit, \u0026 Hope in a Pornified Society",
+        "titleBgColor": "bg-amber-300"
+      },
+      {
+        "filename": "Did Yahweh Evolve^ - Sandra Richter.mp3",
+        "id": "6",
+        "image": "/images/featured/sandra_richter.avif",
+        "speaker": "Sandra Richter",
+        "title": "Did Yahweh Evolve?",
+        "titleBgColor": "bg-lime-700"
+      },
+      {
+        "filename": "On Saving Leonardo From the Clutches of Secularism - Nancy Pearcey___1326.mp3",
+        "id": "7",
+        "image": "/images/featured/nancy_pearcey.avif",
+        "speaker": "Nancy Pearcey",
+        "title": "On Saving Leonardo From the Clutches of Secularism",
+        "titleBgColor": "bg-violet-900"
+      },
+      {
+        "filename": "Twenty-Two Things I Have Learned in Life - Donald Drew___2212.mp3",
+        "id": "8",
+        "image": "/images/featured/donald_drew.avif",
+        "speaker": "Donald Drew",
+        "title": "Twenty-Two Things I Have Learned in Life",
+        "titleBgColor": "bg-sky-400"
+      },
+      {
+        "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3",
+        "id": "9",
+        "image": "/images/featured/ellis_potter.avif",
+        "speaker": "Ellis Potter",
+        "title": "Comprehensive Spirituality",
+        "titleBgColor": "bg-emerald-700"
+      },
+      {
+        "filename": "On the Origins of the Gospels - Dirk Jongkind___1328.mp3",
+        "id": "10",
+        "image": "/images/featured/dirk_jongkind.avif",
+        "speaker": "Dirk Jongkind",
+        "title": "On the Origins of the Gospels",
+        "titleBgColor": "bg-orange-700"
+      }
+    ],
+    "sectionImage": "",
+    "sectionSubtitle": "Noteworthy lectures on important topics.",
+    "sectionTitle": "FEATURED LECTURES"
+  },
+  "schaefferCollection": {
+    "people": {
+      "edith": {
+        "intro": "To get started with Edith Schaeffer's lectures, here are a few recommendations:",
+        "items": [
+          {
+            "filename": "True Spirituality - Edith Schaeffer___2190.mp3",
+            "id": "edith-1",
+            "title": "True Spirituality"
+          },
+          {
+            "filename": "Study on Prayer - Edith Schaeffer___1673.mp3",
+            "id": "edith-2",
+            "title": "Study on Prayer"
+          }
+        ],
+        "moreLink": "x",
+        "speakerName": "Edith Schaeffer"
+      },
+      "francis": {
+        "intro": "To get started with Francis Schaeffer's lectures, listen to these:",
+        "items": [
+          {
+            "filename": "Loss Of Absolutes part 2_ What Next^ What Needed^ Two Contents, two Realities - Francis Schaeffer___1182.mp3",
+            "id": "francis-1",
+            "title": "Two Contents, Two Realities"
+          },
+          {
+            "filename": "The Question of Apologetics - Francis Schaeffer___2084.mp3",
+            "id": "francis-2",
+            "title": "The Question of Apologetics"
+          },
+          {
+            "filename": "Art In The Bible - Francis Schaeffer___141.mp3",
+            "id": "francis-3",
+            "title": "Art in the Bible"
+          }
+        ],
+        "moreLink": "x",
+        "speakerName": "Francis Schaeffer"
+      }
+    },
+    "sectionImage": "/images/schaeffer.avif",
+    "sectionSubtitle": "Explore the lectures and sermons of Francis and Edith Schaeffer.",
+    "sectionTitle": "THE SCHAEFFER COLLECTION"
+  },
   "subMenus": [
     {
-      "subMenu": "Contact L'Abri",
-      "description": "L'Abri has study centres around the world. Each location is a place of community, study, and hospitality. For general enquiries or to arrange a visit, please contact the centre nearest you.",
+      "description": "xxxL'Abri has study centres around the world. Each location is a place of community, study, and hospitality. For general enquiries or to arrange a visit, please contact the centre nearest you.",
       "sites": [
         {
+          "details": [
+            {
+              "label": "Site",
+              "url": "https://www.labri.org/australia",
+              "value": "www.labri.org/australia"
+            },
+            {
+              "label": "Email",
+              "url": "mailto:australia@labri.org",
+              "value": "australia@labri.org"
+            },
+            {
+              "label": "Phone",
+              "value": "International: +61 2 4658 0227 / Local: 02 4658 0227"
+            },
+            {
+              "label": "Mail",
+              "value": "10 River Rd., Elderslie NSW 2570, Australia"
+            }
+          ],
           "id": "australia",
-          "title": "Australian L'Abri",
-          "details": [
-            { "label": "Site", "value": "www.labri.org/australia", "url": "https://www.labri.org/australia" },
-            { "label": "Email", "value": "australia@labri.org", "url": "mailto:australia@labri.org" },
-            { "label": "Phone", "value": "International: +61 2 4658 0227 / Local: 02 4658 0227" },
-            { "label": "Mail", "value": "10 River Rd., Elderslie NSW 2570, Australia" }
-          ]
+          "title": "Australian L'Abri"
         },
         {
+          "details": [
+            {
+              "label": "Site",
+              "url": "https://www.canadianlabri.org",
+              "value": "www.canadianlabri.org"
+            },
+            {
+              "label": "Podcast",
+              "url": "https://canadianlabri.podbean.com",
+              "value": "canadianlabri.podbean.com"
+            },
+            {
+              "label": "Email",
+              "url": "mailto:canadianlabri@gmail.com",
+              "value": "canadianlabri@gmail.com"
+            },
+            {
+              "label": "Phone",
+              "value": "+1 (250) 652-3355"
+            },
+            {
+              "label": "Mail",
+              "value": "6485 West Saanich Road, Saanichton, BC, V8M 1W8, Canada"
+            }
+          ],
           "id": "canada",
-          "title": "Canadian L'Abri",
-          "details": [
-            { "label": "Site", "value": "www.canadianlabri.org", "url": "https://www.canadianlabri.org" },
-            { "label": "Podcast", "value": "canadianlabri.podbean.com", "url": "https://canadianlabri.podbean.com" },
-            { "label": "Email", "value": "canadianlabri@gmail.com", "url": "mailto:canadianlabri@gmail.com" },
-            { "label": "Phone", "value": "+1 (250) 652-3355" },
-            { "label": "Mail", "value": "6485 West Saanich Road, Saanichton, BC, V8M 1W8, Canada" }
-          ]
+          "title": "Canadian L'Abri"
         },
         {
+          "details": [
+            {
+              "label": "Site",
+              "url": "https://www.englishlabri.org",
+              "value": "www.englishlabri.org"
+            },
+            {
+              "label": "Podcast",
+              "url": "https://englishlabri.podbean.com",
+              "value": "englishlabri.podbean.com"
+            },
+            {
+              "label": "Email",
+              "url": "mailto:bookings@englishlabri.org",
+              "value": "bookings@englishlabri.org"
+            },
+            {
+              "label": "Office Phone",
+              "value": "+44-1420-538436"
+            },
+            {
+              "label": "Office Fax",
+              "value": "+44-1420-538432"
+            },
+            {
+              "label": "Student Phone",
+              "note": "(please contact students here)",
+              "value": "+44-1420-538329"
+            },
+            {
+              "label": "Mail",
+              "value": "L'Abri Fellowship, The Manor House, Greatham, Liss, Hants GU33 6HF, United Kingdom"
+            }
+          ],
           "id": "english",
-          "title": "English L'Abri",
-          "details": [
-            { "label": "Site", "value": "www.englishlabri.org", "url": "https://www.englishlabri.org" },
-            { "label": "Podcast", "value": "englishlabri.podbean.com", "url": "https://englishlabri.podbean.com" },
-            { "label": "Email", "value": "bookings@englishlabri.org", "url": "mailto:bookings@englishlabri.org" },
-            { "label": "Office Phone", "value": "+44-1420-538436" },
-            { "label": "Office Fax", "value": "+44-1420-538432" },
-            { "label": "Student Phone", "value": "+44-1420-538329", "note": "(please contact students here)" },
-            { "label": "Mail", "value": "L'Abri Fellowship, The Manor House, Greatham, Liss, Hants GU33 6HF, United Kingdom"}
-          ]
+          "title": "English L'Abri"
         },
         {
-          "id": "dutch",
-          "title": "Dutch L'Abri",
           "details": [
-            { 
-              "label": "Site", 
-              "value": "www.labri.nl", 
-              "url": "https://www.labri.nl" 
+            {
+              "label": "Site",
+              "url": "https://www.labri.nl",
+              "value": "www.labri.nl"
             },
-            { 
-              "label": "Email", 
-              "value": "labri@labri.nl", 
-              "url": "mailto:labri@labri.nl" 
+            {
+              "label": "Email",
+              "url": "mailto:labri@labri.nl",
+              "value": "labri@labri.nl"
             },
-            { 
-              "label": "Mail - Residential House in Eck en Weil", 
-              "value": "" 
+            {
+              "label": "Mail - Residential House in Eck en Weil",
+              "value": ""
             },
-            { 
-              "label": "", 
-              "value": "Huize Kortenhoeve, Burgemeester Verbrughweg 40, 4024 HR Eck en Weil, The Netherlands" 
+            {
+              "label": "",
+              "value": "Huize Kortenhoeve, Burgemeester Verbrughweg 40, 4024 HR Eck en Weil, The Netherlands"
             },
-            { 
-              "label": "Phone - Eck en Weil", 
-              "value": "+31 (0) 344 691914" 
+            {
+              "label": "Phone - Eck en Weil",
+              "value": "+31 (0) 344 691914"
             },
-            { 
-              "label": "Mail - City Centre (Utrecht)", 
-              "value": " " 
+            {
+              "label": "Mail - City Centre (Utrecht)",
+              "value": " "
             },
-            { 
-              "label": "", 
-              "value": "L’Abri Nederland, Kromme Nieuwegracht 90, 3512 HM Utrecht, The Netherlands" 
+            {
+              "label": "",
+              "value": "L’Abri Nederland, Kromme Nieuwegracht 90, 3512 HM Utrecht, The Netherlands"
             },
-            { 
+            {
               "label": "Phone - Utrecht",
-              "value": "+31 (0) 30 2316933" 
+              "value": "+31 (0) 30 2316933"
+            }
+          ],
+          "id": "dutch",
+          "title": "Dutch L'Abri"
+        },
+        {
+          "details": [
+            {
+              "label": "Site",
+              "url": "https://www.labri.kr",
+              "value": "www.labri.kr"
+            },
+            {
+              "label": "Email",
+              "url": "mailto:yangyang@labri.kr",
+              "value": "yangyang@labri.kr"
+            },
+            {
+              "label": "Phone",
+              "value": "+82 033-673-0037"
+            },
+            {
+              "label": "Mail",
+              "value": "3025 Guryongnyeong Road, Seomyon, Yang Yang, Kangwondo, 25037, Korea"
+            }
+          ],
+          "id": "korean",
+          "title": "Korean L'Abri"
+        },
+        {
+          "details": [
+            {
+              "label": "Site",
+              "url": "https://www.southboroughlabri.org",
+              "value": "www.southboroughlabri.org"
+            },
+            {
+              "label": "Podcast",
+              "url": "https://labrisouthborough.podbean.com",
+              "value": "labrisouthborough.podbean.com"
+            },
+            {
+              "label": "Email",
+              "url": "mailto:southborough@labri.org",
+              "value": "southborough@labri.org"
+            },
+            {
+              "label": "Phone",
+              "value": "+1 (508) 481-6490"
+            },
+            {
+              "label": "Mail",
+              "value": "49 Lynbrook Rd., Southborough, MA, 01772, USA"
+            }
+          ],
+          "id": "massachusetts",
+          "title": "Massachusetts L'Abri"
+        },
+        {
+          "details": [
+            {
+              "label": "Site",
+              "url": "https://www.labri.org/minn",
+              "value": "www.labri.org/minn"
+            },
+            {
+              "label": "Email",
+              "url": "mailto:rochester@labri.org",
+              "value": "rochester@labri.org"
+            },
+            {
+              "label": "Phone",
+              "value": "+1 (507) 536-0108"
+            },
+            {
+              "label": "Mail",
+              "value": "1465 12th Ave NE, Rochester, MN 55906-4383, USA"
+            }
+          ],
+          "id": "minnesota",
+          "title": "Minnesota L'Abri"
+        },
+        {
+          "details": [
+            {
+              "label": "Site",
+              "url": "https://swisslabri.org",
+              "value": "swisslabri.org"
+            },
+            {
+              "label": "Email",
+              "url": "mailto:swiss@labri.org",
+              "value": "swiss@labri.org"
+            },
+            {
+              "label": "Phone",
+              "value": "+41 24 495 2139"
+            },
+            {
+              "label": "Fax",
+              "value": "+41 24 495 7647"
+            },
+            {
+              "label": "Mail",
+              "value": "Chalet Bellevue, Route de Villars 89, 1884 Huemoz, Switzerland"
+            }
+          ],
+          "id": "swiss",
+          "title": "Swiss L'Abri"
+        },
+        {
+          "details": [
+            {
+              "label": "Site",
+              "url": "https://www.labri.org.br",
+              "value": "www.labri.org.br"
+            },
+            {
+              "label": "Email",
+              "url": "mailto:labri.brasil@gmail.com",
+              "value": "labri.brasil@gmail.com"
+            }
+          ],
+          "id": "brazil",
+          "title": "Brazilian L'Abri"
+        },
+        {
+          "details": [
+            {
+              "label": "Site",
+              "url": "https://www.labri.za.org",
+              "value": "labri.za.org"
+            },
+            {
+              "label": "Email",
+              "url": "mailto:contact@labri.za.org",
+              "value": "contact@labri.za.org"
+            },
+            {
+              "label": "Phone",
+              "value": "+27 738 676864"
+            }
+          ],
+          "id": "south-africa",
+          "title": "South African L'Abri"
+        }
+      ],
+      "subMenu": "Contact L'Abri"
+    },
+    {
+      "albums": [
+        {
+          "backgroundImage": "/images/playlists/how-to-read-the-bible-bg.avif",
+          "description": "xxxA collection of lectures on where the Bible came from, how to read it, and its reliability.",
+          "id": "how-to-read-the-bible",
+          "title": "How to Read the Bible",
+          "titleBgColor": "bg-red-500",
+          "tracks": [
+            {
+              "displayTitle": "The Canon of Scripture part 1: The Biblical Canon",
+              "filename": "The Canon of Scripture part 1_ The Biblical Canon - Richard Bradford___1791.mp3"
+            },
+            {
+              "displayTitle": "The Canon of Scripture part 2: Biblical Authority",
+              "filename": "The Canon of Scripture part 2_ Biblical Authority - Richard Bradford___1792.mp3"
+            },
+            {
+              "displayTitle": "The Canon of Scripture part 3: Biblical Inerrancy",
+              "filename": "The Canon of Scripture part 3_ Biblical Inerrancy - Richard Bradford___1793.mp3"
+            },
+            {
+              "displayTitle": "But Who Do They Say That I AM? - Considering Jesus in the \"Gospels\" That Did not make it into the New Testament",
+              "filename": "__But Who Do They Say That I AM^__ - Considering Jesus in the __Gospels__ That Did not make it into the New Testament - Joshua Chestnut___224.mp3"
+            },
+            {
+              "displayTitle": "Authority \u0026 Canonization of the New Testament",
+              "filename": "Authority \u0026 Canonization of the New Testament - Jerram Barrs___154.mp3"
+            },
+            {
+              "displayTitle": "On the Origins of the Gospels",
+              "filename": "On the Origins of the Gospels - Dirk Jongkind___1328.mp3"
+            },
+            {
+              "displayTitle": "How We Got the Bible",
+              "filename": "How We Got the Bible - Andy Patton___834.mp3"
+            },
+            {
+              "displayTitle": "What is the Bible?",
+              "filename": "What is the Bible^ - Phillip Johnston___2295.mp3"
+            },
+            {
+              "displayTitle": "The Authority of the Bible",
+              "filename": "The authority of the bible - Andrew Fellows.mp3"
+            },
+            {
+              "displayTitle": "The Bible as Inerrant Revelation",
+              "filename": "The Bible as Inerrant Revelation - Jerram Barrs___1749.mp3"
+            },
+            {
+              "displayTitle": "How to Read the Story of Jesus in Every Part of the Bible: An Introduction to Biblical Theology",
+              "filename": "How to Read the Story of Jesus in Every Part of the Bible_ An Introduction to Biblical Theology - Andy Patton___831.mp3"
+            },
+            {
+              "displayTitle": "How To Read The Bible",
+              "filename": "How To Read The Bible - Jerram Barrs___830.mp3"
             }
           ]
         },
         {
-          "id": "korean",
-          "title": "Korean L'Abri",
-          "details": [
-            { "label": "Site", "value": "www.labri.kr", "url": "https://www.labri.kr" },
-            { "label": "Email", "value": "yangyang@labri.kr", "url": "mailto:yangyang@labri.kr" },
-            { "label": "Phone", "value": "+82 033-673-0037" },
-            { "label": "Mail", "value": "3025 Guryongnyeong Road, Seomyon, Yang Yang, Kangwondo, 25037, Korea" }
-          ]
-        },
-        {
-          "id": "massachusetts",
-          "title": "Massachusetts L'Abri",
-          "details": [
-            { "label": "Site", "value": "www.southboroughlabri.org", "url": "https://www.southboroughlabri.org" },
-            { "label": "Podcast", "value": "labrisouthborough.podbean.com", "url": "https://labrisouthborough.podbean.com" },
-            { "label": "Email", "value": "southborough@labri.org", "url": "mailto:southborough@labri.org" },
-            { "label": "Phone", "value": "+1 (508) 481-6490" },
-            { "label": "Mail", "value": "49 Lynbrook Rd., Southborough, MA, 01772, USA" }
-          ]
-        },
-        {
-          "id": "minnesota",
-          "title": "Minnesota L'Abri",
-          "details": [
-            { "label": "Site", "value": "www.labri.org/minn", "url": "https://www.labri.org/minn" },
-            { "label": "Email", "value": "rochester@labri.org", "url": "mailto:rochester@labri.org" },
-            { "label": "Phone", "value": "+1 (507) 536-0108" },
-            { "label": "Mail", "value": "1465 12th Ave NE, Rochester, MN 55906-4383, USA" }
-          ]
-        },
-        {
-          "id": "swiss",
-          "title": "Swiss L'Abri",
-          "details": [
-            { "label": "Site", "value": "swisslabri.org", "url": "https://swisslabri.org" },
-            { "label": "Email", "value": "swiss@labri.org", "url": "mailto:swiss@labri.org" },
-            { "label": "Phone", "value": "+41 24 495 2139" },
-            { "label": "Fax", "value": "+41 24 495 7647" },
-            { "label": "Mail", "value": "Chalet Bellevue, Route de Villars 89, 1884 Huemoz, Switzerland" }
-          ]
-        },
-        {
-          "id": "brazil",
-          "title": "Brazilian L'Abri",
-          "details": [
-            { "label": "Site", "value": "www.labri.org.br", "url": "https://www.labri.org.br" },
-            { "label": "Email", "value": "labri.brasil@gmail.com", "url": "mailto:labri.brasil@gmail.com" }
-          ]
-        },
-        {
-          "id": "south-africa",
-          "title": "South African L'Abri",
-          "details": [
-            { "label": "Site", "value": "labri.za.org", "url": "https://www.labri.za.org" },
-            { "label": "Email", "value": "contact@labri.za.org", "url": "mailto:contact@labri.za.org" },
-            { "label": "Phone", "value": "+27 738 676864" }
-          ]
-        }
-      ]
-    },
-    {
-      "subMenu": "Playlists",
-      "albums": [
-        {
-          "id": "how-to-read-the-bible",
-          "title": "How to Read the Bible",
-          "titleBgColor": "bg-red-500",
-          "description": "A collection of lectures on where the Bible came from, how to read it, and its reliability.",
-          "backgroundImage": "/images/playlists/how-to-read-the-bible-bg.avif",
-          "tracks": [
-            { "displayTitle": "The Canon of Scripture part 1: The Biblical Canon", "filename": "The Canon of Scripture part 1_ The Biblical Canon - Richard Bradford___1791.mp3" },
-            { "displayTitle": "The Canon of Scripture part 2: Biblical Authority", "filename": "The Canon of Scripture part 2_ Biblical Authority - Richard Bradford___1792.mp3" },
-            { "displayTitle": "The Canon of Scripture part 3: Biblical Inerrancy", "filename": "The Canon of Scripture part 3_ Biblical Inerrancy - Richard Bradford___1793.mp3" },
-            { "displayTitle": "But Who Do They Say That I AM? - Considering Jesus in the \"Gospels\" That Did not make it into the New Testament", "filename": "__But Who Do They Say That I AM^__ - Considering Jesus in the __Gospels__ That Did not make it into the New Testament - Joshua Chestnut___224.mp3" },
-            { "displayTitle": "Authority & Canonization of the New Testament", "filename": "Authority & Canonization of the New Testament - Jerram Barrs___154.mp3" },
-            { "displayTitle": "On the Origins of the Gospels", "filename": "On the Origins of the Gospels - Dirk Jongkind___1328.mp3" },
-            { "displayTitle": "How We Got the Bible", "filename": "How We Got the Bible - Andy Patton___834.mp3" },
-            { "displayTitle": "What is the Bible?", "filename": "What is the Bible^ - Phillip Johnston___2295.mp3" },
-            { "displayTitle": "The Authority of the Bible", "filename": "The authority of the bible - Andrew Fellows.mp3"},
-            { "displayTitle": "The Bible as Inerrant Revelation", "filename": "The Bible as Inerrant Revelation - Jerram Barrs___1749.mp3" },
-            { "displayTitle": "How to Read the Story of Jesus in Every Part of the Bible: An Introduction to Biblical Theology", "filename": "How to Read the Story of Jesus in Every Part of the Bible_ An Introduction to Biblical Theology - Andy Patton___831.mp3" },
-            { "displayTitle": "How To Read The Bible", "filename": "How To Read The Bible - Jerram Barrs___830.mp3" }
-          ]
-        },
-        {
+          "backgroundImage": "/images/playlists/difficult-questions-bg.avif",
+          "description": "Are all religions the same? Is God a construction? Are there any certainties? Here is a collection of L'Abri lectures on the most difficult questions of the day.",
           "id": "difficult-questions",
           "title": "Difficult Questions in Theology",
           "titleBgColor": "bg-green-500",
-          "description": "Are all religions the same? Is God a construction? Are there any certainties? Here is a collection of L'Abri lectures on the most difficult questions of the day.",
-          "backgroundImage": "/images/playlists/difficult-questions-bg.avif",
           "tracks": [
-            { "displayTitle": "Is God Angry?", "filename": "Is God Angry^ - Wade Bradshaw___961.mp3" },
-            { "displayTitle": "An Historical Defense of the Exodus & Conquest (Part 1)", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
-            { "displayTitle": "Horrible Histories: Is The Destruction Of The Canaanites A Moral Problem?", "filename": "Horrible Histories_ Is The Destruction Of The Canaanites A Moral Problem^ - Stephen Lloyd___793.mp3" },
-            { "displayTitle": "Did Yahweh Evolve", "filename": "Did Yahweh Evolve^ - Sandra Richter.mp3" },
-            { "displayTitle": "Knowing the Inaudible, Invisible, Untouchable God", "filename": "Knowing the Inaudible, Invisible, Untouchable God - Richard Winter___1092.mp3" },
-            { "displayTitle": "What is the Biblical Perspective on Slavery?", "filename": "What is the Biblical Perspective on Slavery^ - Dick Keyes___2296.mp3" },
-            { "displayTitle": "Does God Change His Mind?", "filename": "Does God Change His Mind^ - Dick Keyes___515.mp3" },
-            { "displayTitle": "The Sovereignty of God & the Responsibility of Human Beings", "filename": "The Sovereignty of God & the Responsibility of Human Beings - Dick Keyes___2113.mp3" },
-            { "displayTitle": "Am I only a Christian because my Parents were?", "filename": "Am I only a Christian because my Parents were^ - Edith Reitsema___89.mp3" },
-            { "displayTitle": "Is God a Construction?", "filename": "Is God a Construction^ - Dave Friedrich___958.mp3" },
-            { "displayTitle": "Who's On Top Of The Mountain - Are There Many Ways To God?", "filename": "Who__s On Top Of The Mountain - Are There Many Ways To God^ - Wade Bradshaw___2341.mp3" }
+            {
+              "displayTitle": "Is God Angry?",
+              "filename": "Is God Angry^ - Wade Bradshaw___961.mp3"
+            },
+            {
+              "displayTitle": "An Historical Defense of the Exodus \u0026 Conquest (Part 1)",
+              "filename": "An Historical Defense of the Exodus \u0026 Conquest (Part 1) - Sandra Richter___98.mp3"
+            },
+            {
+              "displayTitle": "Horrible Histories: Is The Destruction Of The Canaanites A Moral Problem?",
+              "filename": "Horrible Histories_ Is The Destruction Of The Canaanites A Moral Problem^ - Stephen Lloyd___793.mp3"
+            },
+            {
+              "displayTitle": "Did Yahweh Evolve",
+              "filename": "Did Yahweh Evolve^ - Sandra Richter.mp3"
+            },
+            {
+              "displayTitle": "Knowing the Inaudible, Invisible, Untouchable God",
+              "filename": "Knowing the Inaudible, Invisible, Untouchable God - Richard Winter___1092.mp3"
+            },
+            {
+              "displayTitle": "What is the Biblical Perspective on Slavery?",
+              "filename": "What is the Biblical Perspective on Slavery^ - Dick Keyes___2296.mp3"
+            },
+            {
+              "displayTitle": "Does God Change His Mind?",
+              "filename": "Does God Change His Mind^ - Dick Keyes___515.mp3"
+            },
+            {
+              "displayTitle": "The Sovereignty of God \u0026 the Responsibility of Human Beings",
+              "filename": "The Sovereignty of God \u0026 the Responsibility of Human Beings - Dick Keyes___2113.mp3"
+            },
+            {
+              "displayTitle": "Am I only a Christian because my Parents were?",
+              "filename": "Am I only a Christian because my Parents were^ - Edith Reitsema___89.mp3"
+            },
+            {
+              "displayTitle": "Is God a Construction?",
+              "filename": "Is God a Construction^ - Dave Friedrich___958.mp3"
+            },
+            {
+              "displayTitle": "Who's On Top Of The Mountain - Are There Many Ways To God?",
+              "filename": "Who__s On Top Of The Mountain - Are There Many Ways To God^ - Wade Bradshaw___2341.mp3"
+            }
           ]
         },
         {
+          "backgroundImage": "/images/playlists/men-women-bible-bg.avif",
+          "description": "For many today, the Bible's view of gender is a hot-button issue. Collected here are lectures on some of the most controversial passages on the genders as well as an overall framework for answering questions that often come up.",
           "id": "men-women-bible",
           "title": "Men, Women, and the Bible",
           "titleBgColor": "bg-sky-500",
-          "description": "For many today, the Bible's view of gender is a hot-button issue. Collected here are lectures on some of the most controversial passages on the genders as well as an overall framework for answering questions that often come up.",
-          "backgroundImage": "/images/playlists/men-women-bible-bg.avif",
           "tracks": [
-            { "displayTitle": "Man, Woman & God: Church & Society - part 1", "filename": "Man, Woman & God_ Church & Society - part 1 - Jerram Barrs___1200.mp3" },
-            { "displayTitle": "Man, Woman & God: Church & Society - part 2", "filename": "Man, Woman & God_ Church & Society - part 2 - Jerram Barrs___1201.mp3" },
-            { "displayTitle": "Man, Woman & God: Church & Society - part 3", "filename": "Man, Woman & God_ Church & Society - part 3 - Jerram Barrs___1202.mp3" },
-            { "displayTitle": "Men & Women In The Bible: Controversial Texts", "filename": "Men & Women In The Bible_ Controversial Texts - Mardi Keyes___1229.mp3" },
-            { "displayTitle": "Biblical Overview of Women in Leadership", "filename": "Biblical Overview of Women in Leadership - Mardi Keyes___197.mp3" },
-            { "displayTitle": "The Bible's View of Women", "filename": "The Bible__s View of Women - Jerram Barrs___1762.mp3" },
-            { "displayTitle": "Sexual Freedom", "filename": "Sexual Freedom - Mardi Keyes___1616.mp3" },
-            { "displayTitle": "Bodies with Meaning_ Christians & Sex in the First & the Twenty-first Century", "filename": "Bodies with Meaning_ Christians & Sex in the First & the Twenty-first Century - Phillip Johnston___209.mp3" }
+            {
+              "displayTitle": "Man, Woman \u0026 God: Church \u0026 Society - part 1",
+              "filename": "Man, Woman \u0026 God_ Church \u0026 Society - part 1 - Jerram Barrs___1200.mp3"
+            },
+            {
+              "displayTitle": "Man, Woman \u0026 God: Church \u0026 Society - part 2",
+              "filename": "Man, Woman \u0026 God_ Church \u0026 Society - part 2 - Jerram Barrs___1201.mp3"
+            },
+            {
+              "displayTitle": "Man, Woman \u0026 God: Church \u0026 Society - part 3",
+              "filename": "Man, Woman \u0026 God_ Church \u0026 Society - part 3 - Jerram Barrs___1202.mp3"
+            },
+            {
+              "displayTitle": "Men \u0026 Women In The Bible: Controversial Texts",
+              "filename": "Men \u0026 Women In The Bible_ Controversial Texts - Mardi Keyes___1229.mp3"
+            },
+            {
+              "displayTitle": "Biblical Overview of Women in Leadership",
+              "filename": "Biblical Overview of Women in Leadership - Mardi Keyes___197.mp3"
+            },
+            {
+              "displayTitle": "The Bible's View of Women",
+              "filename": "The Bible__s View of Women - Jerram Barrs___1762.mp3"
+            },
+            {
+              "displayTitle": "Sexual Freedom",
+              "filename": "Sexual Freedom - Mardi Keyes___1616.mp3"
+            },
+            {
+              "displayTitle": "Bodies with Meaning_ Christians \u0026 Sex in the First \u0026 the Twenty-first Century",
+              "filename": "Bodies with Meaning_ Christians \u0026 Sex in the First \u0026 the Twenty-first Century - Phillip Johnston___209.mp3"
+            }
           ]
         },
         {
+          "backgroundImage": "/images/playlists/navigating-relationships-bg.avif",
+          "description": "What does it mean to be alone? To be with others? To be a friend? To be married? These lectures talk about the many questions that come up as we dance the steps of relationship.",
           "id": "navigating-relationships",
           "title": "Navigating Relationships",
           "titleBgColor": "bg-orange-600",
-          "description": "What does it mean to be alone? To be with others? To be a friend? To be married? These lectures talk about the many questions that come up as we dance the steps of relationship.",
-          "backgroundImage": "/images/playlists/navigating-relationships-bg.avif",
           "tracks": [
-            { "displayTitle": "Marriage Redeemed", "filename": "Marriage Redeemed - Mardi Keyes___1214.mp3" },
-            { "displayTitle": "Subverting Modernity: How Community Dismantles Practical Atheism", "filename": "Subverting Modernity_ How Community Dismantles Practical Atheism - Jeff Adams___1675.mp3" },
-            { "displayTitle": "Making Room For One Another: Practising Active Passivity In Our Relationships", "filename": "Making Room For One Another_ Practising Active Passivity In Our Relationships - Jim Paul___1197.mp3" },
-            { "displayTitle": "The Ethics of Divorce & Remarriage", "filename": "The Ethics of Divorce & Remarriage - Dick Keyes___1891.mp3" },
-            { "displayTitle": "Moving Out & Moving On: Why It's Important to Run Away from Home", "filename": "Moving Out & Moving On_ Why It__s Important to Run Away from Home - Mary Frances Giles___1265.mp3" },
-            { "displayTitle": "Love for Humanity & Love for Humans", "filename": "It__s People I Can__t Stand_ Love for Humanity & Love for Humans - Ben Keyes___985.mp3" },
-            { "displayTitle": "Reflections on the Contemporary Search for Community", "filename": "Reflections on the Contemporary Search for Community - Jock McGregor___1511.mp3" },
-            { "displayTitle": "In Christ, Alone? Recovering a Christian Vision for the Single Life", "filename": "In Christ, Alone^ Recovering a Christian Vision for the Single Life - Phillip Johnston___888.mp3" },
-            { "displayTitle": "Singleness", "filename": "Singleness & Sexuality - Jerram Barrs___1629.mp3" }          ]
+            {
+              "displayTitle": "Marriage Redeemed",
+              "filename": "Marriage Redeemed - Mardi Keyes___1214.mp3"
+            },
+            {
+              "displayTitle": "Subverting Modernity: How Community Dismantles Practical Atheism",
+              "filename": "Subverting Modernity_ How Community Dismantles Practical Atheism - Jeff Adams___1675.mp3"
+            },
+            {
+              "displayTitle": "Making Room For One Another: Practising Active Passivity In Our Relationships",
+              "filename": "Making Room For One Another_ Practising Active Passivity In Our Relationships - Jim Paul___1197.mp3"
+            },
+            {
+              "displayTitle": "The Ethics of Divorce \u0026 Remarriage",
+              "filename": "The Ethics of Divorce \u0026 Remarriage - Dick Keyes___1891.mp3"
+            },
+            {
+              "displayTitle": "Moving Out \u0026 Moving On: Why It's Important to Run Away from Home",
+              "filename": "Moving Out \u0026 Moving On_ Why It__s Important to Run Away from Home - Mary Frances Giles___1265.mp3"
+            },
+            {
+              "displayTitle": "Love for Humanity \u0026 Love for Humans",
+              "filename": "It__s People I Can__t Stand_ Love for Humanity \u0026 Love for Humans - Ben Keyes___985.mp3"
+            },
+            {
+              "displayTitle": "Reflections on the Contemporary Search for Community",
+              "filename": "Reflections on the Contemporary Search for Community - Jock McGregor___1511.mp3"
+            },
+            {
+              "displayTitle": "In Christ, Alone? Recovering a Christian Vision for the Single Life",
+              "filename": "In Christ, Alone^ Recovering a Christian Vision for the Single Life - Phillip Johnston___888.mp3"
+            },
+            {
+              "displayTitle": "Singleness",
+              "filename": "Singleness \u0026 Sexuality - Jerram Barrs___1629.mp3"
+            }
+          ]
         },
         {
+          "backgroundImage": "/images/playlists/litature-bg.avif",
+          "description": "If Christ is Lord of all of life, the domain of the written word should be the concern of Christ's followers. Here is a collection of lectures on Flannery O'Connor, T. S. Eliot, Tolkien, Rowling, and more.",
           "id": "literature-poetry",
           "title": "Literature and Poetry",
           "titleBgColor": "bg-amber-400",
-          "description": "If Christ is Lord of all of life, the domain of the written word should be the concern of Christ's followers. Here is a collection of lectures on Flannery O'Connor, T. S. Eliot, Tolkien, Rowling, and more.",
-          "backgroundImage": "/images/playlists/litature-bg.avif",
           "tracks": [
-            { "displayTitle": "Tolkien, Grace & \"The Lord of the Rings\"", "filename": "Tolkien, Grace & __The Lord of the Rings__ - Jerram Barrs___2164.mp3" },
-            { "displayTitle": "T.S. Eliot's \"Four Quartets\"", "filename": "T.S. Eliot__s __Four Quartets__ - Tom Howard___1688.mp3" },
-            { "displayTitle": "Behind the Scenes: The Life & Letters of Dorothy L Sayers", "filename": "Behind the Scenes_ The Life & Letters of Dorothy L Sayers - Dawn Merz___174.mp3" },
-            { "displayTitle": "How People Change: The Transformation Of Character In C.S. Lewis' \"the Chronicles Of Narnia\"", "filename": "How People Change_ The Transformation Of Character In C.S. Lewis__ __the Chronicles Of Narnia__ - Gavin McGrath___819.mp3" },
-            { "displayTitle": "Comic. Tragic. Brutal. The Life & Writings of Flannery O'Connor", "filename": "Comic. Tragic. Brutal. The Life & Writings of Flannery O__Connor - Clarke Scheibe___340.mp3" },
-            { "displayTitle": "Poetry & Prayer", "filename": "Poetry & Prayer - Anna Friedrich___1391.mp3" },
-            { "displayTitle": "Jane Austen", "filename": "Jane Austen - Jerram Barrs___992.mp3" },
-            { "displayTitle": "Echoes of Eden: Looking at Tolkien & Lewis", "filename": "Echoes of Eden_ Looking at Tolkien & Lewis - Jerram Barrs___533.mp3" },
-            { "displayTitle": "Street Ballads - A reflection on Marilynne Robinson's Gilead Trilogy", "filename": "Street Ballads - A reflection on Marilynne Robinson__s Gilead Trilogy - Andrew Jones___1670.mp3" },
-            { "displayTitle": "Order, Chaos, Poetry & God", "filename": "Order, Chaos, Poetry & God - Luci Shaw___1335.mp3" },
-            { "displayTitle": "World of Harry Potter & the Evangelical Muggles", "filename": "World of Harry Potter & the Evangelical Muggles - Jerram Barrs___2376.mp3" },
-            { "displayTitle": "An Introduction to George MacDonald", "filename": "An Introduction to George MacDonald - Olga Lukmanova___102.mp3" }
+            {
+              "displayTitle": "Tolkien, Grace \u0026 \"The Lord of the Rings\"",
+              "filename": "Tolkien, Grace \u0026 __The Lord of the Rings__ - Jerram Barrs___2164.mp3"
+            },
+            {
+              "displayTitle": "T.S. Eliot's \"Four Quartets\"",
+              "filename": "T.S. Eliot__s __Four Quartets__ - Tom Howard___1688.mp3"
+            },
+            {
+              "displayTitle": "Behind the Scenes: The Life \u0026 Letters of Dorothy L Sayers",
+              "filename": "Behind the Scenes_ The Life \u0026 Letters of Dorothy L Sayers - Dawn Merz___174.mp3"
+            },
+            {
+              "displayTitle": "How People Change: The Transformation Of Character In C.S. Lewis' \"the Chronicles Of Narnia\"",
+              "filename": "How People Change_ The Transformation Of Character In C.S. Lewis__ __the Chronicles Of Narnia__ - Gavin McGrath___819.mp3"
+            },
+            {
+              "displayTitle": "Comic. Tragic. Brutal. The Life \u0026 Writings of Flannery O'Connor",
+              "filename": "Comic. Tragic. Brutal. The Life \u0026 Writings of Flannery O__Connor - Clarke Scheibe___340.mp3"
+            },
+            {
+              "displayTitle": "Poetry \u0026 Prayer",
+              "filename": "Poetry \u0026 Prayer - Anna Friedrich___1391.mp3"
+            },
+            {
+              "displayTitle": "Jane Austen",
+              "filename": "Jane Austen - Jerram Barrs___992.mp3"
+            },
+            {
+              "displayTitle": "Echoes of Eden: Looking at Tolkien \u0026 Lewis",
+              "filename": "Echoes of Eden_ Looking at Tolkien \u0026 Lewis - Jerram Barrs___533.mp3"
+            },
+            {
+              "displayTitle": "Street Ballads - A reflection on Marilynne Robinson's Gilead Trilogy",
+              "filename": "Street Ballads - A reflection on Marilynne Robinson__s Gilead Trilogy - Andrew Jones___1670.mp3"
+            },
+            {
+              "displayTitle": "Order, Chaos, Poetry \u0026 God",
+              "filename": "Order, Chaos, Poetry \u0026 God - Luci Shaw___1335.mp3"
+            },
+            {
+              "displayTitle": "World of Harry Potter \u0026 the Evangelical Muggles",
+              "filename": "World of Harry Potter \u0026 the Evangelical Muggles - Jerram Barrs___2376.mp3"
+            },
+            {
+              "displayTitle": "An Introduction to George MacDonald",
+              "filename": "An Introduction to George MacDonald - Olga Lukmanova___102.mp3"
+            }
           ]
         },
         {
-          "id": "suggest-playlist",
-          "title": "Suggest a Playlist",
-          "titleBgColor": "bg-zinc-400",
-          "description": "Do you want to put your own playlist together? Send us your lecture list.",
           "backgroundImage": "/images/playlists/suggest-bg.avif",
-          "linkToForm": "https://labriideaslibrary.typeform.com/to/ppsjl6"
+          "description": "Do you want to put your own playlist together? Send us your lecture list.",
+          "id": "suggest-playlist",
+          "linkToForm": "https://labriideaslibrary.typeform.com/to/ppsjl6",
+          "title": "Suggest a Playlist",
+          "titleBgColor": "bg-zinc-400"
         }
-      ]
+      ],
+      "subMenu": "Playlists"
     },
     {
-      "subMenu": "Topics",
       "hierarchy": {
-        "Theology & Worldview": {
-          "L'Abri": {
-            "lectures": [
-              { "subtopic": "Introduction to L'Abri", "altName": "Introduction", "category": "Introduction to L'Abri" },
-              { "subtopic": "Core Ideas of L'Abri", "altName": "Core Ideas", "category": "The Core Ideas of L'Abri" }
-            ],
+        "Culture and Society": {
+          "Arts": {
             "featured": [
-              { "title": "The Five Themes of L'Abri - L'Abri", "speaker": "Dick Keyes", "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3" },
-              { "title": "An Introduction to Francis Schaeffer", "speaker": "Jerram Barrs", "filename": "An Introduction To Francis Schaeffer & his Writings - Jerram Barrs___100.mp3" },
-              { "title": "Comprehensive Spirituality", "speaker": "Ellis Potter", "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3" }
-            ]
-          },
-          "Bible": {
-            "lectures": [
-              { "subtopic": "New Testament", "altName": "", "category": "The Bible - Exploring the New Testament" },
-              { "subtopic": "Old Testament", "altName": "", "category": "The Bible - Exploring the Old Testament" },
-              { "subtopic": "Interpretation", "altName": "", "category": "The Bible - How to Interpret Scripture" },
-              { "subtopic": "Inspiration", "altName": "", "category": "The Bible - Inspiration and Authority" },
-              { "subtopic": "Canon", "altName": "", "category": "The Bible - The Canon" }
+              {
+                "filename": "Art Needs No Justification - Hans Rookmaaker___142.mp3",
+                "speaker": "Hans Rookmaaker",
+                "title": "Art Needs No Justification"
+              },
+              {
+                "filename": "xxx.mp3",
+                "speaker": "John Hodges",
+                "title": "Creation, Creativity, and the Artist"
+              },
+              {
+                "filename": "Art In The Bible - Francis Schaeffer___141.mp3",
+                "speaker": "Francis Schaeffer",
+                "title": "Art in the Bible"
+              }
             ],
-            "featured": [
-              { "title": "The Conquest of Canaan", "speaker": "Sandra Richter", "filename": "An Historical Defense of the Exodus & Conquest (Part 1) - Sandra Richter___98.mp3" },
-              { "title": "Paul and Greek philosophy", "speaker": "Edwin Judge", "filename": "xxx.mp3" },
-              { "title": "How did we Get the Gospels?", "speaker": "Joshua Chestnut", "filename": "From the Gospel to the Gospels Part 1_ What is a Gospel & how did we get them^ - Joshua Chestnut___653.mp3" }
-            ]
-          },
-          "Doctrine": {
             "lectures": [
-              { "subtopic": "Big Questions in Theology", "altName": "Big Questions", "category": "Important Questions in Christian Doctrine" },
-              { "subtopic": "Jesus", "altName": "", "category": "The Life and Work of Jesus" },
-              { "subtopic": "The Holy Spirit", "altName": "", "category": "The Work of the Holy Spirit" },
-              { "subtopic": "Sin and Evil", "altName": "", "category": "Sin, Evil, and the Fall" },
-              { "subtopic": "Being Human", "altName": "", "category": "What Does It Mean To Be Human?" },
-              { "subtopic": "The Law", "altName": "", "category": "Thinking About God's Law" },
-              { "subtopic": "Prayer and Worship", "altName": "Prayer & Worship", "category": "Prayer and Worship" },
-              { "subtopic": "Prophecy and the Future", "altName": "Prophecy & Future", "category": "Important Questions in Christian Doctrine" },
-              { "subtopic": "Church and Sacraments", "altName": "Church & Sacraments", "category": "The Church and the Sacraments" },
-              { "subtopic": "Spiritual Growth", "altName": "", "category": "Christian Spirituality and Growth" }
-            ],
-            "featured": [
-              { "title": "The Sacrament of the Present Moment", "speaker": "Andrew Fellows", "filename": "The Sacrament of the Present Moment - Andrew Fellows___2105.mp3" },
-              { "title": "Being Human", "speaker": "Ranald Macauley", "filename": "Being Human - Ranald Macaulay___176.mp3" },
-              { "title": "22 Things I Have Learned in Life", "speaker": "Donald Drew", "filename": "Twenty-Two Things I Have Learned in Life - Donald Drew___2212.mp3" }
-            ]
-          },
-          "Apologetics": {
-            "lectures": [
-              { "subtopic": "Exploring Christianity", "altName": "", "category": "Apologetics: Exploring the Truth of Christianity" },
-              { "subtopic": "Sharing Your Faith", "altName": "", "category": "How to Share Your Faith" },
-              { "subtopic": "Modern Questions, Ancient Answers", "altName": "Common Questions", "category": "Ancient Answers to Modern Questions" }
-            ],
-            "featured": [
-              { "title": "Monotheism in a Pluralistic Society", "speaker": "Sandra Richer", "filename": "xxx.mp3" },
-              { "title": "Apologetics with a Human Face", "speaker": "Jim Paul", "filename": "Apologetics With a Human Face - Jim Paul___119.mp3" },
-              { "title": "The Importance of Asking Questions", "speaker": "Ellis Potter", "filename": "The Importance of Asking Questions - Ellis Potter___1946.mp3" }
-            ]
-          },
-          "History": {
-            "lectures": [
-              { "subtopic": "Church History", "altName": "", "category": "History of Christianity" },
-              { "subtopic": "Catholicism", "altName": "", "category": "Catholicism" },
-              { "subtopic": "Liberalism", "altName": "", "category": "Christianity and Liberalism" }
-            ],
-            "featured": [
-              { "title": "How Europe Lost Its Faith", "speaker": "Ian Cooper", "filename": "How Europe Lost Its Faith - Ian Cooper___810.mp3" },
-              { "title": "Who Was John Calvin?", "speaker": "Stefan Lindholm", "filename": "An Introduction to John Calvin - Stefan Lindholm___103.mp3" },
-              { "title": "The Church and the Roman Empire", "speaker": "Mardi Keyes", "filename": "xxx.mp3" }
+              {
+                "altName": "Theology",
+                "category": "Christianity and Art",
+                "subtopic": "Theology of Art"
+              },
+              {
+                "altName": "Literature \u0026 Poetry",
+                "category": "Literature and Poetry",
+                "subtopic": "Literature and Poetry"
+              },
+              {
+                "altName": "",
+                "category": "Christianity and Film",
+                "subtopic": "Film"
+              },
+              {
+                "altName": "",
+                "category": "Painting \u0026 Modern Art",
+                "subtopic": "Modern Art"
+              },
+              {
+                "altName": "Theatre \u0026 Stage",
+                "category": "Theatre and the Stage",
+                "subtopic": "Theater and the Stage"
+              },
+              {
+                "altName": "",
+                "category": "Christianity and Music: Classical music",
+                "subtopic": "Classical Music"
+              },
+              {
+                "altName": "",
+                "category": "Christianity and Music: Popular music",
+                "subtopic": "Popular Music"
+              },
+              {
+                "altName": "",
+                "category": "Christianity and Music: General",
+                "subtopic": "Music: General"
+              }
             ]
           },
           "Other": {
-            "lectures": [
-              { "subtopic": "Ethics and Morality", "altName": "Ethics & Morality", "category": "Apologetics: Exploring the Truth of Christianity" },
-              { "subtopic": "Cults ad the Occult", "altName": "Cults & Occult", "category": "Sects, Cults, and the Occult" },
-              { "subtopic": "Eastern Religion and the New Age", "altName": "Eastern Religion", "category": "Eastern Religion and the New Age" }
-            ],
             "featured": [
-              { "title": "Who is the New Age Jesus?", "speaker": "Richard Winter", "filename": "Who Is The New Age Jesus^ - Richard Winter___2330.mp3" },
-              { "title": "Is God Necessary for Morality?", "speaker": "Dick Keyes", "filename": "Is God Necessary for Morality^ - Dick Keyes___963.mp3" },
-              { "title": "Three Theories of Everything", "speaker": "Ellis Potter", "filename": "Three Theories of Everything - Ellis Potter___2151.mp3" }
-            ]
-          }
-        },
-        "Culture and Society": {
-          "Arts": {
-            "lectures": [
-              { "subtopic": "Theology of Art", "altName": "Theology", "category": "Christianity and Art" },
-              { "subtopic": "Literature and Poetry", "altName": "Literature & Poetry", "category": "Literature and Poetry" },
-              { "subtopic": "Film", "altName": "", "category": "Christianity and Film" },
-              { "subtopic": "Modern Art", "altName": "", "category": "Painting & Modern Art" },
-              { "subtopic": "Theater and the Stage", "altName": "Theatre & Stage", "category": "Theatre and the Stage" },
-              { "subtopic": "Classical Music", "altName": "", "category": "Christianity and Music: Classical music" },
-              { "subtopic": "Popular Music", "altName": "", "category": "Christianity and Music: Popular music" },
-              { "subtopic": "Music: General", "altName": "", "category": "Christianity and Music: General" }
+              {
+                "filename": "Staying Human in a Culture of Busyness - Mary Frances Giles___1665.mp3",
+                "speaker": "Mary Frances Giles",
+                "title": "Staying Human In a Culture of Busyness"
+              },
+              {
+                "filename": "Common Grace - Jerram Barrs___348.mp3",
+                "speaker": "Jerram Barrs",
+                "title": "Common Grace"
+              },
+              {
+                "filename": "Being Human 3_ Thankfulness for the Work of Christ - xxx.mp3",
+                "speaker": "Ranald Macauley",
+                "title": "Work"
+              }
             ],
-            "featured": [
-              { "title": "Art Needs No Justification", "speaker": "Hans Rookmaaker", "filename": "Art Needs No Justification - Hans Rookmaaker___142.mp3" },
-              { "title": "Creation, Creativity, and the Artist", "speaker": "John Hodges", "filename": "xxx.mp3" },
-              { "title": "Art in the Bible", "speaker": "Francis Schaeffer", "filename": "Art In The Bible - Francis Schaeffer___141.mp3" }
-            ]
-          },
-          "The Church and Modernity": {
             "lectures": [
-              { "subtopic": "Christianity and the Modern Age", "altName": "Christianity & Modernity", "category": "Christianity in the Modern Age" },
-              { "subtopic": "Reflections on Modern Culture", "altName": "Christianity & Culture", "category": "Reflections on Modern Culture" }
-            ],
-            "featured": [
-              { "title": "Religion and Violence", "speaker": "Dick Keyes", "filename": "Religion & Violence 1_ Everyone is Religious - Dick Keyes___1518.mp3" },
-              { "title": "The Making of Modernity", "speaker": "Andrew Fellows", "filename": "The Making of Modernity - Andrew Fellows___2001.mp3" },
-              { "title": "The Faith of the Unbeliever", "speaker": "Robb Ludwick", "filename": "The Faith of the Unbeliever - Robb Ludwick___1895.mp3" }
-            ]
-          },
-          "Science": {
-            "lectures": [
-              { "subtopic": "Science and Faith", "altName": "", "category": "science and faith" }
-            ],
-            "featured": [
-              { "title": "Scientists and True Spirituality", "speaker": "Arend Jan Poelarends", "filename": "xxx.mp3" },
-              { "title": "Miracles, Science, and the God of the Gaps", "speaker": "Jack Collins", "filename": "xxx.mp3" },
-              { "title": "Conversations Between Christianity & Science", "speaker": "John Lennox", "filename": "Conversations Between Christianity & Science - John Lennox___369.mp3" }
-          ]
-          },
-          "Technology": {
-            "lectures": [
-              { "subtopic": "Technology and the Future", "altName": "", "category": "Technology and the Futre" }
-            ],
-            "featured": [
-              { "title": "Finding Rest in a Technological World", "speaker": "Denis Haack", "filename": "xxx.mp3" },
-              { "title": "How Technology Behaves", "speaker": "Andy Patton", "filename": "How Technology Behaves (Part 2) - Andy Patton___824.mp3" },
-              { "title": "Technology and the Gospel", "speaker": "Bruce Little", "filename": "xxx.mp3" }
+              {
+                "altName": "",
+                "category": "The History of Secular Thought",
+                "subtopic": "History of Thought"
+              },
+              {
+                "altName": "",
+                "category": "Politics and Economics",
+                "subtopic": "Politics"
+              },
+              {
+                "altName": "",
+                "category": "Politics and Economics",
+                "subtopic": "Economics"
+              },
+              {
+                "altName": "",
+                "category": "Race \u0026 racism",
+                "subtopic": "Race"
+              },
+              {
+                "altName": "",
+                "category": "War \u0026 Peace",
+                "subtopic": "War"
+              },
+              {
+                "altName": "",
+                "category": "Education",
+                "subtopic": "Education"
+              },
+              {
+                "altName": "",
+                "category": "Medical ethics and the Modern Age",
+                "subtopic": "Medical Ethics"
+              },
+              {
+                "altName": "Leisure \u0026 Games",
+                "category": "Games, Sports, and Leisure",
+                "subtopic": "Leisure and Games"
+              },
+              {
+                "altName": "",
+                "category": "Nature \u0026 ecology",
+                "subtopic": "Ecology"
+              },
+              {
+                "altName": "",
+                "category": "Theology of Work",
+                "subtopic": "Work"
+              }
             ]
           },
           "Philosophy": {
-            "lectures": [
-              { "subtopic": "Engaging Philosophy", "altName": "Christianity & Philosophy", "category": "Philosophy" }
-            ],
             "featured": [
-              { "title": "How Do You Know That?", "speaker": "Ellis Potter", "filename": "How Do You Know That^ - Ellis Potter___806.mp3" },
-              { "title": "Is Reality Socially Created?", "speaker": "Jim Paul", "filename": "Is Reality Socially Created^ - Jim Paul___968.mp3" },
-              { "title": "Who's Afraid of Postmoderism", "speaker": "James k. A. Smith", "filename": "xxx.mp3" }
+              {
+                "filename": "How Do You Know That^ - Ellis Potter___806.mp3",
+                "speaker": "Ellis Potter",
+                "title": "How Do You Know That?"
+              },
+              {
+                "filename": "Is Reality Socially Created^ - Jim Paul___968.mp3",
+                "speaker": "Jim Paul",
+                "title": "Is Reality Socially Created?"
+              },
+              {
+                "filename": "xxx.mp3",
+                "speaker": "James k. A. Smith",
+                "title": "Who's Afraid of Postmoderism"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "Christianity \u0026 Philosophy",
+                "category": "Philosophy",
+                "subtopic": "Engaging Philosophy"
+              }
             ]
           },
-          "Other": {
-            "lectures": [
-              { "subtopic": "History of Thought", "altName": "", "category": "The History of Secular Thought" },
-              { "subtopic": "Politics", "altName": "", "category": "Politics and Economics" },
-              { "subtopic": "Economics", "altName": "", "category": "Politics and Economics" },
-              { "subtopic": "Race", "altName": "", "category": "Race & racism" },
-              { "subtopic": "War", "altName": "", "category": "War & Peace" },
-              { "subtopic": "Education", "altName": "", "category": "Education" },
-              { "subtopic": "Medical Ethics", "altName": "", "category": "Medical ethics and the Modern Age" },
-              { "subtopic": "Leisure and Games", "altName": "Leisure & Games", "category": "Games, Sports, and Leisure" },
-              { "subtopic": "Ecology", "altName": "", "category": "Nature & ecology" },
-              { "subtopic": "Work", "altName": "", "category": "Theology of Work" }
-            ],
+          "Science": {
             "featured": [
-              { "title": "Staying Human In a Culture of Busyness", "speaker": "Mary Frances Giles", "filename": "Staying Human in a Culture of Busyness - Mary Frances Giles___1665.mp3" },
-              { "title": "Common Grace", "speaker": "Jerram Barrs", "filename": "Common Grace - Jerram Barrs___348.mp3" },
-              { "title": "Work", "speaker": "Ranald Macauley", "filename": "Being Human 3_ Thankfulness for the Work of Christ - xxx.mp3" }
+              {
+                "filename": "xxx.mp3",
+                "speaker": "Arend Jan Poelarends",
+                "title": "Scientists and True Spirituality"
+              },
+              {
+                "filename": "xxx.mp3",
+                "speaker": "Jack Collins",
+                "title": "Miracles, Science, and the God of the Gaps"
+              },
+              {
+                "filename": "Conversations Between Christianity \u0026 Science - John Lennox___369.mp3",
+                "speaker": "John Lennox",
+                "title": "Conversations Between Christianity \u0026 Science"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "",
+                "category": "science and faith",
+                "subtopic": "Science and Faith"
+              }
+            ]
+          },
+          "Technology": {
+            "featured": [
+              {
+                "filename": "xxx.mp3",
+                "speaker": "Denis Haack",
+                "title": "Finding Rest in a Technological World"
+              },
+              {
+                "filename": "How Technology Behaves (Part 2) - Andy Patton___824.mp3",
+                "speaker": "Andy Patton",
+                "title": "How Technology Behaves"
+              },
+              {
+                "filename": "xxx.mp3",
+                "speaker": "Bruce Little",
+                "title": "Technology and the Gospel"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "",
+                "category": "Technology and the Futre",
+                "subtopic": "Technology and the Future"
+              }
+            ]
+          },
+          "The Church and Modernity": {
+            "featured": [
+              {
+                "filename": "Religion \u0026 Violence 1_ Everyone is Religious - Dick Keyes___1518.mp3",
+                "speaker": "Dick Keyes",
+                "title": "Religion and Violence"
+              },
+              {
+                "filename": "The Making of Modernity - Andrew Fellows___2001.mp3",
+                "speaker": "Andrew Fellows",
+                "title": "The Making of Modernity"
+              },
+              {
+                "filename": "The Faith of the Unbeliever - Robb Ludwick___1895.mp3",
+                "speaker": "Robb Ludwick",
+                "title": "The Faith of the Unbeliever"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "Christianity \u0026 Modernity",
+                "category": "Christianity in the Modern Age",
+                "subtopic": "Christianity and the Modern Age"
+              },
+              {
+                "altName": "Christianity \u0026 Culture",
+                "category": "Reflections on Modern Culture",
+                "subtopic": "Reflections on Modern Culture"
+              }
             ]
           }
         },
-        "Personal - Identity & Relationships": {
-          "Relationships": {
-            "lectures": [
-              { "subtopic": "Community", "altName": "", "category": "Community and Relationships" },
-              { "subtopic": "Hospitality", "altName": "", "category": "Hospitality" },
-              { "subtopic": "Marriage", "altName": "", "category": "Marriage" },
-              { "subtopic": "Family", "altName": "", "category": "Family" },
-              { "subtopic": "Singleness", "altName": "", "category": "Singleness" }
-            ],
+        "Personal - Identity \u0026 Relationships": {
+          "Other": {
             "featured": [
-              { "title": "Active Passivity in Relationships", "speaker": "Jim Paul", "filename": "Making Room For One Another_ Practising Active Passivity In Our Relationships - Jim Paul___1197.mp3" },
-              { "title": "Marriage Redeemed", "speaker": "Mardi Keyes", "filename": "Marriage Redeemed - Mardi Keyes___1214.mp3" },
-              { "title": "Saving Friendship from the 21st Century", "speaker": "Mary Frances Giles", "filename": "You Have a Friend Request_ Saving Friendship From The 21st Century - Mary Frances Giles___2379.mp3" }
+              {
+                "filename": "",
+                "speaker": "Denis Haack",
+                "title": "Calling and Vocation"
+              },
+              {
+                "filename": "xxx.mp3",
+                "speaker": "Emma Scrivener",
+                "title": "The Gospel and Eating Disorders"
+              },
+              {
+                "filename": "Making Decisions part 1_ Decision-Making Today - Jim Paul___1193.mp3",
+                "speaker": "Jim Paul",
+                "title": "Making Decisions"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "",
+                "category": "Guidance and Decision Making",
+                "subtopic": "Making Decisions"
+              },
+              {
+                "altName": "Food",
+                "category": "Food and Eating",
+                "subtopic": "Food and Eating"
+              },
+              {
+                "altName": "",
+                "category": "Ethics and Morality",
+                "subtopic": "Ethics"
+              }
+            ]
+          },
+          "Relationships": {
+            "featured": [
+              {
+                "filename": "Making Room For One Another_ Practising Active Passivity In Our Relationships - Jim Paul___1197.mp3",
+                "speaker": "Jim Paul",
+                "title": "Active Passivity in Relationships"
+              },
+              {
+                "filename": "Marriage Redeemed - Mardi Keyes___1214.mp3",
+                "speaker": "Mardi Keyes",
+                "title": "Marriage Redeemed"
+              },
+              {
+                "filename": "You Have a Friend Request_ Saving Friendship From The 21st Century - Mary Frances Giles___2379.mp3",
+                "speaker": "Mary Frances Giles",
+                "title": "Saving Friendship from the 21st Century"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "",
+                "category": "Community and Relationships",
+                "subtopic": "Community"
+              },
+              {
+                "altName": "",
+                "category": "Hospitality",
+                "subtopic": "Hospitality"
+              },
+              {
+                "altName": "",
+                "category": "Marriage",
+                "subtopic": "Marriage"
+              },
+              {
+                "altName": "",
+                "category": "Family",
+                "subtopic": "Family"
+              },
+              {
+                "altName": "",
+                "category": "Singleness",
+                "subtopic": "Singleness"
+              }
             ]
           },
           "Self": {
-            "lectures": [
-              { "subtopic": "Identity", "altName": "", "category": "Identity and the Self" },
-              { "subtopic": "Psychology", "altName": "", "category": "Psychology & counseling" },
-              { "subtopic": "Emotions", "altName": "", "category": "Emotions and Forgiveness" }
-            ],
             "featured": [
-              { "title": "Me, My Selfie, and I", "speaker": "Andrew Fellows", "filename": "Me, My-Selfie & I - Andrew Fellows___1223.mp3" },
-              { "title": "Shame, Contempt, and Guilt", "speaker": "Henrik Gustavsson", "filename": "xxx.mp3" },
-              { "title": "Perfecting Ourselves to Death", "speaker": "Richard Winter", "filename": "Perfecting Ourselves to Death_ The Pursuit of Excellence & the Perils of Perfectionism - Richard Winter___1355.mp3" }
+              {
+                "filename": "Me, My-Selfie \u0026 I - Andrew Fellows___1223.mp3",
+                "speaker": "Andrew Fellows",
+                "title": "Me, My Selfie, and I"
+              },
+              {
+                "filename": "xxx.mp3",
+                "speaker": "Henrik Gustavsson",
+                "title": "Shame, Contempt, and Guilt"
+              },
+              {
+                "filename": "Perfecting Ourselves to Death_ The Pursuit of Excellence \u0026 the Perils of Perfectionism - Richard Winter___1355.mp3",
+                "speaker": "Richard Winter",
+                "title": "Perfecting Ourselves to Death"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "",
+                "category": "Identity and the Self",
+                "subtopic": "Identity"
+              },
+              {
+                "altName": "",
+                "category": "Psychology \u0026 counseling",
+                "subtopic": "Psychology"
+              },
+              {
+                "altName": "",
+                "category": "Emotions and Forgiveness",
+                "subtopic": "Emotions"
+              }
             ]
           },
           "Sex and Gender": {
-            "lectures": [
-              { "subtopic": "Sexuality, Gender, and Feminism", "altName": "Christianity & Sexuality", "category": "Sexuality, Gender, and the Bible" }
-            ],
             "featured": [
-              { "title": "Christianity and Feminism", "speaker": "Mardi Keyes", "filename": "Are Christianity & Feminism Compatible^ - vs. 1 - Mardi Keyes___122.mp3" },
-              { "title": "The Bible's View of Women", "speaker": "Jerram Barrs", "filename": "The Bible__s View of Women - Jerram Barrs___1762.mp3" },
-              { "title": "The Power of Pornography", "speaker": "Richard Winter", "filename": "The Power of Pornography - Richard Winter___2045.mp3" }
+              {
+                "filename": "Are Christianity \u0026 Feminism Compatible^ - vs. 1 - Mardi Keyes___122.mp3",
+                "speaker": "Mardi Keyes",
+                "title": "Christianity and Feminism"
+              },
+              {
+                "filename": "The Bible__s View of Women - Jerram Barrs___1762.mp3",
+                "speaker": "Jerram Barrs",
+                "title": "The Bible's View of Women"
+              },
+              {
+                "filename": "The Power of Pornography - Richard Winter___2045.mp3",
+                "speaker": "Richard Winter",
+                "title": "The Power of Pornography"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "Christianity \u0026 Sexuality",
+                "category": "Sexuality, Gender, and the Bible",
+                "subtopic": "Sexuality, Gender, and Feminism"
+              }
             ]
           },
           "Suffering": {
-            "lectures": [
-              { "subtopic": "Suffering, Pain, and Healing", "altName": "Suffering, Pain, and Healing", "category": "Suffering, Pain, and Healing" }
-            ],
             "featured": [
-              { "title": "Affliction and the Goodness of God", "speaker": "Edith Schaeffer", "filename": "Affliction (Part 1) - Edith Schaeffer___76.mp3" },
-              { "title": "Finding Yourself In Your Suffering", "speaker": "Dick Keyes", "filename": "Finding Yourself in Your Own Suffering - Dick Keyes___615.mp3" },
-              { "title": "What Happens When God Doesn't Deliver", "speaker": "Mark Ryan", "filename": "From Bad to Worse_ What Happens When God Doesn__t Exactly Deliver^ - Mark Ryan___649.mp3" }
+              {
+                "filename": "Affliction (Part 1) - Edith Schaeffer___76.mp3",
+                "speaker": "Edith Schaeffer",
+                "title": "Affliction and the Goodness of God"
+              },
+              {
+                "filename": "Finding Yourself in Your Own Suffering - Dick Keyes___615.mp3",
+                "speaker": "Dick Keyes",
+                "title": "Finding Yourself In Your Suffering"
+              },
+              {
+                "filename": "From Bad to Worse_ What Happens When God Doesn__t Exactly Deliver^ - Mark Ryan___649.mp3",
+                "speaker": "Mark Ryan",
+                "title": "What Happens When God Doesn't Deliver"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "Suffering, Pain, and Healing",
+                "category": "Suffering, Pain, and Healing",
+                "subtopic": "Suffering, Pain, and Healing"
+              }
+            ]
+          }
+        },
+        "Theology \u0026 Worldview": {
+          "Apologetics": {
+            "featured": [
+              {
+                "filename": "xxx.mp3",
+                "speaker": "Sandra Richer",
+                "title": "Monotheism in a Pluralistic Society"
+              },
+              {
+                "filename": "Apologetics With a Human Face - Jim Paul___119.mp3",
+                "speaker": "Jim Paul",
+                "title": "Apologetics with a Human Face"
+              },
+              {
+                "filename": "The Importance of Asking Questions - Ellis Potter___1946.mp3",
+                "speaker": "Ellis Potter",
+                "title": "The Importance of Asking Questions"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "",
+                "category": "Apologetics: Exploring the Truth of Christianity",
+                "subtopic": "Exploring Christianity"
+              },
+              {
+                "altName": "",
+                "category": "How to Share Your Faith",
+                "subtopic": "Sharing Your Faith"
+              },
+              {
+                "altName": "Common Questions",
+                "category": "Ancient Answers to Modern Questions",
+                "subtopic": "Modern Questions, Ancient Answers"
+              }
+            ]
+          },
+          "Bible": {
+            "featured": [
+              {
+                "filename": "An Historical Defense of the Exodus \u0026 Conquest (Part 1) - Sandra Richter___98.mp3",
+                "speaker": "Sandra Richter",
+                "title": "The Conquest of Canaan"
+              },
+              {
+                "filename": "xxx.mp3",
+                "speaker": "Edwin Judge",
+                "title": "Paul and Greek philosophy"
+              },
+              {
+                "filename": "From the Gospel to the Gospels Part 1_ What is a Gospel \u0026 how did we get them^ - Joshua Chestnut___653.mp3",
+                "speaker": "Joshua Chestnut",
+                "title": "How did we Get the Gospels?"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "",
+                "category": "The Bible - Exploring the New Testament",
+                "subtopic": "New Testament"
+              },
+              {
+                "altName": "",
+                "category": "The Bible - Exploring the Old Testament",
+                "subtopic": "Old Testament"
+              },
+              {
+                "altName": "",
+                "category": "The Bible - How to Interpret Scripture",
+                "subtopic": "Interpretation"
+              },
+              {
+                "altName": "",
+                "category": "The Bible - Inspiration and Authority",
+                "subtopic": "Inspiration"
+              },
+              {
+                "altName": "",
+                "category": "The Bible - The Canon",
+                "subtopic": "Canon"
+              }
+            ]
+          },
+          "Doctrine": {
+            "featured": [
+              {
+                "filename": "The Sacrament of the Present Moment - Andrew Fellows___2105.mp3",
+                "speaker": "Andrew Fellows",
+                "title": "The Sacrament of the Present Moment"
+              },
+              {
+                "filename": "Being Human - Ranald Macaulay___176.mp3",
+                "speaker": "Ranald Macauley",
+                "title": "Being Human"
+              },
+              {
+                "filename": "Twenty-Two Things I Have Learned in Life - Donald Drew___2212.mp3",
+                "speaker": "Donald Drew",
+                "title": "22 Things I Have Learned in Life"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "Big Questions",
+                "category": "Important Questions in Christian Doctrine",
+                "subtopic": "Big Questions in Theology"
+              },
+              {
+                "altName": "",
+                "category": "The Life and Work of Jesus",
+                "subtopic": "Jesus"
+              },
+              {
+                "altName": "",
+                "category": "The Work of the Holy Spirit",
+                "subtopic": "The Holy Spirit"
+              },
+              {
+                "altName": "",
+                "category": "Sin, Evil, and the Fall",
+                "subtopic": "Sin and Evil"
+              },
+              {
+                "altName": "",
+                "category": "What Does It Mean To Be Human?",
+                "subtopic": "Being Human"
+              },
+              {
+                "altName": "",
+                "category": "Thinking About God's Law",
+                "subtopic": "The Law"
+              },
+              {
+                "altName": "Prayer \u0026 Worship",
+                "category": "Prayer and Worship",
+                "subtopic": "Prayer and Worship"
+              },
+              {
+                "altName": "Prophecy \u0026 Future",
+                "category": "Important Questions in Christian Doctrine",
+                "subtopic": "Prophecy and the Future"
+              },
+              {
+                "altName": "Church \u0026 Sacraments",
+                "category": "The Church and the Sacraments",
+                "subtopic": "Church and Sacraments"
+              },
+              {
+                "altName": "",
+                "category": "Christian Spirituality and Growth",
+                "subtopic": "Spiritual Growth"
+              }
+            ]
+          },
+          "History": {
+            "featured": [
+              {
+                "filename": "How Europe Lost Its Faith - Ian Cooper___810.mp3",
+                "speaker": "Ian Cooper",
+                "title": "How Europe Lost Its Faith"
+              },
+              {
+                "filename": "An Introduction to John Calvin - Stefan Lindholm___103.mp3",
+                "speaker": "Stefan Lindholm",
+                "title": "Who Was John Calvin?"
+              },
+              {
+                "filename": "xxx.mp3",
+                "speaker": "Mardi Keyes",
+                "title": "The Church and the Roman Empire"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "",
+                "category": "History of Christianity",
+                "subtopic": "Church History"
+              },
+              {
+                "altName": "",
+                "category": "Catholicism",
+                "subtopic": "Catholicism"
+              },
+              {
+                "altName": "",
+                "category": "Christianity and Liberalism",
+                "subtopic": "Liberalism"
+              }
+            ]
+          },
+          "L'Abri": {
+            "featured": [
+              {
+                "filename": "Five Themes of l__Abri - Dick Keyes___621.mp3",
+                "speaker": "Dick Keyes",
+                "title": "The Five Themes of L'Abri - L'Abri"
+              },
+              {
+                "filename": "An Introduction To Francis Schaeffer \u0026 his Writings - Jerram Barrs___100.mp3",
+                "speaker": "Jerram Barrs",
+                "title": "An Introduction to Francis Schaeffer"
+              },
+              {
+                "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3",
+                "speaker": "Ellis Potter",
+                "title": "Comprehensive Spirituality"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "Introduction",
+                "category": "Introduction to L'Abri",
+                "subtopic": "Introduction to L'Abri"
+              },
+              {
+                "altName": "Core Ideas",
+                "category": "The Core Ideas of L'Abri",
+                "subtopic": "Core Ideas of L'Abri"
+              }
             ]
           },
           "Other": {
-            "lectures": [
-              { "subtopic": "Making Decisions", "altName": "", "category": "Guidance and Decision Making" },
-              { "subtopic": "Food and Eating", "altName": "Food", "category": "Food and Eating" },
-              { "subtopic": "Ethics", "altName": "", "category": "Ethics and Morality" }
-            ],
             "featured": [
-              { "title": "Calling and Vocation", "speaker": "Denis Haack", "filename": "" },
-              { "title": "The Gospel and Eating Disorders", "speaker": "Emma Scrivener", "filename": "xxx.mp3" },
-              { "title": "Making Decisions", "speaker": "Jim Paul", "filename": "Making Decisions part 1_ Decision-Making Today - Jim Paul___1193.mp3" }
+              {
+                "filename": "Who Is The New Age Jesus^ - Richard Winter___2330.mp3",
+                "speaker": "Richard Winter",
+                "title": "Who is the New Age Jesus?"
+              },
+              {
+                "filename": "Is God Necessary for Morality^ - Dick Keyes___963.mp3",
+                "speaker": "Dick Keyes",
+                "title": "Is God Necessary for Morality?"
+              },
+              {
+                "filename": "Three Theories of Everything - Ellis Potter___2151.mp3",
+                "speaker": "Ellis Potter",
+                "title": "Three Theories of Everything"
+              }
+            ],
+            "lectures": [
+              {
+                "altName": "Ethics \u0026 Morality",
+                "category": "Apologetics: Exploring the Truth of Christianity",
+                "subtopic": "Ethics and Morality"
+              },
+              {
+                "altName": "Cults \u0026 Occult",
+                "category": "Sects, Cults, and the Occult",
+                "subtopic": "Cults ad the Occult"
+              },
+              {
+                "altName": "Eastern Religion",
+                "category": "Eastern Religion and the New Age",
+                "subtopic": "Eastern Religion and the New Age"
+              }
             ]
           }
         }
-      }
+      },
+      "subMenu": "Topics"
     }
-  ],
-  "featuredLectures": {
-    "sectionTitle": "FEATURED LECTURES",
-    "sectionSubtitle": "Noteworthy lectures on important topics.",
-    "sectionImage": "",
-    "items": [
-      {
-        "id": "1",
-        "title": "What is a \"Personal Relationship with God\"?",
-        "titleBgColor": "rgb(140,189,171)",
-        "speaker": "Jim Paul",
-        "image": "/images/featured/jim_paul.avif",
-        "filename": "What is a __Personal Relationship with God__^ - Jim Paul___2273.mp3"
-      },
-      {
-        "id": "2",
-        "title": "Community As A Subversion of Modernity",
-        "titleBgColor": "bg-lime-700",
-        "speaker": "Andrew Fellows",
-        "image": "/images/featured/andrew_fellows.avif",
-        "filename": "Community as Subversion of Modernity - Andrew Fellows___354.mp3"
-      },
-      {
-        "id": "3",
-        "title": "How We Got The Bible",
-        "titleBgColor": "bg-sky-400",
-        "speaker": "Andy Patton",
-        "image": "/images/featured/andy_patton.avif",
-        "filename": "How We Got the Bible - Andy Patton___834.mp3"
-      },
-      {
-        "id": "4",
-        "title": "Les Miserables",
-        "titleBgColor": "bg-orange-400",
-        "speaker": "John Hodges",
-        "image": "/images/featured/john_hodges.avif",
-        "filename": "Les Miserables - John Hodges___1128.mp3"
-      },
-      {
-        "id": "5",
-        "title": "Imagination, Habit, & Hope in a Pornified Society",
-        "titleBgColor": "bg-amber-300",
-        "speaker": "Josuha Chestnut",
-        "image": "/images/featured/josuha_chestnut.avif",
-        "filename": "Imagination, Habit & Hope in a Pornified Society - Joshua Chestnut___882.mp3"
-      },
-      {
-        "id": "6",
-        "title": "Did Yahweh Evolve?",
-        "titleBgColor": "bg-lime-700",
-        "speaker": "Sandra Richter",
-        "image": "/images/featured/sandra_richter.avif",
-        "filename": "Did Yahweh Evolve^ - Sandra Richter.mp3"
-      },
-      {
-        "id": "7",
-        "title": "On Saving Leonardo From the Clutches of Secularism",
-        "titleBgColor": "bg-violet-900",
-        "speaker": "Nancy Pearcey",
-        "image": "/images/featured/nancy_pearcey.avif",
-        "filename": "On Saving Leonardo From the Clutches of Secularism - Nancy Pearcey___1326.mp3"
-      },
-      {
-        "id": "8",
-        "title": "Twenty-Two Things I Have Learned in Life",
-        "titleBgColor": "bg-sky-400",
-        "speaker": "Donald Drew",
-        "image": "/images/featured/donald_drew.avif",
-        "filename": "Twenty-Two Things I Have Learned in Life - Donald Drew___2212.mp3"
-      },
-      {
-        "id": "9",
-        "title": "Comprehensive Spirituality",
-        "titleBgColor": "bg-emerald-700",
-        "speaker": "Ellis Potter",
-        "image": "/images/featured/ellis_potter.avif",
-        "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3"
-      },
-      {
-        "id": "10",
-        "title": "On the Origins of the Gospels",
-        "titleBgColor": "bg-orange-700",
-        "speaker": "Dirk Jongkind",
-        "image": "/images/featured/dirk_jongkind.avif",
-        "filename": "On the Origins of the Gospels - Dirk Jongkind___1328.mp3"
-      }
-    ]
-  },
-  "schaefferCollection": {
-    "sectionTitle": "THE SCHAEFFER COLLECTION",
-    "sectionSubtitle": "Explore the lectures and sermons of Francis and Edith Schaeffer.",
-    "sectionImage": "/images/schaeffer.avif",
-    "people": {
-      "francis": {
-        "speakerName": "Francis Schaeffer",
-        "intro": "To get started with Francis Schaeffer's lectures, listen to these:",
-        "items": [
-          {
-            "id": "francis-1",
-            "title": "Two Contents, Two Realities",
-            "filename": "Loss Of Absolutes part 2_ What Next^ What Needed^ Two Contents, two Realities - Francis Schaeffer___1182.mp3"
-          },
-          {
-            "id": "francis-2",
-            "title": "The Question of Apologetics",
-            "filename": "The Question of Apologetics - Francis Schaeffer___2084.mp3"
-          },
-          {
-            "id": "francis-3",
-            "title": "Art in the Bible",
-            "filename": "Art In The Bible - Francis Schaeffer___141.mp3"
-          }
-        ],
-        "moreLink": "x"
-      },
-      "edith": {
-        "speakerName": "Edith Schaeffer",
-        "intro": "To get started with Edith Schaeffer's lectures, here are a few recommendations:",
-        "items": [
-          {
-            "id": "edith-1",
-            "title": "True Spirituality",
-            "filename": "True Spirituality - Edith Schaeffer___2190.mp3"
-          },
-          {
-            "id": "edith-2",
-            "title": "Study on Prayer",
-            "filename": "Study on Prayer - Edith Schaeffer___1673.mp3"
-          }
-        ],
-        "moreLink": "x"
-      }
-    }
-  }
+  ]
 }
