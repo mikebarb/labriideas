@@ -7,15 +7,6 @@ import Player from '../components/Player.svelte';
 import { ClientRouter } from 'astro:transitions';
 import AppShell from '../components/AppShell.svelte';
 
-// 1. Import the static configuration
-import menuData from '../data/menu.json';
-
-// 2. Extract the Topics hierarchy (with the type guard for safety)
-const topicsSubMenu = menuData.subMenus.find(s => s.subMenu === 'Topics');
-if (!topicsSubMenu || !topicsSubMenu.hierarchy) {
-  throw new Error('Configuration error: "Topics" subMenu with hierarchy not found in menu.json');
-}
-const topicsHierarchy = topicsSubMenu.hierarchy;
 const apiBase = import.meta.env.PUBLIC_API_BASE_URL;
 
 interface Props {

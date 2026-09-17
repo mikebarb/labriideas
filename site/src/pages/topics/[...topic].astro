@@ -1,8 +1,8 @@
 ---
 import LabriLayout from '../../layouts/LabriLayout.astro';
-import TrackList from '../../components/TrackList.svelte';
 import { slugify } from '../../lib/slugify.ts';
 import menuData from '../../data/menu.json';
+import TopicView from '../../components/TopicView.svelte';
 
 // Explicit route shape — keeps TypeScript happy end to end.
 // NOTE: declared at frontmatter top level (not inside getStaticPaths)
@@ -200,41 +200,21 @@ export async function getStaticPaths(): Promise<TopicRoute[]> {
 //const { topicName, filterTopic, isMajor, majorSlug, majorLabel, subCategories } = Astro.props;
 const { topicName, filterCategories, isMajor, majorSlug, majorLabel, subCategories } = Astro.props;
 
+// NEW: the route param — the URL is the source of truth the island
+// re-resolves against the draft at runtime.
+const topic = Astro.params.topic ?? '';
 const apiBase = import.meta.env.PUBLIC_API_BASE_URL;
 ---
 
 <LabriLayout title={topicName}>
   <div class="max-w-4xl mx-auto px-4 py-8">
-    <!-- Breadcrumb: Topics / [Major Theme /] Current -->
-    <nav class="text-sm text-gray-500 mb-4">
-      <a href="/topics" class="hover:text-orange-600">Topics</a>
-      {majorSlug && (
-        <Fragment>
-          <span> / </span>
-          <a href={`/topics/${majorSlug}`} class="hover:text-orange-600">{majorLabel}</a>
-        </Fragment>
-      )}
-      <span> / </span>
-      <span class="text-gray-300">{topicName}</span>
-    </nav>
-
-    <h1 class="text-3xl font-bold mb-2">{topicName}</h1>
-
-    {isMajor && subCategories.length > 0 && (
-      <div class="mb-8">
-        <p class="text-gray-500 mb-4">Explore sub-categories below or browse all tracks.</p>
-        <div class="flex flex-wrap gap-2">
-          {subCategories.map((sub: { name: string; slug: string }) => (
-            <a
-              href={`/topics/${majorSlug}/${sub.slug}`}
-              class="text-sm bg-gray-100 hover:bg-orange-100 text-gray-700 px-3 py-1 rounded-full border border-gray-200"
-            >
-              {sub.name}
-            </a>
-          ))}
-        </div>
-      </div>
-    )}
-    <TrackList categories={filterCategories} {apiBase} client:load />
+    <!-- Hybrid Preview Island: this IS the page content, so client:load.
+         getStaticPaths stays fully build-time (route existence); the
+         island re-resolves the current route's content against the
+         draft for a logged-in admin. -->
+    <TopicView
+      {topic} {topicName} {filterCategories} {isMajor} {majorSlug} {majorLabel}
+      {subCategories} {apiBase} client:load
+    />
   </div>
 </LabriLayout>

@@ -2,7 +2,11 @@
 import Layout from '../../layouts/LabriLayout.astro';
 import menuData from '../../data/menu.json';
 import Hero from '../../components/Hero.svelte';
+import PlaylistsGrid from '../../components/PlaylistsGrid.svelte';
 
+// NOTE: this static import and extraction are PERMANENT (Option 2 hybrid
+// pattern) — they seed PlaylistsGrid's build-time SSR render, which is
+// what public visitors and search engines receive. Do not remove.
 const albums = menuData.subMenus.find(s => s.subMenu === 'Playlists')?.albums ?? [];
 ---
 
@@ -16,35 +20,9 @@ const albums = menuData.subMenus.find(s => s.subMenu === 'Playlists')?.albums ??
   />
   
   <div class="container mx-auto px-4 py-8">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {albums.map(album => {
-        const isExternal = album.linkToForm && !album.tracks;
-        const href = isExternal ? album.linkToForm : `/playlists/${album.id}/`;
-        
-        return (
-          <div class="rounded-lg overflow-hidden bg-slate-800 shadow-lg">
-            <a
-              href={href}
-              target={isExternal ? "_blank" : undefined}
-              rel={isExternal ? "noopener noreferrer" : undefined}
-              class="block relative h-48 bg-cover bg-center group"
-              style={`background-image: url(${album.backgroundImage})`}
-            >
-              <div class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 to-transparent p-4">
-                <h2 class:list={[
-                  "text-white text-xl font-bold",
-                  album.titleBgColor
-                ]}>
-                  {album.title}
-                </h2>
-              </div>
-            </a>
-            <div class="p-4">
-              <p class="text-gray-300 text-sm">{album.description}</p>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <!-- Hybrid Preview Island: static SSR for the public, draft override
+         for a logged-in admin. client:visible — below the 300px hero,
+         so hydration defers until scroll into view. -->
+    <PlaylistsGrid {albums} client:visible />
   </div>
 </Layout>

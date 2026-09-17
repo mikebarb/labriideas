@@ -1,7 +1,11 @@
 <!-- src/components/MegaMenu.svelte -->
 <script lang="ts">
-  // Direct JSON import - Vite will bundle this client-side
-  import menuData from '../data/menu.json';
+  // CHANGED (Step B preview): menu.json is no longer a build-time static
+  // import. It flows from menuDataStore, which serves the deployed
+  // MASTER to everyone and the admin's IndexedDB DRAFT when logged in —
+  // so edits preview live in this menu before they're committed to Git.
+  // See src/lib/menuDataStore.ts.
+  import { menuData } from '../lib/menuDataStore';
   import { slugify } from '../lib/slugify.ts';
 
   // Catalog hydration for featured lectures (mirrors FeaturedGrid).
@@ -41,27 +45,39 @@
   // per-category featured), not plain leaf arrays. `featured` lives one
   // level lower than before — inside each sub-category — so curation
   // and navigation share a single source of truth in menu.json.
-  interface TopicsData {
-    hierarchy: Record<string, Record<string, SubCategoryNode | HierarchyItem[]>>;
-  }
+  //interface TopicsData {
+  //  hierarchy: Record<string, Record<string, SubCategoryNode | HierarchyItem[]>>;
+  //}
 
  // === EXTRACT DATA INTERNALLY ===
   
-  const topicsSubMenu = menuData.subMenus.find(s => s.subMenu === 'Topics');
-  if (!topicsSubMenu) {
-    throw new Error('Configuration error: "Topics" subMenu not found in menu.json');
-  }
+  //const topicsSubMenu = menuData.subMenus.find(s => s.subMenu === 'Topics');
+  //if (!topicsSubMenu) {
+  //  throw new Error('Configuration error: "Topics" subMenu not found in menu.json');
+  //}
 
   // Cast to our explicit TopicsData shape
   // This tells TypeScript: "trust me, this is the Topics variant"
-  const topicsData = topicsSubMenu as unknown as TopicsData;
+  //const topicsData = topicsSubMenu as unknown as TopicsData;
   
-  if (!topicsData.hierarchy) {
-    throw new Error('Configuration error: "Topics" subMenu missing hierarchy property');
-  }
-  
+  //if (!topicsData.hierarchy) {
+  //  throw new Error('Configuration error: "Topics" subMenu missing hierarchy property');
+  //}
+
+  // CHANGED (Step B preview): the old fail-fast `throw`s were safe when
+  // menu.json was a build constant, but a runtime DRAFT swap makes them
+  // reachable — a bad draft would crash the public menu. The store
+  // structurally validates drafts before applying them (first line of
+  // defense); this $derived + empty-object fallback is the second. A
+  // malformed menu renders an empty browse bar, never a crash.
+  // $menuData auto-subscribes: hierarchy recomputes on every draft
+  // apply/revert, and the template re-renders from the same name.
+  const hierarchy = $derived(
+    (($menuData as any).subMenus.find((s: any) => s.subMenu === 'Topics')
+      ?.hierarchy as Record<string, Record<string, any>>) ?? {}
+  );  
   // Now both properties are guaranteed to exist
-  const hierarchy = topicsData.hierarchy;
+  //const hierarchy = topicsData.hierarchy;
 
     // === REACTIVE STATE (Svelte 5 syntax) ===
   
