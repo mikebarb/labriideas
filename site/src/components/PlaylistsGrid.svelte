@@ -1,4 +1,4 @@
-<!-- src/components/PlaylistsGrid.svelte -->
+<!--   src/components/PlaylistsGrid.svelte   -->
 <script lang="ts">
   // Hybrid "Preview Island" (Option 2 pattern — same contract as
   // ContactSection.svelte / FeaturedGrid.svelte).
