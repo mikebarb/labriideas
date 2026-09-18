@@ -18,7 +18,14 @@
   import { getCachedCatalog } from '../lib/catalogStore.ts';
   import { buildTrack } from '../lib/buildTrack.ts';
   import TopicFeaturedCard from './TopicFeaturedCard.svelte';
+  
+  // NEW (preview): reactive menu source + admin state, Option 2 hybrid.
+  // people prop remains the SSR fallback; the draft overrides it only
+  // for a logged-in admin with a live draft.
+  import { menuData, menuPreviewSource } from '../lib/menuDataStore';
+  import { isAdmin } from '../lib/appStatusStore';
 
+  
   interface Person {
     speakerName: string;
     intro: string;
@@ -36,6 +43,33 @@
   }
 
   let { people, apiBase = '' }: Props = $props();
+
+  // ─── Hybrid draft preview (same contract as FeaturedGrid.svelte) ───
+  // schaefferCollection is a TOP-LEVEL key in menu.json, so the draft
+  // lookup reads $menuData.schaefferCollection directly.
+  const isPreviewing = $derived($isAdmin && $menuPreviewSource === 'draft');
+
+  // The draft's copy of the collection, resolved once and shared by the
+  // banner, the diagnostic effect, and the selection. undefined when the
+  // draft lacks the key (e.g. accidentally renamed — load-bearing).
+  const draftCollection = $derived(
+    isPreviewing ? ($menuData as any).schaefferCollection : undefined
+  );
+
+  // Diagnostic twin of the banner state — the two can never disagree.
+  $effect(() => {
+    if (isPreviewing && !draftCollection) {
+      console.warn(
+        '[SchaefferGrid] Draft preview active but "schaefferCollection" key not found in draft — rendering the deployed master. Check the key spelling in the editor.'
+      );
+    }
+  });
+
+  // Single source-selection point: draft people when the draft section
+  // resolved, else the static people prop.
+   const activePeople = $derived<Record<string, Person>>(
+    isPreviewing && draftCollection ? (draftCollection.people ?? {}) : people
+  );
 
   // Catalog tracks (null until the background lookup completes).
   // Only THIS is $state — per-item hydration is computed on demand below.
@@ -70,7 +104,10 @@
         catalogTracks = tracks;
 
         // Admin diagnosis: warn once per missing filename.
-        for (const person of Object.values(people)) {
+        // CHANGED: reads activePeople (not the people prop) so the
+        // diagnosis covers the DRAFT when previewing — a draft item with
+        // a bad filename warns here the same way a deployed one does.
+        for (const person of Object.values(activePeople)) {
           for (const item of person.items) {
             if (!tracks.find((t: any) => t.filename === item.filename)) {
               console.warn(`[Schaeffer] Featured filename not found in catalog: "${item.filename}"`);
@@ -86,8 +123,23 @@
   });
 </script>
 
+{#if isPreviewing && draftCollection}
+  <!-- Draft banner: the grid on screen IS the admin's uncommitted draft. -->
+  <div class="mb-4 px-3 py-2 bg-amber-100 border border-amber-400 text-amber-800 text-sm rounded">
+    ✎ Previewing your uncommitted draft — public visitors see the deployed version.
+  </div>
+{:else if isPreviewing}
+  <!-- Broken-preview banner: matches the console warn exactly. -->
+  <div class="mb-4 px-3 py-2 bg-red-100 border border-red-400 text-red-800 text-sm rounded">
+    ⚠ A draft is active, but the "schaefferCollection" section was not found in it — this page is showing the deployed master. Check the key spelling in the editor.
+  </div>
+{/if}
+
 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-  {#each Object.entries(people) as [slug, person]}
+  <!-- CHANGED: iterates activePeople (hybrid) instead of the prop; keyed
+       by slug so draft reordering/edits re-render correctly. -->
+
+  {#each Object.entries(activePeople) as [slug, person] (slug)}
     <div class="space-y-4">
       <p>
         {person.intro}

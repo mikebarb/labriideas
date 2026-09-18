@@ -1,0 +1,10 @@
+---
+import LabriLayout from '../layouts/LabriLayout.astro';
+import NotFoundInspector from '../components/NotFoundInspector.svelte';
+---
+
+<LabriLayout title="Page Not Found">
+  <div class="max-w-2xl mx-auto px-4 py-16">
+    <NotFoundInspector client:load />
+  </div>
+</LabriLayout>

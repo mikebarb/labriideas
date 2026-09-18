@@ -1,19 +1,15 @@
 ---
 import LabriLayout from '../../layouts/LabriLayout.astro';
 import Hero from '../../components/Hero.svelte';
+import ContactSection from '../../components/ContactSection.svelte';
 import menuData from '../../data/menu.json';
 
-// Define the shape of each contact detail
-type ContactDetail = {
-  label: string;
-  value: string;
-  url?: string;
-  note?: string;
-};
-
-// Find the Contact L'Abri section
+// NOTE: this static import and extraction are PERMANENT, not legacy.
+// They seed the island's build-time SSR render — the HTML that public
+// visitors and search engines receive. Do not remove in later cleanup;
+// the grep hit for menu.json on this page is by design (Option 2
+// hybrid: static master + admin-only live draft override).
 const contactSection = menuData.subMenus.find(s => s.subMenu === 'Contact L\'Abri');
-const sites = contactSection?.sites ?? [];
 ---
 
 <LabriLayout title="Contact L'Abri">
@@ -26,45 +22,10 @@ const sites = contactSection?.sites ?? [];
     color="white"
   />
 
-
-
-
   <section class="max-w-4xl">
-  <!-- INTRO TEXT SECTION -->
-    <!-- <h3 class="font-bold">Get in Touch</h3> -->
-    <p>
-      {contactSection?.description}
-    </p>
-    
-  <!-- CONTACT DETAILS GRID -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
-      {sites.map(site => (
-        <div>
-          <h3 class="font-bold">{site.title}</h3>
-          <p class="text-md">
-            {/* Apply the type here so the editor recognizes 'note' */}
-            {site.details.map((detail: ContactDetail) => (
-              <>
-                  {detail.label && detail.label.trim() !== "" ? (
-                  <strong>{detail.label}:</strong>
-                  ) : null}
-                  
-                  {" "} {/* Adds a space between the label section and the value section */}
-                {detail.url ? (
-                  <a href={detail.url} target="_blank" rel="noopener noreferrer" class="underline text-md">
-                    {detail.value}
-                  </a>
-                ) : (
-                  detail.value
-                )}
-                {/* This renders the note ONLY if it exists in the JSON */}
-                {detail.note && <span class="italic text-gray-500 ml-1">{detail.note}</span>}
-                <br />
-              </>
-            ))}
-          </p>
-        </div>
-      ))}
-    </div>
+    <!-- Hybrid Preview Island: static SSR for the public, draft
+         override for a logged-in admin. client:visible — below the
+         400px hero, so hydration defers until scroll into view. -->
+    <ContactSection client:visible contactSection={contactSection} />
 </section>
 </LabriLayout>

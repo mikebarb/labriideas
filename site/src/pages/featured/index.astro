@@ -13,6 +13,12 @@
 //    logic with TrackCard via the useTrackActions composable.
 // 3. The filename is the unique key across R2, the catalog, and
 //    menu.json — an administrator cannot misconfigure it.
+
+// NOTE: this static import and extraction are PERMANENT (Option 2 hybrid
+// pattern) — they seed FeaturedGrid's build-time SSR render, which is
+// what public visitors and search engines receive. The draft override
+// happens INSIDE the island for logged-in admins. Do not remove.
+
 import Layout from '../../layouts/LabriLayout.astro';
 import menuData from '../../data/menu.json';
 import Hero from '../../components/Hero.svelte';

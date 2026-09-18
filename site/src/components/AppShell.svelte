@@ -4,7 +4,6 @@
   import { mobileView, desktopQueueOpen } from '../lib/playerStore.js';
   import { onMount } from 'svelte';
   import { refreshAuth } from '../lib/appStatusStore'; 
-  import { authClient } from '../lib/authClient';
   import QueueDrawer from './QueueDrawer.svelte';
   import MetadataEditor from './MetadataEditor.svelte';
   import { getCachedCatalog } from '../lib/catalogStore.js';
@@ -37,6 +36,21 @@
   async function performInitialHandshake(): Promise<void> {
     isSyncing = true; // Show a subtle "Syncing..." icon
     try {
+      // CHANGED: Boot-time auth verification now runs on EVERY page, not
+      // just admin pages (AuthGuard only refreshes admin routes). One
+      // cheap, public, read-only GET /api/auth/status; sets isAdmin for
+      // all consumers:
+      //   - TrackCard/FeaturedCard/QueueDrawer edit affordances on
+      //     public pages (a returning admin with a saved token sees
+      //     them without visiting an admin page first)
+      //   - menuDataStore's draft preview (admin + draft → draft menu)
+      // Deliberately NOT awaited alongside the catalog: auth status
+      // has no dependency on the catalog, and the two requests can
+      // race in parallel.
+      refreshAuth().catch(() => {
+        // Server unreachable — isAdmin stays false. Public pages simply
+        // behave as logged-out, which is the correct degradation.
+      });
       await getCachedCatalog();
     } finally {
       isSyncing = false; // Hide it

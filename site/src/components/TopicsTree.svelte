@@ -1,10 +1,20 @@
 <!-- src/components/TopicsTree.svelte -->
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { ChevronDown, ChevronRight, Search, Maximize2, Minimize2 } from 'lucide-svelte';
-  import menuData from '../data/menu.json';
+  // CHANGED (Step B preview): build-time static import → reactive store.
+  // Serves the deployed master normally; the admin's draft when logged
+  // in — so the tree previews draft hierarchy changes live.
+  // See src/lib/menuDataStore.ts.
+  import { menuData, menuPreviewSource } from '../lib/menuDataStore';
+  import { isAdmin } from '../lib/appStatusStore';
+  // PERMANENT (Option 2 hybrid): the deployed master, used as the
+  // fallback when a broken draft omits the Topics section. Not legacy —
+  // do not remove in a future "unused imports" sweep.
+  import masterMenu from '../data/menu.json';
   import { slugify } from '../lib/slugify.ts';
 
+  
   interface LeafItem {
     subtopic: string;
     altName?: string;
@@ -22,16 +32,47 @@
     return node?.lectures ?? [];
   }
 
-  // Find the Topics menu (this returns 'SubMenu | undefined')
-  const topicsSubMenu = menuData.subMenus.find(s => s.subMenu === 'Topics');
-  
-  // Guard clause: if menu.json is malformed, throw a build error
-  if (!topicsSubMenu || !topicsSubMenu.hierarchy) {
-    throw new Error('Configuration error: "Topics" subMenu with hierarchy not found in menu.json');
-  }
+  // CHANGED (Step B preview): old guard threw at component init — safe
+  // for a build-time constant, but a runtime draft swap makes it
+  // reachable. The store validates drafts before applying them; this
+  // fallback renders an empty tree rather than crashing if something
+  // still slips through. $derived: re-derives on every draft apply.
+  //const hierarchy = $derived(
+  //  (($menuData as any).subMenus.find((s: any) => s.subMenu === 'Topics')
+  //    ?.hierarchy as Record<string, Record<string, any>>) ?? {}
+  //);
 
-  // Now TypeScript knows hierarchy exists
-  const hierarchy = topicsSubMenu.hierarchy;
+  // CHANGED (preview): draft-preview state + honest fallback.
+  const isPreviewing = $derived($isAdmin && $menuPreviewSource === 'draft');
+
+  // The draft's Topics section — used ONLY for the banner/diagnostic
+  // state (hierarchy below reads $menuData directly).
+  const draftTopics = $derived(
+    isPreviewing
+      ? (($menuData as any).subMenus.find((s: any) => s.subMenu === 'Topics') as any)
+      : undefined
+  );
+
+  // Diagnostic twin of the banner state — the two can never disagree.
+  $effect(() => {
+    if (isPreviewing && !draftTopics) {
+      console.warn(
+        '[TopicsTree] Draft preview active but "Topics" subMenu not found in draft — rendering the deployed master. Check the subMenu key spelling in the editor.'
+      );
+    }
+  });
+
+    // CHANGED (preview): the old fallback was `?? {}` — an EMPTY tree when
+  // the draft lacked Topics, which is a broken page, not a degraded one.
+  // Now the fallback chain is: draft (when previewing) → deployed master
+  // → empty object. $menuData IS the master when not previewing, so the
+  // masterMenu fallback only engages in the broken-draft case.
+  // TYPED explicitly (same reason as SchaefferGrid): the any-typed draft
+  // branch would otherwise widen the ternary and lose the record typing.
+  const hierarchy = $derived<Record<string, Record<string, any>>>(
+    (($menuData as any).subMenus.find((s: any) => s.subMenu === 'Topics')?.hierarchy
+      ?? (masterMenu as any).subMenus.find((s: any) => s.subMenu === 'Topics')?.hierarchy) ?? {}
+  );
 
   // ============================================================================
   // STATE PERSISTENCE (sessionStorage)
@@ -150,7 +191,41 @@
   };
   // Initialize the state directly with the generated object
   let openSections = $state(initialOpenState());
-  
+
+  // NEW (Step B preview): when the hierarchy changes identity (a draft
+  // applied or reverted — NOT a section toggle), rebuild the expansion
+  // map for the new structure: sections that still exist keep their
+  // open/closed state, new sections default open, removed sections drop.
+  //
+  // Mechanics notes:
+  //  - lastHierarchy is a PLAIN variable (not $state) — an identity
+  //    sentinel so routine re-derives of the same object don't trigger
+  //    a rebuild.
+  //  - openSections is read through untrack() — reading it as a
+  //    dependency while writing it here would loop the effect.
+  //  - Toggling a section mutates openSections but NOT hierarchy, so
+  //    this effect correctly stays dormant during normal browsing.
+  //  - On first run (mount) this simply reproduces initialOpenState(),
+  //    so the pre-existing onMount sessionStorage restore behaves
+  //    exactly as before.
+  let lastHierarchy: unknown = null;
+  $effect(() => {
+    const h = hierarchy;
+    if (untrack(() => lastHierarchy) === h) return;
+    lastHierarchy = h;
+    const prev = untrack(() => openSections);
+    const next: Record<string, boolean> = {};
+    for (const major of Object.keys(h)) {
+      next[major] = prev[major] ?? true;
+      for (const minor of Object.keys(h[major])) {
+        if (minor === 'featured') continue;
+        const key = `${major}-${minor}`;
+        next[key] = prev[key] ?? true;
+      }
+    }
+    openSections = next;
+  });
+
   // ============================================================================
   // CLIENT-SIDE RESTORE
   // ----------------------------------------------------------------------------
@@ -262,6 +337,18 @@
 <!-- bind:this gives the script a handle on this root element so it can walk
      up the DOM to find the real scrolling container (see getScroller above) -->
 <div class="max-w-2xl mx-auto py-8 px-4" bind:this={treeEl}>
+
+  {#if isPreviewing && draftTopics}
+    <!-- Draft banner: the tree on screen IS the admin's uncommitted draft. -->
+    <div class="mb-4 px-3 py-2 bg-amber-100 border border-amber-400 text-amber-800 text-sm rounded">
+      ✎ Previewing your uncommitted draft — public visitors see the deployed version.
+    </div>
+  {:else if isPreviewing}
+    <!-- Broken-preview banner: matches the console warn exactly. -->
+    <div class="mb-4 px-3 py-2 bg-red-100 border border-red-400 text-red-800 text-sm rounded">
+      ⚠ A draft is active, but the "Topics" section was not found in it — this page is showing the deployed master. Check the subMenu key spelling in the editor.
+    </div>
+  {/if}
   
   <!-- GLOBAL EXPAND/COLLAPSE CONTROLS -->
   <div class="flex gap-2 mb-6 pb-4 border-b border-gray-200">

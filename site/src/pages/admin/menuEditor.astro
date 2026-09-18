@@ -1,0 +1,13 @@
+---
+import Layout from '../../layouts/LayoutAdmin.astro';
+import MenuEditor from '../../components/admin/MenuEditor.svelte';
+---
+<Layout>
+  <main class="flex flex-col items-center py-12">
+    <h1 class="text-4xl font-bold text-white mb-8 text-center">Menu Editor</h1>
+    <p class="text-slate-300 mb-8 text-center max-w-lg">
+      Draft, validate and deploy the site menu configuration.
+    </p>
+    <MenuEditor client:load />
+  </main>
+</Layout>

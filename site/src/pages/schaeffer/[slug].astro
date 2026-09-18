@@ -1,8 +1,12 @@
 ---
 import LabriLayout from '../../layouts/LabriLayout.astro';
-import TrackList from '../../components/TrackList.svelte';
+import SchaefferPersonView from '../../components/SchaefferPersonView.svelte';
 
-// Generate static paths for each person in the collection
+// Generate static paths for each person in the collection.
+// NOTE: the dynamic menu.json import and this extraction are PERMANENT
+// (Option 2 hybrid) — they seed SchaefferPersonView's build-time SSR
+// render. Route existence stays a build-time decision; draft preview
+// works INSIDE each existing route.
 export async function getStaticPaths() {
   const data = (await import('../../data/menu.json')).default;
   const people = data.schaefferCollection?.people ?? {};
@@ -17,23 +21,14 @@ export async function getStaticPaths() {
 }
 
 const { person } = Astro.props;
+// Route param is the source of truth at build time.
+const slug = Astro.params.slug ?? '';
 const apiBase = import.meta.env.PUBLIC_API_BASE_URL;
 ---
 
 <LabriLayout title={person.speakerName}>
   <div class="max-w-4xl mx-auto px-4 py-8">
-    <nav class="text-sm text-gray-500 mb-4">
-      <a href="/schaeffer" class="hover:text-orange-600">Schaeffer Collection</a>
-      <span> / </span>
-      <span class="text-gray-300">{person.speakerName}</span>
-    </nav>
-    
-    <h1 class="text-3xl font-bold mb-6 text-gray-900">{person.speakerName}</h1>
-    <p class="text-sm text-gray-500 mb-6">
-      All lectures and sermons by {person.speakerName}
-    </p>
-    
-    <!-- Reuse TrackList, but filter by speaker instead of category -->
-    <TrackList speaker={person.speakerName} {apiBase} client:load />
+    <!-- Hybrid Preview Island: this IS the page content, so client:load. -->
+    <SchaefferPersonView {person} {slug} {apiBase} client:load />
   </div>
 </LabriLayout>
