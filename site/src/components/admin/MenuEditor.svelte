@@ -31,6 +31,7 @@
     clearMenuDraft,
   } from '../../lib/menuDraftStore';
   import { applyMenuDraft, revertMenuToMaster } from '../../lib/menuDataStore';
+  import { authClient } from '../../lib/authClient';
 
   // ─── Editor plumbing (typed `any` deliberately) ───
   // DOM ref for the CodeMirror host. $state so Svelte 5 tracks the
@@ -54,11 +55,43 @@
   let saveMessage = $state('');
   let lastSavedAt = $state('');
   let busy = $state(false);
+  let deploying = $state(false);
 
   let diagnosticsTimer: ReturnType<typeof setTimeout> | undefined;
   onDestroy(() => clearTimeout(diagnosticsTimer));
 
   const API_BASE = import.meta.env.PUBLIC_API_BASE_URL;
+
+  async function handleCommitAndDeploy() {
+    deploying = true;
+    saveMessage = 'Committing and triggering build...';
+
+    try {
+      const response = await authClient.fetch(`${API_BASE}/api/update-menu`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: editorText, // The validated JSON string
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to commit changes');
+      }
+
+      // Success: The Go server has committed the file.
+      // Clear the draft to reset the preview loop.
+      await clearMenuDraft();
+      
+      saveMessage = '✅ Successfully deployed! Refreshing...';
+      setTimeout(() => window.location.reload(), 2000);
+
+    } catch (err) {
+      console.error('Deployment failed:', err);
+      saveMessage = '❌ Deployment failed: ' + (err as Error).message;
+    } finally {
+      deploying = false;
+    }
+  }
 
   // ─── Validation ───
   // Parse check stays synchronous and authoritative for syntax — cheap,
@@ -389,6 +422,17 @@
           class="flex-1 min-w-40 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 font-bold py-2 px-4 rounded transition-colors">
           {busy ? 'Saving...' : 'Save Draft'}
         </button>
+
+            <!-- NEW: Deploy button -->
+        <button
+          type="button"
+          onclick={handleCommitAndDeploy}
+          disabled={deploying || !!parseError}
+          class="bg-orange-600 hover:bg-orange-700 text-white font-bold px-4 py-2 rounded transition-colors disabled:opacity-50"
+        >
+          {deploying ? 'Deploying...' : 'Save & Deploy'}
+        </button>
+
 
         {#if viewingMaster && draftLoaded}
           <button
