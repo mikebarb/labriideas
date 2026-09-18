@@ -134,7 +134,7 @@
   },
   "subMenus": [
     {
-      "description": "xxxL'Abri has study centres around the world. Each location is a place of community, study, and hospitality. For general enquiries or to arrange a visit, please contact the centre nearest you.",
+      "description": "L'Abri has study centres around the world. Each location is a place of community, study, and hospitality. For general enquiries or to arrange a visit, please contact the centre nearest you.",
       "sites": [
         {
           "details": [
@@ -158,7 +158,7 @@
             }
           ],
           "id": "australia",
-          "title": "Australian L'Abri"
+          "title": "xxxAustralian L'Abri"
         },
         {
           "details": [
@@ -415,7 +415,7 @@
       "albums": [
         {
           "backgroundImage": "/images/playlists/how-to-read-the-bible-bg.avif",
-          "description": "xxxA collection of lectures on where the Bible came from, how to read it, and its reliability.",
+          "description": "A collection of lectures on where the Bible came from, how to read it, and its reliability.",
           "id": "how-to-read-the-bible",
           "title": "How to Read the Bible",
           "titleBgColor": "bg-red-500",
