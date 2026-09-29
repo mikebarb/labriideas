@@ -42,7 +42,8 @@
 
     // ── /topics/... ──
     if (segments[0] === 'topics' && segments.length >= 2) {
-      const hierarchy = menu.subMenus?.find((s: any) => s.subMenu === 'Topics')?.hierarchy;
+      // CHANGED (menu.json format v2): direct top-level key access.
+      const hierarchy = menu.Topics?.hierarchy;
       if (hierarchy) {
         for (const root of Object.keys(hierarchy)) {
           if (slugify(root) === segments[1]) {
@@ -68,7 +69,8 @@
 
     // ── /playlists/<id>/ ──
     if (segments[0] === 'playlists' && segments.length >= 2) {
-      const albums = menu.subMenus?.find((s: any) => s.subMenu === 'Playlists')?.albums ?? [];
+      // CHANGED (menu.json format v2): direct top-level key access.
+      const albums = menu.Playlists?.albums ?? [];
       const album = albums.find((a: any) => a.id === segments[1]);
       if (album) return { kind: 'playlist album', name: album.title ?? album.id };
     }

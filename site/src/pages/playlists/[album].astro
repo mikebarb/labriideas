@@ -7,7 +7,8 @@ export function getStaticPaths() {
   // UNCHANGED — route existence is a build-time decision (see the
   // boundary notes in AlbumView.svelte). The draft preview works INSIDE
   // each existing route; new album ids need a rebuild to gain a page.
-  const playlistsMenu = menuData.subMenus.find(s => s.subMenu === 'Playlists');
+  // CHANGED (menu.json format v2): direct top-level key access.
+  const playlistsMenu = menuData.Playlists;
   
   // Return empty array if Playlists submenu not found
   if (!playlistsMenu || !playlistsMenu.albums) {

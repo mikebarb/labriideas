@@ -9,7 +9,9 @@ import menuData from '../../data/menu.json';
 // visitors and search engines receive. Do not remove in later cleanup;
 // the grep hit for menu.json on this page is by design (Option 2
 // hybrid: static master + admin-only live draft override).
-const contactSection = menuData.subMenus.find(s => s.subMenu === 'Contact L\'Abri');
+// CHANGED (menu.json format v2): the section was promoted to a
+// top-level key — the find() becomes a direct property access.
+const contactSection = menuData["Contact L'Abri"];
 ---
 
 <LabriLayout title="Contact L'Abri">

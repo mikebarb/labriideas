@@ -55,14 +55,15 @@
 
   // The draft's copy of this section, resolved ONCE and shared by the
   // banner, the diagnostic effect, and the source selection. undefined
-  // when the draft doesn't contain the section (e.g. the subMenu key
-  // was accidentally edited — the identifier is load-bearing, an
-  // exact-match locator in every consumer).
+  // when the draft doesn't contain the section (e.g. the top-level key
+  // was accidentally edited — the key is load-bearing, an exact-match
+  // locator in every consumer).
+  // CHANGED (menu.json format v2): the section was promoted from a
+  // subMenus array entry to a top-level root key — the find() becomes
+  // a direct property access on the "Contact L'Abri" key.
   const draftSection = $derived(
     isPreviewing
-      ? (($menuData as any).subMenus.find(
-          (s: any) => s.subMenu === "Contact L'Abri"
-        ) as ContactSectionData | undefined)
+      ? (($menuData as any)["Contact L'Abri"] as ContactSectionData | undefined)
       : undefined
   );
 
@@ -72,7 +73,7 @@
   $effect(() => {
     if (isPreviewing && !draftSection) {
         console.warn(
-          '[ContactSection] Draft preview active but "Contact L\'Abri" subMenu not found in draft — rendering the deployed master. Check the subMenu key spelling in the editor.'
+          '[ContactSection] Draft preview active but "Contact L\'Abri" section not found in draft — rendering the deployed master. Check the top-level key spelling in the editor.'
         );
     }
   });
@@ -97,7 +98,7 @@
        not be found in it — the page is showing the deployed MASTER.
        Honest to the admin: matches the console warn exactly. -->
   <div class="mb-4 px-3 py-2 bg-red-100 border border-red-400 text-red-800 text-sm rounded">
-    ⚠ A draft is active, but the "Contact L'Abri" section was not found in it — this page is showing the deployed master. Check the subMenu key spelling in the editor.
+    ⚠ A draft is active, but the "Contact L'Abri" section was not found in it — this page is showing the deployed master. Check the top-level key spelling in the editor.
   </div>
 {/if}
 

@@ -14,7 +14,6 @@
   import masterMenu from '../data/menu.json';
   import { slugify } from '../lib/slugify.ts';
 
-  
   interface LeafItem {
     subtopic: string;
     altName?: string;
@@ -32,24 +31,15 @@
     return node?.lectures ?? [];
   }
 
-  // CHANGED (Step B preview): old guard threw at component init — safe
-  // for a build-time constant, but a runtime draft swap makes it
-  // reachable. The store validates drafts before applying them; this
-  // fallback renders an empty tree rather than crashing if something
-  // still slips through. $derived: re-derives on every draft apply.
-  //const hierarchy = $derived(
-  //  (($menuData as any).subMenus.find((s: any) => s.subMenu === 'Topics')
-  //    ?.hierarchy as Record<string, Record<string, any>>) ?? {}
-  //);
-
   // CHANGED (preview): draft-preview state + honest fallback.
   const isPreviewing = $derived($isAdmin && $menuPreviewSource === 'draft');
 
   // The draft's Topics section — used ONLY for the banner/diagnostic
   // state (hierarchy below reads $menuData directly).
+  // CHANGED (menu.json format v2): direct top-level key access.
   const draftTopics = $derived(
     isPreviewing
-      ? (($menuData as any).subMenus.find((s: any) => s.subMenu === 'Topics') as any)
+      ? (($menuData as any).Topics as any)
       : undefined
   );
 
@@ -57,21 +47,23 @@
   $effect(() => {
     if (isPreviewing && !draftTopics) {
       console.warn(
-        '[TopicsTree] Draft preview active but "Topics" subMenu not found in draft — rendering the deployed master. Check the subMenu key spelling in the editor.'
+        '[TopicsTree] Draft preview active but "Topics" section not found in draft — rendering the deployed master. Check the top=level key spelling in the editor.'
       );
     }
   });
 
-    // CHANGED (preview): the old fallback was `?? {}` — an EMPTY tree when
+  // CHANGED (preview): the old fallback was `?? {}` — an EMPTY tree when
   // the draft lacked Topics, which is a broken page, not a degraded one.
   // Now the fallback chain is: draft (when previewing) → deployed master
   // → empty object. $menuData IS the master when not previewing, so the
   // masterMenu fallback only engages in the broken-draft case.
   // TYPED explicitly (same reason as SchaefferGrid): the any-typed draft
   // branch would otherwise widen the ternary and lose the record typing.
+  // CHANGED (menu.json format v2): both branches moved from the subMenus
+  // find() to the top-level "Topics" key.
   const hierarchy = $derived<Record<string, Record<string, any>>>(
-    (($menuData as any).subMenus.find((s: any) => s.subMenu === 'Topics')?.hierarchy
-      ?? (masterMenu as any).subMenus.find((s: any) => s.subMenu === 'Topics')?.hierarchy) ?? {}
+    (($menuData as any).Topics?.hierarchy
+      ?? (masterMenu as any).Topics?.hierarchy) ?? {}
   );
 
   // ============================================================================
@@ -346,7 +338,7 @@
   {:else if isPreviewing}
     <!-- Broken-preview banner: matches the console warn exactly. -->
     <div class="mb-4 px-3 py-2 bg-red-100 border border-red-400 text-red-800 text-sm rounded">
-      ⚠ A draft is active, but the "Topics" section was not found in it — this page is showing the deployed master. Check the subMenu key spelling in the editor.
+      ⚠ A draft is active, but the "Topics" section was not found in it — this page is showing the deployed master. Check the top-level key spelling in the editor.
     </div>
   {/if}
   

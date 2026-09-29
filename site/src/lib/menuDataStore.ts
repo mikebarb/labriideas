@@ -38,14 +38,19 @@ export const menuPreviewSource = writable<'master' | 'draft'>('master');
 // components downstream historically threw on a missing Topics
 // hierarchy. NEVER let a structurally-broken draft into the store;
 // a public page must degrade to master, not crash.
+//
+// CHANGED (menu.json format v2): the old format wrapped the Topics
+// hierarchy in a subMenus array entry (subMenus.find(s =>
+// s.subMenu === 'Topics').hierarchy). The new format promotes the
+// sections to top-level keys — the hierarchy now lives at
+// menu.Topics.hierarchy. Strictness is UNCHANGED: still exactly one
+// load-bearing check guarding the same historical crash risk
+// (TopicsTree/TopicView reading a missing hierarchy). Deliberately
+// NOT also validating "Playlists"/"Contact L'Abri" — parity with the
+// old gate, which trusted the rest of the menu shape to the editor's
+// schema validation.
 function menuLooksValid(menu: any): boolean {
-  return (
-    !!menu &&
-    Array.isArray(menu.subMenus) &&
-    menu.subMenus.some(
-      (s: any) => s && s.subMenu === 'Topics' && s.hierarchy
-    )
-  );
+  return !!(menu?.Topics?.hierarchy);
 }
 
 // ─── Bootstrap: run once, on first browser evaluation ───

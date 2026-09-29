@@ -1,683 +1,5 @@
 {
-  "featuredLectures": {
-    "items": [
-      {
-        "filename": "What is a __Personal Relationship with God__^ - Jim Paul___2273.mp3",
-        "id": "1",
-        "image": "/images/featured/jim_paul.avif",
-        "speaker": "Jim Paul",
-        "title": "What is a \"Personal Relationship with God\"?",
-        "titleBgColor": "rgb(140,189,171)"
-      },
-      {
-        "filename": "Community as Subversion of Modernity - Andrew Fellows___354.mp3",
-        "id": "2",
-        "image": "/images/featured/andrew_fellows.avif",
-        "speaker": "Andrew Fellows",
-        "title": "Community As A Subversion of Modernity",
-        "titleBgColor": "bg-lime-700"
-      },
-      {
-        "filename": "How We Got the Bible - Andy Patton___834.mp3",
-        "id": "3",
-        "image": "/images/featured/andy_patton.avif",
-        "speaker": "Andy Patton",
-        "title": "How We Got The Bible",
-        "titleBgColor": "bg-sky-400"
-      },
-      {
-        "filename": "Les Miserables - John Hodges___1128.mp3",
-        "id": "4",
-        "image": "/images/featured/john_hodges.avif",
-        "speaker": "John Hodges",
-        "title": "Les Miserables",
-        "titleBgColor": "bg-orange-400"
-      },
-      {
-        "filename": "Imagination, Habit \u0026 Hope in a Pornified Society - Joshua Chestnut___882.mp3",
-        "id": "5",
-        "image": "/images/featured/josuha_chestnut.avif",
-        "speaker": "Josuha Chestnut",
-        "title": "Imagination, Habit, \u0026 Hope in a Pornified Society",
-        "titleBgColor": "bg-amber-300"
-      },
-      {
-        "filename": "Did Yahweh Evolve^ - Sandra Richter.mp3",
-        "id": "6",
-        "image": "/images/featured/sandra_richter.avif",
-        "speaker": "Sandra Richter",
-        "title": "Did Yahweh Evolve?",
-        "titleBgColor": "bg-lime-700"
-      },
-      {
-        "filename": "On Saving Leonardo From the Clutches of Secularism - Nancy Pearcey___1326.mp3",
-        "id": "7",
-        "image": "/images/featured/nancy_pearcey.avif",
-        "speaker": "Nancy Pearcey",
-        "title": "On Saving Leonardo From the Clutches of Secularism",
-        "titleBgColor": "bg-violet-900"
-      },
-      {
-        "filename": "Twenty-Two Things I Have Learned in Life - Donald Drew___2212.mp3",
-        "id": "8",
-        "image": "/images/featured/donald_drew.avif",
-        "speaker": "Donald Drew",
-        "title": "Twenty-Two Things I Have Learned in Life",
-        "titleBgColor": "bg-sky-400"
-      },
-      {
-        "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3",
-        "id": "9",
-        "image": "/images/featured/ellis_potter.avif",
-        "speaker": "Ellis Potter",
-        "title": "Comprehensive Spirituality",
-        "titleBgColor": "bg-emerald-700"
-      },
-      {
-        "filename": "On the Origins of the Gospels - Dirk Jongkind___1328.mp3",
-        "id": "10",
-        "image": "/images/featured/dirk_jongkind.avif",
-        "speaker": "Dirk Jongkind",
-        "title": "On the Origins of the Gospels",
-        "titleBgColor": "bg-orange-700"
-      }
-    ],
-    "sectionImage": "",
-    "sectionSubtitle": "Noteworthy lectures on important topics.",
-    "sectionTitle": "FEATURED LECTURES"
-  },
-  "schaefferCollection": {
-    "people": {
-      "edith": {
-        "intro": "To get started with Edith Schaeffer's lectures, here are a few recommendations:",
-        "items": [
-          {
-            "filename": "True Spirituality - Edith Schaeffer___2190.mp3",
-            "id": "edith-1",
-            "title": "True Spirituality"
-          },
-          {
-            "filename": "Study on Prayer - Edith Schaeffer___1673.mp3",
-            "id": "edith-2",
-            "title": "Study on Prayer"
-          }
-        ],
-        "moreLink": "x",
-        "speakerName": "Edith Schaeffer"
-      },
-      "francis": {
-        "intro": "To get started with Francis Schaeffer's lectures, listen to these:",
-        "items": [
-          {
-            "filename": "Loss Of Absolutes part 2_ What Next^ What Needed^ Two Contents, two Realities - Francis Schaeffer___1182.mp3",
-            "id": "francis-1",
-            "title": "Two Contents, Two Realities"
-          },
-          {
-            "filename": "The Question of Apologetics - Francis Schaeffer___2084.mp3",
-            "id": "francis-2",
-            "title": "The Question of Apologetics"
-          },
-          {
-            "filename": "Art In The Bible - Francis Schaeffer___141.mp3",
-            "id": "francis-3",
-            "title": "Art in the Bible"
-          }
-        ],
-        "moreLink": "x",
-        "speakerName": "Francis Schaeffer"
-      }
-    },
-    "sectionImage": "/images/schaeffer.avif",
-    "sectionSubtitle": "Explore the lectures and sermons of Francis and Edith Schaeffer.",
-    "sectionTitle": "THE SCHAEFFER COLLECTION"
-  },
-  "subMenus": [
-    {
-      "description": "L'Abri has study centres around the world. Each location is a place of community, study, and hospitality. For general enquiries or to arrange a visit, please contact the centre nearest you.",
-      "sites": [
-        {
-          "details": [
-            {
-              "label": "Site",
-              "url": "https://www.labri.org/australia",
-              "value": "www.labri.org/australia"
-            },
-            {
-              "label": "Email",
-              "url": "mailto:australia@labri.org",
-              "value": "australia@labri.org"
-            },
-            {
-              "label": "Phone",
-              "value": "International: +61 2 4658 0227 / Local: 02 4658 0227"
-            },
-            {
-              "label": "Mail",
-              "value": "10 River Rd., Elderslie NSW 2570, Australia"
-            }
-          ],
-          "id": "australia",
-          "title": "xxxAustralian L'Abri"
-        },
-        {
-          "details": [
-            {
-              "label": "Site",
-              "url": "https://www.canadianlabri.org",
-              "value": "www.canadianlabri.org"
-            },
-            {
-              "label": "Podcast",
-              "url": "https://canadianlabri.podbean.com",
-              "value": "canadianlabri.podbean.com"
-            },
-            {
-              "label": "Email",
-              "url": "mailto:canadianlabri@gmail.com",
-              "value": "canadianlabri@gmail.com"
-            },
-            {
-              "label": "Phone",
-              "value": "+1 (250) 652-3355"
-            },
-            {
-              "label": "Mail",
-              "value": "6485 West Saanich Road, Saanichton, BC, V8M 1W8, Canada"
-            }
-          ],
-          "id": "canada",
-          "title": "Canadian L'Abri"
-        },
-        {
-          "details": [
-            {
-              "label": "Site",
-              "url": "https://www.englishlabri.org",
-              "value": "www.englishlabri.org"
-            },
-            {
-              "label": "Podcast",
-              "url": "https://englishlabri.podbean.com",
-              "value": "englishlabri.podbean.com"
-            },
-            {
-              "label": "Email",
-              "url": "mailto:bookings@englishlabri.org",
-              "value": "bookings@englishlabri.org"
-            },
-            {
-              "label": "Office Phone",
-              "value": "+44-1420-538436"
-            },
-            {
-              "label": "Office Fax",
-              "value": "+44-1420-538432"
-            },
-            {
-              "label": "Student Phone",
-              "note": "(please contact students here)",
-              "value": "+44-1420-538329"
-            },
-            {
-              "label": "Mail",
-              "value": "L'Abri Fellowship, The Manor House, Greatham, Liss, Hants GU33 6HF, United Kingdom"
-            }
-          ],
-          "id": "english",
-          "title": "English L'Abri"
-        },
-        {
-          "details": [
-            {
-              "label": "Site",
-              "url": "https://www.labri.nl",
-              "value": "www.labri.nl"
-            },
-            {
-              "label": "Email",
-              "url": "mailto:labri@labri.nl",
-              "value": "labri@labri.nl"
-            },
-            {
-              "label": "Mail - Residential House in Eck en Weil",
-              "value": ""
-            },
-            {
-              "label": "",
-              "value": "Huize Kortenhoeve, Burgemeester Verbrughweg 40, 4024 HR Eck en Weil, The Netherlands"
-            },
-            {
-              "label": "Phone - Eck en Weil",
-              "value": "+31 (0) 344 691914"
-            },
-            {
-              "label": "Mail - City Centre (Utrecht)",
-              "value": " "
-            },
-            {
-              "label": "",
-              "value": "L’Abri Nederland, Kromme Nieuwegracht 90, 3512 HM Utrecht, The Netherlands"
-            },
-            {
-              "label": "Phone - Utrecht",
-              "value": "+31 (0) 30 2316933"
-            }
-          ],
-          "id": "dutch",
-          "title": "Dutch L'Abri"
-        },
-        {
-          "details": [
-            {
-              "label": "Site",
-              "url": "https://www.labri.kr",
-              "value": "www.labri.kr"
-            },
-            {
-              "label": "Email",
-              "url": "mailto:yangyang@labri.kr",
-              "value": "yangyang@labri.kr"
-            },
-            {
-              "label": "Phone",
-              "value": "+82 033-673-0037"
-            },
-            {
-              "label": "Mail",
-              "value": "3025 Guryongnyeong Road, Seomyon, Yang Yang, Kangwondo, 25037, Korea"
-            }
-          ],
-          "id": "korean",
-          "title": "Korean L'Abri"
-        },
-        {
-          "details": [
-            {
-              "label": "Site",
-              "url": "https://www.southboroughlabri.org",
-              "value": "www.southboroughlabri.org"
-            },
-            {
-              "label": "Podcast",
-              "url": "https://labrisouthborough.podbean.com",
-              "value": "labrisouthborough.podbean.com"
-            },
-            {
-              "label": "Email",
-              "url": "mailto:southborough@labri.org",
-              "value": "southborough@labri.org"
-            },
-            {
-              "label": "Phone",
-              "value": "+1 (508) 481-6490"
-            },
-            {
-              "label": "Mail",
-              "value": "49 Lynbrook Rd., Southborough, MA, 01772, USA"
-            }
-          ],
-          "id": "massachusetts",
-          "title": "Massachusetts L'Abri"
-        },
-        {
-          "details": [
-            {
-              "label": "Site",
-              "url": "https://www.labri.org/minn",
-              "value": "www.labri.org/minn"
-            },
-            {
-              "label": "Email",
-              "url": "mailto:rochester@labri.org",
-              "value": "rochester@labri.org"
-            },
-            {
-              "label": "Phone",
-              "value": "+1 (507) 536-0108"
-            },
-            {
-              "label": "Mail",
-              "value": "1465 12th Ave NE, Rochester, MN 55906-4383, USA"
-            }
-          ],
-          "id": "minnesota",
-          "title": "Minnesota L'Abri"
-        },
-        {
-          "details": [
-            {
-              "label": "Site",
-              "url": "https://swisslabri.org",
-              "value": "swisslabri.org"
-            },
-            {
-              "label": "Email",
-              "url": "mailto:swiss@labri.org",
-              "value": "swiss@labri.org"
-            },
-            {
-              "label": "Phone",
-              "value": "+41 24 495 2139"
-            },
-            {
-              "label": "Fax",
-              "value": "+41 24 495 7647"
-            },
-            {
-              "label": "Mail",
-              "value": "Chalet Bellevue, Route de Villars 89, 1884 Huemoz, Switzerland"
-            }
-          ],
-          "id": "swiss",
-          "title": "Swiss L'Abri"
-        },
-        {
-          "details": [
-            {
-              "label": "Site",
-              "url": "https://www.labri.org.br",
-              "value": "www.labri.org.br"
-            },
-            {
-              "label": "Email",
-              "url": "mailto:labri.brasil@gmail.com",
-              "value": "labri.brasil@gmail.com"
-            }
-          ],
-          "id": "brazil",
-          "title": "Brazilian L'Abri"
-        },
-        {
-          "details": [
-            {
-              "label": "Site",
-              "url": "https://www.labri.za.org",
-              "value": "labri.za.org"
-            },
-            {
-              "label": "Email",
-              "url": "mailto:contact@labri.za.org",
-              "value": "contact@labri.za.org"
-            },
-            {
-              "label": "Phone",
-              "value": "+27 738 676864"
-            }
-          ],
-          "id": "south-africa",
-          "title": "South African L'Abri"
-        }
-      ],
-      "subMenu": "Contact L'Abri"
-    },
-    {
-      "albums": [
-        {
-          "backgroundImage": "/images/playlists/how-to-read-the-bible-bg.avif",
-          "description": "A collection of lectures on where the Bible came from, how to read it, and its reliability.",
-          "id": "how-to-read-the-bible",
-          "title": "How to Read the Bible",
-          "titleBgColor": "bg-red-500",
-          "tracks": [
-            {
-              "displayTitle": "The Canon of Scripture part 1: The Biblical Canon",
-              "filename": "The Canon of Scripture part 1_ The Biblical Canon - Richard Bradford___1791.mp3"
-            },
-            {
-              "displayTitle": "The Canon of Scripture part 2: Biblical Authority",
-              "filename": "The Canon of Scripture part 2_ Biblical Authority - Richard Bradford___1792.mp3"
-            },
-            {
-              "displayTitle": "The Canon of Scripture part 3: Biblical Inerrancy",
-              "filename": "The Canon of Scripture part 3_ Biblical Inerrancy - Richard Bradford___1793.mp3"
-            },
-            {
-              "displayTitle": "But Who Do They Say That I AM? - Considering Jesus in the \"Gospels\" That Did not make it into the New Testament",
-              "filename": "__But Who Do They Say That I AM^__ - Considering Jesus in the __Gospels__ That Did not make it into the New Testament - Joshua Chestnut___224.mp3"
-            },
-            {
-              "displayTitle": "Authority \u0026 Canonization of the New Testament",
-              "filename": "Authority \u0026 Canonization of the New Testament - Jerram Barrs___154.mp3"
-            },
-            {
-              "displayTitle": "On the Origins of the Gospels",
-              "filename": "On the Origins of the Gospels - Dirk Jongkind___1328.mp3"
-            },
-            {
-              "displayTitle": "How We Got the Bible",
-              "filename": "How We Got the Bible - Andy Patton___834.mp3"
-            },
-            {
-              "displayTitle": "What is the Bible?",
-              "filename": "What is the Bible^ - Phillip Johnston___2295.mp3"
-            },
-            {
-              "displayTitle": "The Authority of the Bible",
-              "filename": "The authority of the bible - Andrew Fellows.mp3"
-            },
-            {
-              "displayTitle": "The Bible as Inerrant Revelation",
-              "filename": "The Bible as Inerrant Revelation - Jerram Barrs___1749.mp3"
-            },
-            {
-              "displayTitle": "How to Read the Story of Jesus in Every Part of the Bible: An Introduction to Biblical Theology",
-              "filename": "How to Read the Story of Jesus in Every Part of the Bible_ An Introduction to Biblical Theology - Andy Patton___831.mp3"
-            },
-            {
-              "displayTitle": "How To Read The Bible",
-              "filename": "How To Read The Bible - Jerram Barrs___830.mp3"
-            }
-          ]
-        },
-        {
-          "backgroundImage": "/images/playlists/difficult-questions-bg.avif",
-          "description": "Are all religions the same? Is God a construction? Are there any certainties? Here is a collection of L'Abri lectures on the most difficult questions of the day.",
-          "id": "difficult-questions",
-          "title": "Difficult Questions in Theology",
-          "titleBgColor": "bg-green-500",
-          "tracks": [
-            {
-              "displayTitle": "Is God Angry?",
-              "filename": "Is God Angry^ - Wade Bradshaw___961.mp3"
-            },
-            {
-              "displayTitle": "An Historical Defense of the Exodus \u0026 Conquest (Part 1)",
-              "filename": "An Historical Defense of the Exodus \u0026 Conquest (Part 1) - Sandra Richter___98.mp3"
-            },
-            {
-              "displayTitle": "Horrible Histories: Is The Destruction Of The Canaanites A Moral Problem?",
-              "filename": "Horrible Histories_ Is The Destruction Of The Canaanites A Moral Problem^ - Stephen Lloyd___793.mp3"
-            },
-            {
-              "displayTitle": "Did Yahweh Evolve",
-              "filename": "Did Yahweh Evolve^ - Sandra Richter.mp3"
-            },
-            {
-              "displayTitle": "Knowing the Inaudible, Invisible, Untouchable God",
-              "filename": "Knowing the Inaudible, Invisible, Untouchable God - Richard Winter___1092.mp3"
-            },
-            {
-              "displayTitle": "What is the Biblical Perspective on Slavery?",
-              "filename": "What is the Biblical Perspective on Slavery^ - Dick Keyes___2296.mp3"
-            },
-            {
-              "displayTitle": "Does God Change His Mind?",
-              "filename": "Does God Change His Mind^ - Dick Keyes___515.mp3"
-            },
-            {
-              "displayTitle": "The Sovereignty of God \u0026 the Responsibility of Human Beings",
-              "filename": "The Sovereignty of God \u0026 the Responsibility of Human Beings - Dick Keyes___2113.mp3"
-            },
-            {
-              "displayTitle": "Am I only a Christian because my Parents were?",
-              "filename": "Am I only a Christian because my Parents were^ - Edith Reitsema___89.mp3"
-            },
-            {
-              "displayTitle": "Is God a Construction?",
-              "filename": "Is God a Construction^ - Dave Friedrich___958.mp3"
-            },
-            {
-              "displayTitle": "Who's On Top Of The Mountain - Are There Many Ways To God?",
-              "filename": "Who__s On Top Of The Mountain - Are There Many Ways To God^ - Wade Bradshaw___2341.mp3"
-            }
-          ]
-        },
-        {
-          "backgroundImage": "/images/playlists/men-women-bible-bg.avif",
-          "description": "For many today, the Bible's view of gender is a hot-button issue. Collected here are lectures on some of the most controversial passages on the genders as well as an overall framework for answering questions that often come up.",
-          "id": "men-women-bible",
-          "title": "Men, Women, and the Bible",
-          "titleBgColor": "bg-sky-500",
-          "tracks": [
-            {
-              "displayTitle": "Man, Woman \u0026 God: Church \u0026 Society - part 1",
-              "filename": "Man, Woman \u0026 God_ Church \u0026 Society - part 1 - Jerram Barrs___1200.mp3"
-            },
-            {
-              "displayTitle": "Man, Woman \u0026 God: Church \u0026 Society - part 2",
-              "filename": "Man, Woman \u0026 God_ Church \u0026 Society - part 2 - Jerram Barrs___1201.mp3"
-            },
-            {
-              "displayTitle": "Man, Woman \u0026 God: Church \u0026 Society - part 3",
-              "filename": "Man, Woman \u0026 God_ Church \u0026 Society - part 3 - Jerram Barrs___1202.mp3"
-            },
-            {
-              "displayTitle": "Men \u0026 Women In The Bible: Controversial Texts",
-              "filename": "Men \u0026 Women In The Bible_ Controversial Texts - Mardi Keyes___1229.mp3"
-            },
-            {
-              "displayTitle": "Biblical Overview of Women in Leadership",
-              "filename": "Biblical Overview of Women in Leadership - Mardi Keyes___197.mp3"
-            },
-            {
-              "displayTitle": "The Bible's View of Women",
-              "filename": "The Bible__s View of Women - Jerram Barrs___1762.mp3"
-            },
-            {
-              "displayTitle": "Sexual Freedom",
-              "filename": "Sexual Freedom - Mardi Keyes___1616.mp3"
-            },
-            {
-              "displayTitle": "Bodies with Meaning_ Christians \u0026 Sex in the First \u0026 the Twenty-first Century",
-              "filename": "Bodies with Meaning_ Christians \u0026 Sex in the First \u0026 the Twenty-first Century - Phillip Johnston___209.mp3"
-            }
-          ]
-        },
-        {
-          "backgroundImage": "/images/playlists/navigating-relationships-bg.avif",
-          "description": "What does it mean to be alone? To be with others? To be a friend? To be married? These lectures talk about the many questions that come up as we dance the steps of relationship.",
-          "id": "navigating-relationships",
-          "title": "Navigating Relationships",
-          "titleBgColor": "bg-orange-600",
-          "tracks": [
-            {
-              "displayTitle": "Marriage Redeemed",
-              "filename": "Marriage Redeemed - Mardi Keyes___1214.mp3"
-            },
-            {
-              "displayTitle": "Subverting Modernity: How Community Dismantles Practical Atheism",
-              "filename": "Subverting Modernity_ How Community Dismantles Practical Atheism - Jeff Adams___1675.mp3"
-            },
-            {
-              "displayTitle": "Making Room For One Another: Practising Active Passivity In Our Relationships",
-              "filename": "Making Room For One Another_ Practising Active Passivity In Our Relationships - Jim Paul___1197.mp3"
-            },
-            {
-              "displayTitle": "The Ethics of Divorce \u0026 Remarriage",
-              "filename": "The Ethics of Divorce \u0026 Remarriage - Dick Keyes___1891.mp3"
-            },
-            {
-              "displayTitle": "Moving Out \u0026 Moving On: Why It's Important to Run Away from Home",
-              "filename": "Moving Out \u0026 Moving On_ Why It__s Important to Run Away from Home - Mary Frances Giles___1265.mp3"
-            },
-            {
-              "displayTitle": "Love for Humanity \u0026 Love for Humans",
-              "filename": "It__s People I Can__t Stand_ Love for Humanity \u0026 Love for Humans - Ben Keyes___985.mp3"
-            },
-            {
-              "displayTitle": "Reflections on the Contemporary Search for Community",
-              "filename": "Reflections on the Contemporary Search for Community - Jock McGregor___1511.mp3"
-            },
-            {
-              "displayTitle": "In Christ, Alone? Recovering a Christian Vision for the Single Life",
-              "filename": "In Christ, Alone^ Recovering a Christian Vision for the Single Life - Phillip Johnston___888.mp3"
-            },
-            {
-              "displayTitle": "Singleness",
-              "filename": "Singleness \u0026 Sexuality - Jerram Barrs___1629.mp3"
-            }
-          ]
-        },
-        {
-          "backgroundImage": "/images/playlists/litature-bg.avif",
-          "description": "If Christ is Lord of all of life, the domain of the written word should be the concern of Christ's followers. Here is a collection of lectures on Flannery O'Connor, T. S. Eliot, Tolkien, Rowling, and more.",
-          "id": "literature-poetry",
-          "title": "Literature and Poetry",
-          "titleBgColor": "bg-amber-400",
-          "tracks": [
-            {
-              "displayTitle": "Tolkien, Grace \u0026 \"The Lord of the Rings\"",
-              "filename": "Tolkien, Grace \u0026 __The Lord of the Rings__ - Jerram Barrs___2164.mp3"
-            },
-            {
-              "displayTitle": "T.S. Eliot's \"Four Quartets\"",
-              "filename": "T.S. Eliot__s __Four Quartets__ - Tom Howard___1688.mp3"
-            },
-            {
-              "displayTitle": "Behind the Scenes: The Life \u0026 Letters of Dorothy L Sayers",
-              "filename": "Behind the Scenes_ The Life \u0026 Letters of Dorothy L Sayers - Dawn Merz___174.mp3"
-            },
-            {
-              "displayTitle": "How People Change: The Transformation Of Character In C.S. Lewis' \"the Chronicles Of Narnia\"",
-              "filename": "How People Change_ The Transformation Of Character In C.S. Lewis__ __the Chronicles Of Narnia__ - Gavin McGrath___819.mp3"
-            },
-            {
-              "displayTitle": "Comic. Tragic. Brutal. The Life \u0026 Writings of Flannery O'Connor",
-              "filename": "Comic. Tragic. Brutal. The Life \u0026 Writings of Flannery O__Connor - Clarke Scheibe___340.mp3"
-            },
-            {
-              "displayTitle": "Poetry \u0026 Prayer",
-              "filename": "Poetry \u0026 Prayer - Anna Friedrich___1391.mp3"
-            },
-            {
-              "displayTitle": "Jane Austen",
-              "filename": "Jane Austen - Jerram Barrs___992.mp3"
-            },
-            {
-              "displayTitle": "Echoes of Eden: Looking at Tolkien \u0026 Lewis",
-              "filename": "Echoes of Eden_ Looking at Tolkien \u0026 Lewis - Jerram Barrs___533.mp3"
-            },
-            {
-              "displayTitle": "Street Ballads - A reflection on Marilynne Robinson's Gilead Trilogy",
-              "filename": "Street Ballads - A reflection on Marilynne Robinson__s Gilead Trilogy - Andrew Jones___1670.mp3"
-            },
-            {
-              "displayTitle": "Order, Chaos, Poetry \u0026 God",
-              "filename": "Order, Chaos, Poetry \u0026 God - Luci Shaw___1335.mp3"
-            },
-            {
-              "displayTitle": "World of Harry Potter \u0026 the Evangelical Muggles",
-              "filename": "World of Harry Potter \u0026 the Evangelical Muggles - Jerram Barrs___2376.mp3"
-            },
-            {
-              "displayTitle": "An Introduction to George MacDonald",
-              "filename": "An Introduction to George MacDonald - Olga Lukmanova___102.mp3"
-            }
-          ]
-        },
-        {
-          "backgroundImage": "/images/playlists/suggest-bg.avif",
-          "description": "Do you want to put your own playlist together? Send us your lecture list.",
-          "id": "suggest-playlist",
-          "linkToForm": "https://labriideaslibrary.typeform.com/to/ppsjl6",
-          "title": "Suggest a Playlist",
-          "titleBgColor": "bg-zinc-400"
-        }
-      ],
-      "subMenu": "Playlists"
-    },
-    {
+  "Topics": {
       "hierarchy": {
         "Culture and Society": {
           "Arts": {
@@ -1352,8 +674,681 @@
             ]
           }
         }
+      }
+  },
+  "featuredLectures": {
+    "items": [
+      {
+        "filename": "What is a __Personal Relationship with God__^ - Jim Paul___2273.mp3",
+        "id": "1",
+        "image": "/images/featured/jim_paul.avif",
+        "speaker": "Jim Paul",
+        "title": "What is a \"Personal Relationship with God\"?",
+        "titleBgColor": "rgb(140,189,171)"
       },
-      "subMenu": "Topics"
-    }
-  ]
+      {
+        "filename": "Community as Subversion of Modernity - Andrew Fellows___354.mp3",
+        "id": "2",
+        "image": "/images/featured/andrew_fellows.avif",
+        "speaker": "Andrew Fellows",
+        "title": "Community As A Subversion of Modernity",
+        "titleBgColor": "bg-lime-700"
+      },
+      {
+        "filename": "How We Got the Bible - Andy Patton___834.mp3",
+        "id": "3",
+        "image": "/images/featured/andy_patton.avif",
+        "speaker": "Andy Patton",
+        "title": "How We Got The Bible",
+        "titleBgColor": "bg-sky-400"
+      },
+      {
+        "filename": "Les Miserables - John Hodges___1128.mp3",
+        "id": "4",
+        "image": "/images/featured/john_hodges.avif",
+        "speaker": "John Hodges",
+        "title": "Les Miserables",
+        "titleBgColor": "bg-orange-400"
+      },
+      {
+        "filename": "Imagination, Habit \u0026 Hope in a Pornified Society - Joshua Chestnut___882.mp3",
+        "id": "5",
+        "image": "/images/featured/josuha_chestnut.avif",
+        "speaker": "Josuha Chestnut",
+        "title": "Imagination, Habit, \u0026 Hope in a Pornified Society",
+        "titleBgColor": "bg-amber-300"
+      },
+      {
+        "filename": "Did Yahweh Evolve^ - Sandra Richter.mp3",
+        "id": "6",
+        "image": "/images/featured/sandra_richter.avif",
+        "speaker": "Sandra Richter",
+        "title": "Did Yahweh Evolve?",
+        "titleBgColor": "bg-lime-700"
+      },
+      {
+        "filename": "On Saving Leonardo From the Clutches of Secularism - Nancy Pearcey___1326.mp3",
+        "id": "7",
+        "image": "/images/featured/nancy_pearcey.avif",
+        "speaker": "Nancy Pearcey",
+        "title": "On Saving Leonardo From the Clutches of Secularism",
+        "titleBgColor": "bg-violet-900"
+      },
+      {
+        "filename": "Twenty-Two Things I Have Learned in Life - Donald Drew___2212.mp3",
+        "id": "8",
+        "image": "/images/featured/donald_drew.avif",
+        "speaker": "Donald Drew",
+        "title": "Twenty-Two Things I Have Learned in Life",
+        "titleBgColor": "bg-sky-400"
+      },
+      {
+        "filename": "Comprehensive Spirituality - Ellis Potter___360.mp3",
+        "id": "9",
+        "image": "/images/featured/ellis_potter.avif",
+        "speaker": "Ellis Potter",
+        "title": "Comprehensive Spirituality",
+        "titleBgColor": "bg-emerald-700"
+      },
+      {
+        "filename": "On the Origins of the Gospels - Dirk Jongkind___1328.mp3",
+        "id": "10",
+        "image": "/images/featured/dirk_jongkind.avif",
+        "speaker": "Dirk Jongkind",
+        "title": "On the Origins of the Gospels",
+        "titleBgColor": "bg-orange-700"
+      }
+    ],
+    "sectionImage": "",
+    "sectionSubtitle": "Noteworthy lectures on important topics.",
+    "sectionTitle": "FEATURED LECTURES"
+  },
+   "Playlists": {
+      "albums": [
+        {
+          "backgroundImage": "/images/playlists/how-to-read-the-bible-bg.avif",
+          "description": "A collection of lectures on where the Bible came from, how to read it, and its reliability.",
+          "id": "how-to-read-the-bible",
+          "title": "How to Read the Bible",
+          "titleBgColor": "bg-red-500",
+          "tracks": [
+            {
+              "displayTitle": "The Canon of Scripture part 1: The Biblical Canon",
+              "filename": "The Canon of Scripture part 1_ The Biblical Canon - Richard Bradford___1791.mp3"
+            },
+            {
+              "displayTitle": "The Canon of Scripture part 2: Biblical Authority",
+              "filename": "The Canon of Scripture part 2_ Biblical Authority - Richard Bradford___1792.mp3"
+            },
+            {
+              "displayTitle": "The Canon of Scripture part 3: Biblical Inerrancy",
+              "filename": "The Canon of Scripture part 3_ Biblical Inerrancy - Richard Bradford___1793.mp3"
+            },
+            {
+              "displayTitle": "But Who Do They Say That I AM? - Considering Jesus in the \"Gospels\" That Did not make it into the New Testament",
+              "filename": "__But Who Do They Say That I AM^__ - Considering Jesus in the __Gospels__ That Did not make it into the New Testament - Joshua Chestnut___224.mp3"
+            },
+            {
+              "displayTitle": "Authority \u0026 Canonization of the New Testament",
+              "filename": "Authority \u0026 Canonization of the New Testament - Jerram Barrs___154.mp3"
+            },
+            {
+              "displayTitle": "On the Origins of the Gospels",
+              "filename": "On the Origins of the Gospels - Dirk Jongkind___1328.mp3"
+            },
+            {
+              "displayTitle": "How We Got the Bible",
+              "filename": "How We Got the Bible - Andy Patton___834.mp3"
+            },
+            {
+              "displayTitle": "What is the Bible?",
+              "filename": "What is the Bible^ - Phillip Johnston___2295.mp3"
+            },
+            {
+              "displayTitle": "The Authority of the Bible",
+              "filename": "The authority of the bible - Andrew Fellows.mp3"
+            },
+            {
+              "displayTitle": "The Bible as Inerrant Revelation",
+              "filename": "The Bible as Inerrant Revelation - Jerram Barrs___1749.mp3"
+            },
+            {
+              "displayTitle": "How to Read the Story of Jesus in Every Part of the Bible: An Introduction to Biblical Theology",
+              "filename": "How to Read the Story of Jesus in Every Part of the Bible_ An Introduction to Biblical Theology - Andy Patton___831.mp3"
+            },
+            {
+              "displayTitle": "How To Read The Bible",
+              "filename": "How To Read The Bible - Jerram Barrs___830.mp3"
+            }
+          ]
+        },
+        {
+          "backgroundImage": "/images/playlists/difficult-questions-bg.avif",
+          "description": "Are all religions the same? Is God a construction? Are there any certainties? Here is a collection of L'Abri lectures on the most difficult questions of the day.",
+          "id": "difficult-questions",
+          "title": "Difficult Questions in Theology",
+          "titleBgColor": "bg-green-500",
+          "tracks": [
+            {
+              "displayTitle": "Is God Angry?",
+              "filename": "Is God Angry^ - Wade Bradshaw___961.mp3"
+            },
+            {
+              "displayTitle": "An Historical Defense of the Exodus \u0026 Conquest (Part 1)",
+              "filename": "An Historical Defense of the Exodus \u0026 Conquest (Part 1) - Sandra Richter___98.mp3"
+            },
+            {
+              "displayTitle": "Horrible Histories: Is The Destruction Of The Canaanites A Moral Problem?",
+              "filename": "Horrible Histories_ Is The Destruction Of The Canaanites A Moral Problem^ - Stephen Lloyd___793.mp3"
+            },
+            {
+              "displayTitle": "Did Yahweh Evolve",
+              "filename": "Did Yahweh Evolve^ - Sandra Richter.mp3"
+            },
+            {
+              "displayTitle": "Knowing the Inaudible, Invisible, Untouchable God",
+              "filename": "Knowing the Inaudible, Invisible, Untouchable God - Richard Winter___1092.mp3"
+            },
+            {
+              "displayTitle": "What is the Biblical Perspective on Slavery?",
+              "filename": "What is the Biblical Perspective on Slavery^ - Dick Keyes___2296.mp3"
+            },
+            {
+              "displayTitle": "Does God Change His Mind?",
+              "filename": "Does God Change His Mind^ - Dick Keyes___515.mp3"
+            },
+            {
+              "displayTitle": "The Sovereignty of God \u0026 the Responsibility of Human Beings",
+              "filename": "The Sovereignty of God \u0026 the Responsibility of Human Beings - Dick Keyes___2113.mp3"
+            },
+            {
+              "displayTitle": "Am I only a Christian because my Parents were?",
+              "filename": "Am I only a Christian because my Parents were^ - Edith Reitsema___89.mp3"
+            },
+            {
+              "displayTitle": "Is God a Construction?",
+              "filename": "Is God a Construction^ - Dave Friedrich___958.mp3"
+            },
+            {
+              "displayTitle": "Who's On Top Of The Mountain - Are There Many Ways To God?",
+              "filename": "Who__s On Top Of The Mountain - Are There Many Ways To God^ - Wade Bradshaw___2341.mp3"
+            }
+          ]
+        },
+        {
+          "backgroundImage": "/images/playlists/men-women-bible-bg.avif",
+          "description": "For many today, the Bible's view of gender is a hot-button issue. Collected here are lectures on some of the most controversial passages on the genders as well as an overall framework for answering questions that often come up.",
+          "id": "men-women-bible",
+          "title": "Men, Women, and the Bible",
+          "titleBgColor": "bg-sky-500",
+          "tracks": [
+            {
+              "displayTitle": "Man, Woman \u0026 God: Church \u0026 Society - part 1",
+              "filename": "Man, Woman \u0026 God_ Church \u0026 Society - part 1 - Jerram Barrs___1200.mp3"
+            },
+            {
+              "displayTitle": "Man, Woman \u0026 God: Church \u0026 Society - part 2",
+              "filename": "Man, Woman \u0026 God_ Church \u0026 Society - part 2 - Jerram Barrs___1201.mp3"
+            },
+            {
+              "displayTitle": "Man, Woman \u0026 God: Church \u0026 Society - part 3",
+              "filename": "Man, Woman \u0026 God_ Church \u0026 Society - part 3 - Jerram Barrs___1202.mp3"
+            },
+            {
+              "displayTitle": "Men \u0026 Women In The Bible: Controversial Texts",
+              "filename": "Men \u0026 Women In The Bible_ Controversial Texts - Mardi Keyes___1229.mp3"
+            },
+            {
+              "displayTitle": "Biblical Overview of Women in Leadership",
+              "filename": "Biblical Overview of Women in Leadership - Mardi Keyes___197.mp3"
+            },
+            {
+              "displayTitle": "The Bible's View of Women",
+              "filename": "The Bible__s View of Women - Jerram Barrs___1762.mp3"
+            },
+            {
+              "displayTitle": "Sexual Freedom",
+              "filename": "Sexual Freedom - Mardi Keyes___1616.mp3"
+            },
+            {
+              "displayTitle": "Bodies with Meaning_ Christians \u0026 Sex in the First \u0026 the Twenty-first Century",
+              "filename": "Bodies with Meaning_ Christians \u0026 Sex in the First \u0026 the Twenty-first Century - Phillip Johnston___209.mp3"
+            }
+          ]
+        },
+        {
+          "backgroundImage": "/images/playlists/navigating-relationships-bg.avif",
+          "description": "What does it mean to be alone? To be with others? To be a friend? To be married? These lectures talk about the many questions that come up as we dance the steps of relationship.",
+          "id": "navigating-relationships",
+          "title": "Navigating Relationships",
+          "titleBgColor": "bg-orange-600",
+          "tracks": [
+            {
+              "displayTitle": "Marriage Redeemed",
+              "filename": "Marriage Redeemed - Mardi Keyes___1214.mp3"
+            },
+            {
+              "displayTitle": "Subverting Modernity: How Community Dismantles Practical Atheism",
+              "filename": "Subverting Modernity_ How Community Dismantles Practical Atheism - Jeff Adams___1675.mp3"
+            },
+            {
+              "displayTitle": "Making Room For One Another: Practising Active Passivity In Our Relationships",
+              "filename": "Making Room For One Another_ Practising Active Passivity In Our Relationships - Jim Paul___1197.mp3"
+            },
+            {
+              "displayTitle": "The Ethics of Divorce \u0026 Remarriage",
+              "filename": "The Ethics of Divorce \u0026 Remarriage - Dick Keyes___1891.mp3"
+            },
+            {
+              "displayTitle": "Moving Out \u0026 Moving On: Why It's Important to Run Away from Home",
+              "filename": "Moving Out \u0026 Moving On_ Why It__s Important to Run Away from Home - Mary Frances Giles___1265.mp3"
+            },
+            {
+              "displayTitle": "Love for Humanity \u0026 Love for Humans",
+              "filename": "It__s People I Can__t Stand_ Love for Humanity \u0026 Love for Humans - Ben Keyes___985.mp3"
+            },
+            {
+              "displayTitle": "Reflections on the Contemporary Search for Community",
+              "filename": "Reflections on the Contemporary Search for Community - Jock McGregor___1511.mp3"
+            },
+            {
+              "displayTitle": "In Christ, Alone? Recovering a Christian Vision for the Single Life",
+              "filename": "In Christ, Alone^ Recovering a Christian Vision for the Single Life - Phillip Johnston___888.mp3"
+            },
+            {
+              "displayTitle": "Singleness",
+              "filename": "Singleness \u0026 Sexuality - Jerram Barrs___1629.mp3"
+            }
+          ]
+        },
+        {
+          "backgroundImage": "/images/playlists/litature-bg.avif",
+          "description": "If Christ is Lord of all of life, the domain of the written word should be the concern of Christ's followers. Here is a collection of lectures on Flannery O'Connor, T. S. Eliot, Tolkien, Rowling, and more.",
+          "id": "literature-poetry",
+          "title": "Literature and Poetry",
+          "titleBgColor": "bg-amber-400",
+          "tracks": [
+            {
+              "displayTitle": "Tolkien, Grace \u0026 \"The Lord of the Rings\"",
+              "filename": "Tolkien, Grace \u0026 __The Lord of the Rings__ - Jerram Barrs___2164.mp3"
+            },
+            {
+              "displayTitle": "T.S. Eliot's \"Four Quartets\"",
+              "filename": "T.S. Eliot__s __Four Quartets__ - Tom Howard___1688.mp3"
+            },
+            {
+              "displayTitle": "Behind the Scenes: The Life \u0026 Letters of Dorothy L Sayers",
+              "filename": "Behind the Scenes_ The Life \u0026 Letters of Dorothy L Sayers - Dawn Merz___174.mp3"
+            },
+            {
+              "displayTitle": "How People Change: The Transformation Of Character In C.S. Lewis' \"the Chronicles Of Narnia\"",
+              "filename": "How People Change_ The Transformation Of Character In C.S. Lewis__ __the Chronicles Of Narnia__ - Gavin McGrath___819.mp3"
+            },
+            {
+              "displayTitle": "Comic. Tragic. Brutal. The Life \u0026 Writings of Flannery O'Connor",
+              "filename": "Comic. Tragic. Brutal. The Life \u0026 Writings of Flannery O__Connor - Clarke Scheibe___340.mp3"
+            },
+            {
+              "displayTitle": "Poetry \u0026 Prayer",
+              "filename": "Poetry \u0026 Prayer - Anna Friedrich___1391.mp3"
+            },
+            {
+              "displayTitle": "Jane Austen",
+              "filename": "Jane Austen - Jerram Barrs___992.mp3"
+            },
+            {
+              "displayTitle": "Echoes of Eden: Looking at Tolkien \u0026 Lewis",
+              "filename": "Echoes of Eden_ Looking at Tolkien \u0026 Lewis - Jerram Barrs___533.mp3"
+            },
+            {
+              "displayTitle": "Street Ballads - A reflection on Marilynne Robinson's Gilead Trilogy",
+              "filename": "Street Ballads - A reflection on Marilynne Robinson__s Gilead Trilogy - Andrew Jones___1670.mp3"
+            },
+            {
+              "displayTitle": "Order, Chaos, Poetry \u0026 God",
+              "filename": "Order, Chaos, Poetry \u0026 God - Luci Shaw___1335.mp3"
+            },
+            {
+              "displayTitle": "World of Harry Potter \u0026 the Evangelical Muggles",
+              "filename": "World of Harry Potter \u0026 the Evangelical Muggles - Jerram Barrs___2376.mp3"
+            },
+            {
+              "displayTitle": "An Introduction to George MacDonald",
+              "filename": "An Introduction to George MacDonald - Olga Lukmanova___102.mp3"
+            }
+          ]
+        },
+        {
+          "backgroundImage": "/images/playlists/suggest-bg.avif",
+          "description": "Do you want to put your own playlist together? Send us your lecture list.",
+          "id": "suggest-playlist",
+          "linkToForm": "https://labriideaslibrary.typeform.com/to/ppsjl6",
+          "title": "Suggest a Playlist",
+          "titleBgColor": "bg-zinc-400"
+        }
+      ]
+  },
+  "schaefferCollection": {
+    "people": {
+      "edith": {
+        "intro": "To get started with Edith Schaeffer's lectures, here are a few recommendations:",
+        "items": [
+          {
+            "filename": "True Spirituality - Edith Schaeffer___2190.mp3",
+            "id": "edith-1",
+            "title": "True Spirituality"
+          },
+          {
+            "filename": "Study on Prayer - Edith Schaeffer___1673.mp3",
+            "id": "edith-2",
+            "title": "Study on Prayer"
+          }
+        ],
+        "moreLink": "x",
+        "speakerName": "Edith Schaeffer"
+      },
+      "francis": {
+        "intro": "To get started with Francis Schaeffer's lectures, listen to these:",
+        "items": [
+          {
+            "filename": "Loss Of Absolutes part 2_ What Next^ What Needed^ Two Contents, two Realities - Francis Schaeffer___1182.mp3",
+            "id": "francis-1",
+            "title": "Two Contents, Two Realities"
+          },
+          {
+            "filename": "The Question of Apologetics - Francis Schaeffer___2084.mp3",
+            "id": "francis-2",
+            "title": "The Question of Apologetics"
+          },
+          {
+            "filename": "Art In The Bible - Francis Schaeffer___141.mp3",
+            "id": "francis-3",
+            "title": "Art in the Bible"
+          }
+        ],
+        "moreLink": "x",
+        "speakerName": "Francis Schaeffer"
+      }
+    },
+    "sectionImage": "/images/schaeffer.avif",
+    "sectionSubtitle": "Explore the lectures and sermons of Francis and Edith Schaeffer.",
+    "sectionTitle": "THE SCHAEFFER COLLECTION"
+  },
+  "Contact L'Abri": {
+    "description": "L'Abri has study centres around the world. Each location is a place of community, study, and hospitality. For general enquiries or to arrange a visit, please contact the centre nearest you.",
+    "sites": [
+      {
+        "details": [
+          {
+            "label": "Site",
+            "url": "https://www.labri.org/australia",
+            "value": "www.labri.org/australia"
+          },
+          {
+            "label": "Email",
+            "url": "mailto:australia@labri.org",
+            "value": "australia@labri.org"
+          },
+          {
+            "label": "Phone",
+            "value": "International: +61 2 4658 0227 / Local: 02 4658 0227"
+          },
+          {
+            "label": "Mail",
+            "value": "10 River Rd., Elderslie NSW 2570, Australia"
+          }
+        ],
+        "id": "australia",
+        "title": "xxxAustralian L'Abri"
+      },
+      {
+        "details": [
+          {
+            "label": "Site",
+            "url": "https://www.canadianlabri.org",
+            "value": "www.canadianlabri.org"
+          },
+          {
+            "label": "Podcast",
+            "url": "https://canadianlabri.podbean.com",
+            "value": "canadianlabri.podbean.com"
+          },
+          {
+            "label": "Email",
+            "url": "mailto:canadianlabri@gmail.com",
+            "value": "canadianlabri@gmail.com"
+          },
+          {
+            "label": "Phone",
+            "value": "+1 (250) 652-3355"
+          },
+          {
+            "label": "Mail",
+            "value": "6485 West Saanich Road, Saanichton, BC, V8M 1W8, Canada"
+          }
+        ],
+        "id": "canada",
+        "title": "Canadian L'Abri"
+      },
+      {
+        "details": [
+          {
+            "label": "Site",
+            "url": "https://www.englishlabri.org",
+            "value": "www.englishlabri.org"
+          },
+          {
+            "label": "Podcast",
+            "url": "https://englishlabri.podbean.com",
+            "value": "englishlabri.podbean.com"
+          },
+          {
+            "label": "Email",
+            "url": "mailto:bookings@englishlabri.org",
+            "value": "bookings@englishlabri.org"
+          },
+          {
+            "label": "Office Phone",
+            "value": "+44-1420-538436"
+          },
+          {
+            "label": "Office Fax",
+            "value": "+44-1420-538432"
+          },
+          {
+            "label": "Student Phone",
+            "note": "(please contact students here)",
+            "value": "+44-1420-538329"
+          },
+          {
+            "label": "Mail",
+            "value": "L'Abri Fellowship, The Manor House, Greatham, Liss, Hants GU33 6HF, United Kingdom"
+          }
+        ],
+        "id": "english",
+        "title": "English L'Abri"
+      },
+      {
+        "details": [
+          {
+            "label": "Site",
+            "url": "https://www.labri.nl",
+            "value": "www.labri.nl"
+          },
+          {
+            "label": "Email",
+            "url": "mailto:labri@labri.nl",
+            "value": "labri@labri.nl"
+          },
+          {
+            "label": "Mail - Residential House in Eck en Weil",
+            "value": ""
+          },
+          {
+            "label": "",
+            "value": "Huize Kortenhoeve, Burgemeester Verbrughweg 40, 4024 HR Eck en Weil, The Netherlands"
+          },
+          {
+            "label": "Phone - Eck en Weil",
+            "value": "+31 (0) 344 691914"
+          },
+          {
+            "label": "Mail - City Centre (Utrecht)",
+            "value": " "
+          },
+          {
+            "label": "",
+            "value": "L’Abri Nederland, Kromme Nieuwegracht 90, 3512 HM Utrecht, The Netherlands"
+          },
+          {
+            "label": "Phone - Utrecht",
+            "value": "+31 (0) 30 2316933"
+          }
+        ],
+        "id": "dutch",
+        "title": "Dutch L'Abri"
+      },
+      {
+        "details": [
+          {
+            "label": "Site",
+            "url": "https://www.labri.kr",
+            "value": "www.labri.kr"
+          },
+          {
+            "label": "Email",
+            "url": "mailto:yangyang@labri.kr",
+            "value": "yangyang@labri.kr"
+          },
+          {
+            "label": "Phone",
+            "value": "+82 033-673-0037"
+          },
+          {
+            "label": "Mail",
+            "value": "3025 Guryongnyeong Road, Seomyon, Yang Yang, Kangwondo, 25037, Korea"
+          }
+        ],
+        "id": "korean",
+        "title": "Korean L'Abri"
+      },
+      {
+        "details": [
+          {
+            "label": "Site",
+            "url": "https://www.southboroughlabri.org",
+            "value": "www.southboroughlabri.org"
+          },
+          {
+            "label": "Podcast",
+            "url": "https://labrisouthborough.podbean.com",
+            "value": "labrisouthborough.podbean.com"
+          },
+          {
+            "label": "Email",
+            "url": "mailto:southborough@labri.org",
+            "value": "southborough@labri.org"
+          },
+          {
+            "label": "Phone",
+            "value": "+1 (508) 481-6490"
+          },
+          {
+            "label": "Mail",
+            "value": "49 Lynbrook Rd., Southborough, MA, 01772, USA"
+          }
+        ],
+        "id": "massachusetts",
+        "title": "Massachusetts L'Abri"
+      },
+      {
+        "details": [
+          {
+            "label": "Site",
+            "url": "https://www.labri.org/minn",
+            "value": "www.labri.org/minn"
+          },
+          {
+            "label": "Email",
+            "url": "mailto:rochester@labri.org",
+            "value": "rochester@labri.org"
+          },
+          {
+            "label": "Phone",
+            "value": "+1 (507) 536-0108"
+          },
+          {
+            "label": "Mail",
+            "value": "1465 12th Ave NE, Rochester, MN 55906-4383, USA"
+          }
+        ],
+        "id": "minnesota",
+        "title": "Minnesota L'Abri"
+      },
+      {
+        "details": [
+          {
+            "label": "Site",
+            "url": "https://swisslabri.org",
+            "value": "swisslabri.org"
+          },
+          {
+            "label": "Email",
+            "url": "mailto:swiss@labri.org",
+            "value": "swiss@labri.org"
+          },
+          {
+            "label": "Phone",
+            "value": "+41 24 495 2139"
+          },
+          {
+            "label": "Fax",
+            "value": "+41 24 495 7647"
+          },
+          {
+            "label": "Mail",
+            "value": "Chalet Bellevue, Route de Villars 89, 1884 Huemoz, Switzerland"
+          }
+        ],
+        "id": "swiss",
+        "title": "Swiss L'Abri"
+      },
+      {
+        "details": [
+          {
+            "label": "Site",
+            "url": "https://www.labri.org.br",
+            "value": "www.labri.org.br"
+          },
+          {
+            "label": "Email",
+            "url": "mailto:labri.brasil@gmail.com",
+            "value": "labri.brasil@gmail.com"
+          }
+        ],
+        "id": "brazil",
+        "title": "Brazilian L'Abri"
+      },
+      {
+        "details": [
+          {
+            "label": "Site",
+            "url": "https://www.labri.za.org",
+            "value": "labri.za.org"
+          },
+          {
+            "label": "Email",
+            "url": "mailto:contact@labri.za.org",
+            "value": "contact@labri.za.org"
+          },
+          {
+            "label": "Phone",
+            "value": "+27 738 676864"
+          }
+        ],
+        "id": "south-africa",
+        "title": "South African L'Abri"
+      }
+    ]
+  }
 }

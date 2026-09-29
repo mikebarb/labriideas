@@ -26,8 +26,10 @@ export async function getStaticPaths(): Promise<TopicRoute[]> {
   // FIXED: data extraction lives INSIDE getStaticPaths. Astro evaluates
   // this function in its own module scope during the build — variables
   // defined elsewhere in the frontmatter are NOT visible to it.
-  const topicsSubMenu: any = menuData.subMenus.find((s: any) => s.subMenu === 'Topics') || {};
-  //const hierarchy: Record<string, Record<string, any[]>> = topicsSubMenu.hierarchy || {};
+  // CHANGED (menu.json format v2): Topics was promoted from a subMenus
+  // array entry to a top-level key — the find() becomes a direct
+  // property access.
+  const topicsSubMenu: any = menuData.Topics || {};
   // CHANGED: hierarchy values are now sub-category NODES ({ lectures, featured? }),
   // not bare leaf arrays.
   const hierarchy: Record<string, Record<string, any>> = topicsSubMenu.hierarchy || {};

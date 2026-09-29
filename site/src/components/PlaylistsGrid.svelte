@@ -39,13 +39,15 @@
   // Draft preview is live ONLY for a logged-in admin with a draft applied.
   const isPreviewing = $derived($isAdmin && $menuPreviewSource === 'draft');
 
-  // The draft's copy of the Playlists section (subMenu key is
+  // The draft's copy of the Playlists section (the top-level key is
   // load-bearing — an exact-match locator in every consumer, including
   // this page's frontmatter and the [album] route). Resolved once,
   // shared by banner / diagnostic / selection.
+  // CHANGED (menu.json format v2): Playlists was promoted from a
+  // subMenus array entry to a top-level "Playlists" key.
   const draftSection = $derived(
     isPreviewing
-      ? (($menuData as any).subMenus.find((s: any) => s.subMenu === 'Playlists')) ?? undefined
+      ? (($menuData as any).Playlists ?? undefined)
       : undefined
   );
 
@@ -53,7 +55,7 @@
   $effect(() => {
     if (isPreviewing && !draftSection) {
       console.warn(
-        '[PlaylistsGrid] Draft preview active but "Playlists" subMenu not found in draft — rendering the deployed master. Check the subMenu key spelling in the editor.'
+        '[PlaylistsGrid] Draft preview active but "Playlists" section not found in draft — rendering the deployed master. Check the top-level key spelling in the editor.'
       );
     }
   });
@@ -93,7 +95,7 @@
        not be found in it — the page is showing the deployed MASTER.
        Matches the console warn exactly. -->
   <div class="mb-4 px-3 py-2 bg-red-100 border border-red-400 text-red-800 text-sm rounded">
-    ⚠ A draft is active, but the "Playlists" section was not found in it — this page is showing the deployed master. Check the subMenu key spelling in the editor.
+    ⚠ A draft is active, but the "Playlists" section was not found in it — this page is showing the deployed master. Check the top-level key spelling in the editor.
   </div>
 {/if}
 

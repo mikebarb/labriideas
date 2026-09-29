@@ -22,6 +22,24 @@
   // if offline), the editor falls back to parse-only validation —
   // exactly the Step A behavior. Nothing breaks, the schema features
   // simply light up once the endpoint exists.
+  //
+  // JSON FOLDING (VSCode-style expand/collapse):
+  //   - basicSetup already ships the folding UI (foldGutter + keymap),
+  //     but @codemirror/lang-json registers no fold points, so nothing
+  //     folds by default. A custom foldService (below) walks the JSON
+  //     syntax tree and makes every Object/Array foldable — letting
+  //     admins collapse the huge subMenus/hierarchy blocks in menu.json
+  //     (600+ lines) down to a navigable outline, exactly like VSCode.
+  //   - @codemirror/language is already in the lazy editor chunk (it's
+  //     a dependency of basicSetup), so this adds zero bundle cost.
+  //
+  // AUTO-FOLD TO OUTLINE ON OPEN:
+  //   - On mount, the editor folds the VALUE of every top-level
+  //     property (featuredLectures, schaefferCollection, etc.) so
+  //     admins land on a clean outline of the menu's major sections
+  //     and expand only the one they came to edit. Deliberately NOT
+  //     foldAll() — that would fold nested regions too (and the root
+  //     braces), leaving nothing visible at all.
 
   import { onMount, onDestroy, tick } from 'svelte';
   import masterMenu from '../../data/menu.json';
@@ -156,6 +174,10 @@
     // ── 2. Lazy-load the CodeMirror chunk (code-splitting: only this
     //        admin page ever fetches it) ──
     let EditorView: any, basicSetup: any, json: any, jsonSchema: any;
+    // Folding pieces from @codemirror/language — the same module
+    // basicSetup already depends on, so no additional chunk is fetched.
+    let foldService: any, foldInside: any, syntaxTree: any;
+    let foldEffect: any, ensureSyntaxTree: any;
     try {
       const cm = await import('codemirror');
       EditorView = cm.EditorView;
@@ -166,6 +188,25 @@
       jsonSchema = cmSchema.jsonSchema;
       const lint = await import('@codemirror/lint');
       lintStateFacet = (lint as any).lintState ?? null;
+
+      // WHY: basicSetup includes foldGutter() and the fold keymap
+      // (Ctrl/Cmd+[ and ]), but folding only works if something tells
+      // CodeMirror WHERE foldable ranges are. @codemirror/lang-json
+      // ships no fold points, so we supply them ourselves via a
+      // foldService. The exports needed:
+      //   foldService — facet we register our fold-point logic into
+      //   foldInside  — helper returning the range INSIDE a node's brackets
+      //   syntaxTree  — access to the parsed JSON syntax tree
+      // Plus, for the auto-fold-on-open feature:
+      //   foldEffect        — the StateEffect that marks a range folded
+      //   ensureSyntaxTree  — forces the (async) parser to finish, so the
+      //                       tree is complete on a freshly mounted doc
+      const langMod = await import('@codemirror/language');
+      foldService = langMod.foldService;
+      foldInside = langMod.foldInside;
+      syntaxTree = langMod.syntaxTree;
+      foldEffect = langMod.foldEffect;
+      ensureSyntaxTree = langMod.ensureSyntaxTree;
     } catch (err) {
       console.error('MenuEditor: CodeMirror chunk failed to load', err);
       editorFailed = true;
@@ -202,10 +243,46 @@
       return;
     }
 
+    // ── JSON fold service: teach CodeMirror where menu.json folds ──
+    // NOTE: the foldService callback receives the EditorState DIRECTLY
+    // (not the EditorView) — hence `state.doc`, never `state.state`.
+    // CodeMirror calls this once per LINE (lineStart/lineEnd delimit
+    // that line's text). A line is foldable if it ENDS with an opening
+    // bracket — the pretty-printed shape of menu.json means every
+    // `"items": [` / `"featured": [` / `"Arts": {` line matches this.
+    // We then resolve the syntax-tree node at that bracket and return
+    // foldInside(node), so the fold collapses the interior while both
+    // brackets stay visible — same UX as VSCode's JSON folding.
+    // Because it reads the syntax tree (not raw regex on the doc),
+    // it stays correct after the full-document replacements that
+    // setEditorText() dispatches (revert/discard handlers).
+    const jsonFolding = foldService.of((state: any, lineStart: number, lineEnd: number) => {
+      // Does this line end with an opening { or [? If not, nothing to fold.
+      const text = state.doc.sliceString(lineStart, lineEnd);
+      const m = /([\[{])\s*$/.exec(text);
+      if (!m) return null;
+      const openPos = lineStart + m.index;
+
+      // Walk up the tree from just inside the bracket to find the
+      // Object/Array node that STARTS at openPos, then fold its interior.
+      let node = syntaxTree(state).resolveInner(openPos + 1, 1);
+      while (node) {
+        if ((node.name === 'Object' || node.name === 'Array') && node.from === openPos) {
+          return foldInside(node);
+        }
+        node = node.parent;
+      }
+      return null;
+    });
+
     // ── 5. Build and mount the editor ──
     const extensions: any[] = [
       basicSetup,
       json(),
+      // VSCode-style folding: pairs with the foldGutter + foldKeymap
+      // that basicSetup already installs. Gutter arrows (▸/▾) appear
+      // next to every foldable line; Ctrl/Cmd+[ and ] fold/unfold.
+      jsonFolding,
       EditorView.lineWrapping,
       // Force the editor to use a light theme so text remains dark
       EditorView.theme({
@@ -231,6 +308,53 @@
     view = new EditorView({ doc: editorText, extensions, parent: editorHost });
     editorReady = true;
     refreshDiagnostics(); // catch diagnostics from the initial doc
+
+    // ── 6. AUTO-FOLD TO OUTLINE: collapse to top-level keys on open ──
+    // Walks the root Object's direct Property children and folds each
+    // one's Object/Array VALUE — a 600-line menu.json opens as:
+    //     {
+    //       "topics": { … },
+    //       "featuredLectures": { … },
+    //       "playlists": { … },
+    //       "schaefferCollection": { … },
+    //       "contact L'Abri": [ … ]
+    //     }
+    // Nested regions inside are left UNFOLDED, so expanding a section
+    // shows its keys and the admin drills down one level at a time.
+    // The fold ranges use the SAME foldInside() values the foldService
+    // returns, so the gutter markers and folded state agree exactly.
+    function foldTopLevel() {
+      // ensureSyntaxTree: the JSON parser runs incrementally/async, and
+      // a freshly mounted 600-line doc may not be fully parsed yet.
+      // This forces parsing through end-of-doc (5s cap, effectively
+      // instant for menu.json) so we walk a COMPLETE tree. Falls back
+      // to whatever is parsed if even that times out.
+      const tree = ensureSyntaxTree(view.state, view.state.doc.length, 5000)
+        ?? syntaxTree(view.state);
+
+      // Locate the root Object node (the outermost { ... }).
+      let root = tree.resolveInner(1, 1);
+      while (root && root.name !== 'Object') root = root.parent;
+      if (!root) return;
+
+      // Each direct child of the root is a Property node; its LAST
+      // child is the property's value. Batch one foldEffect per
+      // top-level Object/Array value into a single dispatch.
+      const effects: any[] = [];
+      let prop = root.firstChild;
+      while (prop) {
+        const value = prop.lastChild;
+        if (value && (value.name === 'Object' || value.name === 'Array')) {
+          const range = foldInside(value);
+          if (range) effects.push(foldEffect.of(range));
+        }
+        prop = prop.nextSibling;
+      }
+      if (effects.length) {
+        view.dispatch({ effects });
+      }
+    }
+    foldTopLevel();
   });
 
   // Programmatic doc replacement (revert/discard handlers). Dispatch is
@@ -432,7 +556,6 @@
         >
           {deploying ? 'Deploying...' : 'Save & Deploy'}
         </button>
-
 
         {#if viewingMaster && draftLoaded}
           <button

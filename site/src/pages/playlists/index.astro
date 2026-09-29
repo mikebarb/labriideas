@@ -7,7 +7,8 @@ import PlaylistsGrid from '../../components/PlaylistsGrid.svelte';
 // NOTE: this static import and extraction are PERMANENT (Option 2 hybrid
 // pattern) — they seed PlaylistsGrid's build-time SSR render, which is
 // what public visitors and search engines receive. Do not remove.
-const albums = menuData.subMenus.find(s => s.subMenu === 'Playlists')?.albums ?? [];
+// CHANGED (menu.json format v2): direct top-level key access.
+const albums = menuData.Playlists?.albums ?? [];
 ---
 
 <Layout title="Playlists">

@@ -45,9 +45,10 @@
 
   // The draft's Topics hierarchy (undefined when the subMenu key itself
   // is missing/broken — distinct from this route's content being gone).
+  // CHANGED (menu.json format v2): direct top-level key access.
   const draftHierarchy = $derived(
     isPreviewing
-      ? (($menuData as any).subMenus.find((s: any) => s.subMenu === 'Topics')
+      ? (($menuData as any).Topics
           ?.hierarchy as Record<string, Record<string, any>> | undefined)
       : undefined
   );
@@ -167,7 +168,7 @@
   $effect(() => {
     if (draftState === 'section-missing') {
       console.warn(
-        '[TopicView] Draft preview active but "Topics" subMenu not found in draft — rendering the deployed master. Check the subMenu key spelling in the editor.'
+        '[TopicView] Draft preview active but "Topics" section not found in draft — rendering the deployed master. Check the top-level key spelling in the editor.'
       );
     } else if (draftState === 'removed') {
       console.warn(
@@ -187,7 +188,7 @@
   </div>
 {:else if draftState === 'section-missing'}
   <div class="mb-4 px-3 py-2 bg-red-100 border border-red-400 text-red-800 text-sm rounded">
-    ⚠ A draft is active, but the "Topics" section was not found in it — this page is showing the deployed master. Check the subMenu key spelling in the editor.
+    ⚠ A draft is active, but the "Topics" section was not found in it — this page is showing the deployed master. Check the top-level key spelling in the editor.
   </div>
 {/if}
 

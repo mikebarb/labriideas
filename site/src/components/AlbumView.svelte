@@ -36,11 +36,13 @@
   // Draft preview is live ONLY for a logged-in admin with a draft applied.
   const isPreviewing = $derived($isAdmin && $menuPreviewSource === 'draft');
 
-  // The draft's Playlists section (undefined if the subMenu key itself is
-  // missing/broken — a different failure mode from a missing album).
+  // The draft's Playlists section (undefined if the top-level key itself
+  // is missing/broken — a different failure mode from a missing album).
+  // CHANGED (menu.json format v2): Playlists was promoted from a
+  // subMenus array entry to a top-level "Playlists" key.
   const draftPlaylists = $derived(
     isPreviewing
-      ? (($menuData as any).subMenus.find((s: any) => s.subMenu === 'Playlists') as any)
+      ? (($menuData as any).Playlists as any)
       : undefined
   );
 
@@ -74,7 +76,7 @@
   $effect(() => {
     if (draftState === 'section-missing') {
       console.warn(
-        '[AlbumView] Draft preview active but "Playlists" subMenu not found in draft — rendering the deployed master. Check the subMenu key spelling in the editor.'
+        '[AlbumView] Draft preview active but "Playlists" section not found in draft — rendering the deployed master. Check the top-level key spelling in the editor.'
       );
     } else if (draftState === 'album-removed') {
       console.warn(
@@ -94,7 +96,7 @@
   </div>
 {:else if draftState === 'section-missing'}
   <div class="mb-4 px-3 py-2 bg-red-100 border border-red-400 text-red-800 text-sm rounded">
-    ⚠ A draft is active, but the "Playlists" section was not found in it — this page is showing the deployed master. Check the subMenu key spelling in the editor.
+    ⚠ A draft is active, but the "Playlists" section was not found in it — this page is showing the deployed master. Check the top-level key spelling in the editor.
   </div>
 {/if}
 

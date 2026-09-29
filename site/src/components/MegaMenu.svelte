@@ -50,20 +50,6 @@
   //}
 
  // === EXTRACT DATA INTERNALLY ===
-  
-  //const topicsSubMenu = menuData.subMenus.find(s => s.subMenu === 'Topics');
-  //if (!topicsSubMenu) {
-  //  throw new Error('Configuration error: "Topics" subMenu not found in menu.json');
-  //}
-
-  // Cast to our explicit TopicsData shape
-  // This tells TypeScript: "trust me, this is the Topics variant"
-  //const topicsData = topicsSubMenu as unknown as TopicsData;
-  
-  //if (!topicsData.hierarchy) {
-  //  throw new Error('Configuration error: "Topics" subMenu missing hierarchy property');
-  //}
-
   // CHANGED (Step B preview): the old fail-fast `throw`s were safe when
   // menu.json was a build constant, but a runtime DRAFT swap makes them
   // reachable — a bad draft would crash the public menu. The store
@@ -72,14 +58,15 @@
   // malformed menu renders an empty browse bar, never a crash.
   // $menuData auto-subscribes: hierarchy recomputes on every draft
   // apply/revert, and the template re-renders from the same name.
+  //
+  // CHANGED (menu.json format v2): Topics was promoted from a subMenus
+  // array entry to a top-level "Topics" key — the find() becomes a
+  // direct property access.
   const hierarchy = $derived(
-    (($menuData as any).subMenus.find((s: any) => s.subMenu === 'Topics')
-      ?.hierarchy as Record<string, Record<string, any>>) ?? {}
-  );  
-  // Now both properties are guaranteed to exist
-  //const hierarchy = topicsData.hierarchy;
+    (($menuData as any).Topics?.hierarchy as Record<string, Record<string, any>>) ?? {}
+  );
 
-    // === REACTIVE STATE (Svelte 5 syntax) ===
+  // === REACTIVE STATE (Svelte 5 syntax) ===
   
   // Type is inferred as string | null from the initial value
   let activeRoot = $state<string | null>(null);
