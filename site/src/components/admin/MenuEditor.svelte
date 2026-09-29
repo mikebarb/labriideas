@@ -96,12 +96,56 @@
         throw new Error(errorText || 'Failed to commit changes');
       }
 
-      // Success: The Go server has committed the file.
-      // Clear the draft to reset the preview loop.
+      // Success: the Go server has committed the file. The Cloudflare
+      // build takes a minute or more — the old unconditional reload
+      // fired ~2s after the commit, ALWAYS before the new build
+      // existed, so the refresh served the stale previous bundle.
+      // Now: clear the draft, then poll /api/deploy-status until the
+      // deployment that includes this commit is live, THEN reload.
+      //
+      // WHY HERE: this is the first point where the commit is CONFIRMED.
+      // Clearing the draft before the POST (or inside a failure path)
+      // would delete the admin's only local copy of uncommitted work;
+      // clearing only on 'deployed' leaves a "draft" badge and preview
+      // banners active for content that is already committed to GitHub.
+      // The draft store's job ends the moment the commit lands — the
+      // build is just delivery delay of already-saved content.
       await clearMenuDraft();
-      
-      saveMessage = '✅ Successfully deployed! Refreshing...';
-      setTimeout(() => window.location.reload(), 2000);
+      saveMessage = '⏳ Committed to GitHub — waiting for the Cloudflare build...';
+
+      // Poll every 5s, give up after 5 minutes (builds occasionally
+      // queue behind others). On timeout/unknown state we fall back to
+      // an honest message instead of a misleading auto-refresh.
+      const deadline = Date.now() + 5 * 60 * 1000;
+      let state = 'building';
+      while (Date.now() < deadline) {
+        await new Promise(res => setTimeout(res, 5000));
+        try {
+          const status = await authClient.fetch(`${API_BASE}/api/deploy-status`);
+          if (status.ok) {
+            const s = await status.json();
+            state = s.state;
+            saveMessage = `⏳ ${s.message}`;
+            if (state === 'deployed') break;
+            if (state === 'failed') break;
+          } else {
+            state = 'unknown';
+            break;
+          }
+        } catch {
+          state = 'unknown';
+          break;
+        }
+      }
+
+      if (state === 'deployed') {
+        saveMessage = '✅ Deployed! Reloading to show the new menu...';
+        setTimeout(() => window.location.reload(), 1000);
+      } else if (state === 'failed') {
+        saveMessage = '❌ The commit succeeded but the build on the Cloudflare server failed — check the server dashboard.';
+      } else {
+        saveMessage = '✅ Committed to GitHub. The build is still running — refresh the page in a minute or two.';
+      }
 
     } catch (err) {
       console.error('Deployment failed:', err);
@@ -110,6 +154,7 @@
       deploying = false;
     }
   }
+
 
   // ─── Validation ───
   // Parse check stays synchronous and authoritative for syntax — cheap,

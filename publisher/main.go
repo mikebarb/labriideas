@@ -33,6 +33,12 @@ import (
 var storageClient *storage.Client
 var catalogCache *cache.CatalogCache
 
+// Timestamp of the last successful menu.json commit — the baseline
+// deploy-status polling compares against, so a SUCCESSFUL OLD build
+// (from before this admin's commit) never reads as "deployed".
+var lastMenuCommitAt time.Time
+var lastMenuCommitMu sync.Mutex
+
 // In-memory store for background crawl tasks
 var jobRegistry sync.Map
 
@@ -59,13 +65,35 @@ type CrawlJob struct {
 	Message  string `json:"message"`
 }
 
+// Root-level validation contract derived from the schema — populated
+// at startup, used by updateMenuHandler's structural gate. Single
+// source of truth: the required root keys come from the schema's
+// "required" array, so schema revisions automatically update the
+// deploy gate with no Go code changes.
+var menuSchemaRequiredKeys []string
+
 func init() {
 	var err error
 	// Read and verify menu JSON schema at application startup
 	menuSchemaBytes, err = os.ReadFile("pkg/schema/menu.schema.json")
 	if err != nil {
 		log.Printf("⚠️  WARNING: Could not load pkg/schema/menu.schema.json: %v", err)
+		return
 	}
+
+	// Parse the schema's TOP-LEVEL contract only — we are not a full
+	// JSON Schema validator (the browser editor already does that via
+	// codemirror-json-schema). We extract the root "required" keys so
+	// the deploy gate enforces exactly what the schema declares,
+	// instead of a hard-coded key list that can drift from the schema.
+	var schemaDoc struct {
+		Required []string `json:"required"`
+	}
+	if err := json.Unmarshal(menuSchemaBytes, &schemaDoc); err != nil {
+		log.Printf("⚠️  WARNING: menu.schema.json is not valid JSON — root-key gate will use fallback: %v", err)
+		return
+	}
+	menuSchemaRequiredKeys = schemaDoc.Required
 }
 
 func main() {
@@ -134,6 +162,7 @@ func main() {
 	mux.HandleFunc("/api/start-crawl", corsMiddleware(authMiddleware(startCrawlHandler)))
 	mux.HandleFunc("/api/crawl-status", corsMiddleware(authMiddleware(crawlStatusHandler)))
 	mux.HandleFunc("/api/update-menu", corsMiddleware(authMiddleware(updateMenuHandler)))
+	mux.HandleFunc("/api/deploy-status", corsMiddleware(authMiddleware(deployStatusHandler)))
 
 	// BACKGROUND CACHE WARMUP
 	go func() {
@@ -249,6 +278,20 @@ func menuSchemaHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(menuSchemaBytes)
 }
 
+// requiredMenuKeys returns the root keys the deploy gate enforces.
+// Schema-derived when the schema loaded and declared a "required"
+// array; hard-coded fallback when the schema file is missing or
+// unreadable — the deploy path must never become ungated.
+func requiredMenuKeys() []string {
+	if len(menuSchemaRequiredKeys) > 0 {
+		return menuSchemaRequiredKeys
+	}
+	// FALLBACK: mirrors the current schema's required roots. Only
+	// engages if the schema failed to load at startup (deployment
+	// misconfiguration); the startup warning makes that visible.
+	return []string{"Topics", "featuredLectures", "Playlists", "schaefferCollection", "Contact L'Abri"}
+}
+
 // updateMenuHandler acts as the GitOps CI/CD orchestrator. It performs structural
 // sanity checks on incoming menu data and commits it directly to the GitHub repository.
 func updateMenuHandler(w http.ResponseWriter, r *http.Request) {
@@ -264,36 +307,19 @@ func updateMenuHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// ─── STRUCTURAL VALIDATION GATE ───
-	// Verify that critical root keys exist before sending to GitHub.
-	requiredRootKeys := []string{"subMenus", "featuredLectures", "schaefferCollection"}
-	for _, key := range requiredRootKeys {
+
+	// ─── STRUCTURAL VALIDATION GATE (SCHEMA-DRIVEN) ───
+	// Required root keys are read from menu.schema.json at startup —
+	// the same file served to the browser editor via
+	// menuSchemaHandler. Revising the schema (adding a section,
+	// renaming a key) automatically revises this gate; the two can no
+	// longer drift apart. Deep validation (nested objects, arrays,
+	// item fields) remains the editor's job client-side via
+	// codemirror-json-schema; this gate enforces only the root-level
+	// contract before the payload is committed to GitHub.
+	for _, key := range requiredMenuKeys() {
 		if _, exists := menuData[key]; !exists {
 			http.Error(w, fmt.Sprintf("Schema violation: missing root key '%s'", key), http.StatusBadRequest)
-			return
-		}
-	}
-
-	// Verify required sub-menus exist with exact naming.
-	subMenus, ok := menuData["subMenus"].([]interface{})
-	if !ok || len(subMenus) == 0 {
-		http.Error(w, "Schema violation: 'subMenus' must be a non-empty array", http.StatusBadRequest)
-		return
-	}
-
-	requiredSubMenus := []string{"Contact L'Abri", "Playlists", "Topics"}
-	foundSubMenus := make(map[string]bool)
-
-	for _, sm := range subMenus {
-		if smMap, ok := sm.(map[string]interface{}); ok {
-			if name, ok := smMap["subMenu"].(string); ok {
-				foundSubMenus[name] = true
-			}
-		}
-	}
-
-	for _, req := range requiredSubMenus {
-		if !foundSubMenus[req] {
-			http.Error(w, fmt.Sprintf("Critical section missing: 'subMenu': '%s' was not found. Check naming.", req), http.StatusBadRequest)
 			return
 		}
 	}
@@ -375,6 +401,12 @@ func updateMenuHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	putResp.Body.Close()
 
+	// Record the commit time — /api/deploy-status uses this to decide
+	// whether the latest Cloudflare deployment includes this change.
+	lastMenuCommitMu.Lock()
+	lastMenuCommitAt = time.Now().UTC()
+	lastMenuCommitMu.Unlock()
+
 	log.Printf("[ADMIN] Successfully committed updated menu.json to GitHub on branch %s", branch)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -382,6 +414,88 @@ func updateMenuHandler(w http.ResponseWriter, r *http.Request) {
 		"status":  "success",
 		"message": "Menu committed successfully. Build triggered on Cloudflare.",
 	})
+}
+
+// deployStatusHandler reports whether the Cloudflare Pages build that
+// includes the admin's last menu.json commit has finished. The editor
+// polls this after "Save & Deploy" and reloads the page only once the
+// NEW build is live — closing the gap where a reload fired before the
+// build existed and served the previous (stale) bundle.
+//
+// Requires env vars: CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_PROJECT_NAME,
+// CLOUDFLARE_API_TOKEN (a Pages:Read-scoped token is sufficient).
+func deployStatusHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	lastMenuCommitMu.Lock()
+	commitAt := lastMenuCommitAt
+	lastMenuCommitMu.Unlock()
+
+	if commitAt.IsZero() {
+		// No menu commit has happened since the server booted.
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"state": "idle", "message": "No menu deploy in progress."})
+		return
+	}
+
+	accountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
+	project := os.Getenv("CLOUDFLARE_PROJECT_NAME")
+	token := os.Getenv("CLOUDFLARE_API_TOKEN")
+	if accountID == "" || project == "" || token == "" {
+		// Not configured — degrade honestly rather than hang the editor.
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"state": "unknown", "message": "Cloudflare status not configured on server."})
+		return
+	}
+
+	// Latest deployment for the project (list is newest-first).
+	url := fmt.Sprintf("https://api.cloudflare.com/client/v4/accounts/%s/pages/projects/%s/deployments?per_page=1", accountID, project)
+	req, err := http.NewRequestWithContext(r.Context(), "GET", url, nil)
+	if err != nil {
+		http.Error(w, "Failed to build status request", http.StatusInternalServerError)
+		return
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := (&http.Client{Timeout: 10 * time.Second}).Do(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		log.Printf("[ADMIN] Cloudflare status check failed (status: %d): %v", resp.StatusCode, err)
+		http.Error(w, "Failed to query Cloudflare status", http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+
+	var cfResp struct {
+		Result []struct {
+			CreatedOn time.Time `json:"created_on"`
+			Status    string    `json:"status"` // "queued" | "building" | "success" | "failure"
+		} `json:"result"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&cfResp); err != nil || len(cfResp.Result) == 0 {
+		http.Error(w, "Failed to parse Cloudflare status", http.StatusBadGateway)
+		return
+	}
+
+	latest := cfResp.Result[0]
+	state := "building"
+	message := "Cloudflare build in progress..."
+
+	if latest.Status == "failure" {
+		state, message = "failed", "Cloudflare build failed — check the Pages dashboard."
+	} else if strings.EqualFold(latest.Status, "success") {
+		if latest.CreatedOn.After(commitAt) {
+			state, message = "deployed", "New build is live."
+		} else {
+			// SUCCESS, but from BEFORE this commit — the build for this
+			// commit hasn't appeared as a deployment yet (or was skipped).
+			state, message = "pending", "Waiting for the build to start..."
+		}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"state": state, "message": message})
 }
 
 // catalogHandler streams the compressed catalog.json.gz with 304 ETag revalidation.
