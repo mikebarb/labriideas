@@ -592,14 +592,20 @@
           {busy ? 'Saving...' : 'Save Draft'}
         </button>
 
-            <!-- NEW: Deploy button -->
+        <!-- Deploy: commits the SAVED DRAFT to GitHub via the Go
+             server → Cloudflare build → reload on completion.
+             GATED: only enabled when there is actually something to
+             deploy — a saved draft exists (draftLoaded), it is what's on
+             screen (not dirty), and it passes parse + schema validation.
+             Editing the master directly requires Save Draft first —
+             deploy is never a substitute for saving. -->
         <button
           type="button"
           onclick={handleCommitAndDeploy}
-          disabled={deploying || !!parseError}
-          class="bg-orange-600 hover:bg-orange-700 text-white font-bold px-4 py-2 rounded transition-colors disabled:opacity-50"
+          disabled={deploying || !draftLoaded || dirty || !!parseError || (schemaAvailable && schemaErrorCount > 0)}
+          class="bg-orange-600 hover:bg-orange-700 text-white font-bold px-4 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {deploying ? 'Deploying...' : 'Save & Deploy'}
+          {deploying ? 'Deploying...' : 'Deploy'}
         </button>
 
         {#if viewingMaster && draftLoaded}
