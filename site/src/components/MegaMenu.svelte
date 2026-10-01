@@ -71,7 +71,23 @@
   // Type is inferred as string | null from the initial value
   let activeRoot = $state<string | null>(null);
   let activeSub = $state<string | null>(null);
+  // Close delay: keeps the panel open briefly after the mouse leaves
+  // the nav, so moving down into the panel doesn't close it.
   let timer: ReturnType<typeof setTimeout> | undefined;
+
+  // NEW: open/switch delay (hover intent). When the top-level bar wraps
+  // to two rows, the panel sits below BOTH rows — so the mouse must
+  // cross the second row to reach it, and every crossed root button
+  // would instantly steal the panel. With this delay, a root only takes
+  // over if the mouse LINGERS on it; a fast transit is cancelled before
+  // it fires, and the original selection survives the trip to the panel.
+  let openTimer: ReturnType<typeof setTimeout> | undefined;
+
+  // How long the mouse must rest on a top-level button before it takes
+  // over the panel. 250ms: fast enough to feel responsive as a deliberate
+  // hover, slow enough that a drag-to-the-panel pass (~50–100ms per
+  // button) never triggers.
+  const OPEN_DELAY = 250;    
 
   // Props — apiBase is forwarded to TopicFeaturedCard (play/download
   // need it)
@@ -165,15 +181,53 @@
   const getLabel = (item: HierarchyItem): string => 
     (item.altName && item.altName.trim() !== '') ? item.altName : item.subtopic;
 
+  // CHANGED: switching the active root is now DELAYED (hover intent).
+  //   - Same root re-entered: nothing to do except cancel any pending
+  //     switch — the panel must not flicker.
+  //   - Different root: cancel any pending switch, keep the panel open
+  //     (cancel the close timer — the mouse is back on the bar), and
+  //     schedule the takeover after OPEN_DELAY. Quick passes never fire.
   const handleMouseEnter = (root: string): void => {
-    if (timer) clearTimeout(timer);
-    activeRoot = root;
-    // CHANGED: default the active sub-category to the FIRST real
-    // category (featured key is skipped by getSubCategories).
-    activeSub = getSubCategories(root)[0] ?? null;
+    if (activeRoot === root) {
+      if (openTimer) { 
+        clearTimeout(openTimer); 
+        openTimer = undefined; 
+      }
+    }
+    // The pointer has returned to the nav, so cancel any pending close.
+    if (timer) {
+      clearTimeout(timer);
+      timer = undefined;
+    }
+
+    // Already showing this root; don't change the selected submenu.
+    if (activeRoot === root) return;
+
+    // First hover: open immediately so the selectable behavior is clear.
+    if (activeRoot === null) {
+      activeRoot = root;
+      activeSub = getSubCategories(root)[0] ?? null;
+      return;
+    }
+
+    // A different root is already open. Switch only if the pointer
+    // pauses here; quick movement across the wrapped row won't hijack it.
+    openTimer = setTimeout(() => {
+      openTimer = undefined;
+      activeRoot = root;
+      // Default the active sub-category to the FIRST real category
+      // (featured key is skipped by getSubCategories).
+      activeSub = getSubCategories(root)[0] ?? null;
+    }, OPEN_DELAY);
   };
 
   const handleMouseLeave = (): void => {
+    // NEW: leaving the nav also cancels any pending switch — a takeover
+    // must never fire after the mouse has gone.
+    if (openTimer) { 
+      clearTimeout(openTimer); 
+      openTimer = undefined; 
+    }
     timer = setTimeout(() => {
       activeRoot = null;
       activeSub = null;
@@ -181,6 +235,10 @@
   };
 
   const handleHeaderHover = (): void => {
+    if (openTimer) { 
+      clearTimeout(openTimer); 
+      openTimer = undefined; 
+    }
     if (timer) clearTimeout(timer);
     activeRoot = null;
     activeSub = null;
@@ -210,10 +268,24 @@
     </div>
 
     {#if activeRoot}
-      <div class="absolute left-0 right-0 top-full z-40 bg-white shadow-xl border-t border-gray-100 
-                  grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 
-                  max-h-[70vh] md:max-h-[80vh] overflow-y-auto" role="menu">
-        
+      <div
+        class="absolute left-0 right-0 top-full z-40 bg-white shadow-xl border-t border-gray-100 
+                    grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 
+                    max-h-[70vh] md:max-h-[80vh] overflow-y-auto"
+        role="menu"
+        tabindex="0"
+        onmouseenter={() => {
+          if (openTimer) { 
+            clearTimeout(openTimer);
+            openTimer = undefined; 
+          }
+          if (timer) { 
+            clearTimeout(timer); 
+            timer = undefined; 
+          }
+        }}
+      >
+
         <!-- COLUMN 1: Major theme's sub-categories -->
         <!-- CHANGED: getSubCategories skips the reserved 'featured' key -->
         <div class="col-span-1 bg-gray-50 p-6 border-r border-b md:border-b-0">
