@@ -319,6 +319,20 @@
     openSections = {};
   }
 
+  function collapseMinor() {
+    const majorOpen: Record<string, boolean> = {};
+    for (const [majorTheme, minorMap] of Object.entries(hierarchy)) {
+      majorOpen[majorTheme] = true; // Open the major
+      // CHANGED: skip 'featured' — it's curation data inside the node,
+      // not a navigable sub-category, and must not gain a tree section.
+      for (const minorTheme of Object.keys(minorMap)) {
+        if (minorTheme === 'featured') continue;
+        majorOpen[getKey(majorTheme, minorTheme)] = false;
+      }
+    }
+    openSections = majorOpen;
+  }
+
   // Pure URL generator (no side effects) that encodes both category and label
   function getTopicUrl(item: LeafItem): string {
     return `/topics/${slugify(item.category)}`;
@@ -351,16 +365,16 @@
       title="Expand all categories"
     >
       <Maximize2 size={14} />
-      Expand All
+      Expand
     </button>
     <button
       type="button"
-      onclick={collapseAll}
+      onclick={collapseMinor}
       class="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors"
       title="Collapse all categories"
     >
       <Minimize2 size={14} />
-      Collapse All
+      Collapse
     </button>
   </div>
 
