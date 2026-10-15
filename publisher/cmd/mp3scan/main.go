@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/csv"
 	"fmt"
 	"os"
@@ -17,8 +18,8 @@ import (
 // directory, then one dot for every dotInterval files after that.
 const dotInterval = 10
 
-// header is the fixed schema agreed in the spec. Column order matters:
-// it defines the CSV layout and must not change between runs.
+// header is the fixed schema. Copyright is placed at the end to keep
+// all prior column indexes identical. Extra unmapped tags spill out to the right.
 var header = []string{
 	"file_path",
 	"dir_path",
@@ -34,9 +35,34 @@ var header = []string{
 	"Composer",
 	"Grouping",
 	"Comment",
+	"Copyright",
+}
+
+// handledKeys tracks which raw tags are explicitly mapped to our fixed columns.
+// Any tag not in this map will be appended to the row as "tag_name:value" (or "tag_name:skipped").
+var handledKeys = map[string]bool{
+	"TIT2": true, //Title / Song name (Mapped to our Title column
+	"TPE1": true, //Lead performer(s) / Soloist(s) (Mapped to our Artist column)
+	"TPE2": true, //Album Artist / Band / Orchestra (Mapped to our Album_Artist column)
+	"TALB": true, //Album / Collection (Mapped to our Album column)
+	"TYER": true, //Year (Mapped to our Year column)
+	"TDRC": true, //Alternate ID3v2.4 Year (Mapped to our Year column)
+	"TCON": true, //Content Type / Genre (Mapped to our Genre column)
+	"TRCK": true, //Track number / Position in set (Mapped to our Track_Number column)
+	"TPOS": true, //Part of a set / Disc number (Mapped to our Disc_Number column)
+	"TCOM": true, //Composer (Mapped into your Composer column)
+	"TIT1": true, //Content Group Description (Mapped to our Grouping column)
+	"COMM": true, //Comments (Mapped to our Comment column)
+	"TCOP": true, //Copyright (Mapped to our Copyright column)
 }
 
 func main() {
+	// Ensure the console window stays open until the user presses Enter.
+	defer func() {
+		fmt.Print("\nPress Enter to close...")
+		_, _ = bufio.NewReader(os.Stdin).ReadString('\n')
+	}()
+
 	startTime := time.Now()
 
 	// ---- 1. Chooser: directory to scan ----
@@ -107,7 +133,6 @@ func main() {
 	dirCount := 0
 	fileCount := 0
 	errorCount := 0
-	currentDir := ""
 	dotCount := 0 // files processed since the last dot in the current directory
 
 	err = filepath.WalkDir(scanRoot, func(path string, d os.DirEntry, err error) error {
@@ -124,7 +149,6 @@ func main() {
 				fmt.Printf("\n%s\n", path)
 			}
 			dirCount++
-			currentDir = path
 			dotCount = 0
 			return nil
 		}
@@ -151,7 +175,6 @@ func main() {
 			fmt.Print(".")
 		}
 
-		_ = currentDir
 		return nil
 	})
 
@@ -163,7 +186,6 @@ func main() {
 	writer.Flush()
 	if err := writer.Error(); err != nil {
 		fmt.Printf("Error flushing output file: %v\n", err)
-		errorCount++
 	}
 
 	// ---- 6. Completion summary ----
@@ -176,9 +198,9 @@ func main() {
 	fmt.Printf("  Total runtime:       	%s\n", time.Since(startTime).Round(time.Millisecond))
 }
 
-// scanFile extracts the row data for a single MP3 file.
-// It relies strictly on ID3 tags for speed, avoiding a full audio stream decode.
+// scanFile extracts base ID3 tags and appends any unmapped raw tags as trailing columns.
 func scanFile(path string) []string {
+	// Initialize row with capacity for base header fields
 	row := make([]string, len(header))
 	for i := range row {
 		row[i] = ""
@@ -187,6 +209,9 @@ func scanFile(path string) []string {
 	row[0] = path
 	row[1] = filepath.Dir(path)
 	row[2] = filepath.Base(path)
+
+	// Collect any unmapped/custom tags found in Raw()
+	var extraCols []string
 
 	// ---- ID3 tags ----
 	if f, err := os.Open(path); err == nil {
@@ -197,29 +222,60 @@ func scanFile(path string) []string {
 			row[5] = metadata.AlbumArtist()
 			row[6] = metadata.Album()
 
-			if year := metadata.Year(); year != 0 {
-				row[7] = strconv.Itoa(year)
-			}
-
-			row[8] = metadata.Genre()
-			// Track and disc come back as "n" or "n/total" - keep raw.
-			if track, total := metadata.Track(); track != 0 {
-				if total != 0 {
-					row[9] = fmt.Sprintf("%d/%d", track, total)
-				} else {
-					row[9] = fmt.Sprintf("%d", track)
+			// Year: integer if parseable, otherwise verbatim string as-is.
+			// dhowden/tag exposes raw frames under their uppercase ID3
+			// frame IDs: TDRC (v2.4) or TYER (v2.3).
+			if rawYear := metadata.Year(); rawYear != 0 {
+				row[7] = strconv.Itoa(rawYear)
+			} else {
+				for _, key := range []string{"TDRC", "TYER"} {
+					if raw, ok := metadata.Raw()[key]; ok {
+						if s, ok := raw.(string); ok && s != "" {
+							row[7] = s
+							break
+						}
+					}
 				}
 			}
 
-			if disc, total := metadata.Disc(); disc != 0 {
-				if total != 0 {
-					row[10] = fmt.Sprintf("%d/%d", disc, total)
-				} else {
-					row[10] = fmt.Sprintf("%d", disc)
+			row[8] = metadata.Genre()
+
+			// Track number: raw TRCK frame verbatim if present (may be
+			// "07/15" or any string); integer fallback otherwise.
+			if raw, ok := metadata.Raw()["TRCK"]; ok {
+				if s, ok := raw.(string); ok {
+					row[9] = s
+				}
+			}
+			if row[9] == "" {
+				if track, total := metadata.Track(); track != 0 {
+					if total != 0 {
+						row[9] = fmt.Sprintf("%d/%d", track, total)
+					} else {
+						row[9] = fmt.Sprintf("%d", track)
+					}
+				}
+			}
+
+			// Disc number: raw TPOS frame verbatim if present (may be
+			// "1" or a string like "EN NL"); integer fallback otherwise.
+			if raw, ok := metadata.Raw()["TPOS"]; ok {
+				if s, ok := raw.(string); ok {
+					row[10] = s
+				}
+			}
+			if row[10] == "" {
+				if disc, total := metadata.Disc(); disc != 0 {
+					if total != 0 {
+						row[10] = fmt.Sprintf("%d/%d", disc, total)
+					} else {
+						row[10] = fmt.Sprintf("%d", disc)
+					}
 				}
 			}
 
 			row[11] = metadata.Composer()
+
 			// dhowden/tag maps TIT1 (content group) into its Raw() map.
 			if raw, ok := metadata.Raw()["grouping"]; ok {
 				if s, ok := raw.(string); ok {
@@ -231,7 +287,33 @@ func scanFile(path string) []string {
 				row[13] = comment
 			}
 
+			// Copyright (TCOP frame)
+			if raw, ok := metadata.Raw()["copyright"]; ok {
+				if s, ok := raw.(string); ok {
+					row[14] = s
+				}
+			}
+
+			// Scan raw tags for anything we didn't explicitly map above
+			for k, v := range metadata.Raw() {
+				if handledKeys[k] {
+					continue
+				}
+				if s, ok := v.(string); ok {
+					if s != "" {
+						extraCols = append(extraCols, fmt.Sprintf("%s:%s", k, s))
+					}
+				} else {
+					// Non-string tag (e.g., binary album art APIC frame)
+					extraCols = append(extraCols, fmt.Sprintf("%s:skipped", k))
+				}
+			}
 		}
+	}
+
+	// Append any discovered extra tags to the end of the row (unheaded columns)
+	if len(extraCols) > 0 {
+		row = append(row, extraCols...)
 	}
 
 	return row
