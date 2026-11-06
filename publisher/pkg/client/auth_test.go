@@ -1,4 +1,27 @@
 // pkg/client/auth_test.go
+
+//------------------------------------------------------------------------
+// Test the client's authentication flow
+// Re-auth only fires for session credentials (ownsSession == true, password path).
+// With a static token there is nothing to renew, so a restart can't produce a 401.
+// To exercise it, two options:
+// 1. Racy but real: comment out PUBLISHER_API_TOKEN and ADMIN_API_TOKENS from the
+//    client's environment, keep ADMIN_PASSWORDS, confirm the banner says
+//    (session expires …), then run a real (non-dry) upload of a handful of files and
+//    restart the server while uploads are in flight. GetSignedUploadURL / UpdateMetadata
+//    should 401, re-login once, and continue.
+//
+// 2. Deterministic (better): a Go test with httptest, which removes the timing problem
+//    entirely:
+//    From the publisher directory, run:
+//      go test ./pkg/client -run TestDoReauthenticatesOn401 -v
+//
+//   That asserts the whole contract: one 401 → exactly one login → one successful replay,
+//   no loop. A second test with N goroutines calling concurrently would additionally
+//   prove the single-flight lock keeps logins at 1 rather than N — worth having, since
+//  that's the property protecting the rate limiter.
+//------------------------------------------------------------------------
+
 package client
 
 import (
