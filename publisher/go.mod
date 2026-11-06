@@ -9,6 +9,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.101.0
 	github.com/dhowden/tag v0.0.0-20240417053706-3d75831295e8
 	github.com/joho/godotenv v1.5.1
+	github.com/ncruces/zenity v0.10.15
+	golang.org/x/term v0.47.0
 )
 
 require (
@@ -29,9 +31,7 @@ require (
 	github.com/aws/smithy-go v1.25.1 // indirect
 	github.com/dchest/jsmin v1.0.0 // indirect
 	github.com/josephspurrier/goversioninfo v1.7.0 // indirect
-	github.com/ncruces/zenity v0.10.15 // indirect
 	github.com/randall77/makefat v0.0.0-20260406194835-1b91746796b7 // indirect
-	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300 // indirect
 	golang.org/x/image v0.44.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
 )
