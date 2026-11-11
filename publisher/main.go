@@ -6,13 +6,13 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"slices"
 	"strings"
 	"sync"
 	"syscall"
@@ -22,9 +22,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/joho/godotenv"
 
 	"github.com/mikebarb/labriideas-publisher/pkg/cache"
+	"github.com/mikebarb/labriideas-publisher/pkg/catalog"
 	"github.com/mikebarb/labriideas-publisher/pkg/schema"
 	"github.com/mikebarb/labriideas-publisher/pkg/storage"
 )
@@ -32,6 +34,11 @@ import (
 // Global storage and cache singletons
 var storageClient *storage.Client
 var catalogCache *cache.CatalogCache
+
+// The shared catalog store: ONE implementation of the catalog
+// read-modify-write lifecycle, used by the update, delete and upload
+// handlers (previously three near-identical copies lived inline).
+var catalogStore *catalog.Store
 
 // Timestamp of the last successful menu.json commit — the baseline
 // deploy-status polling compares against, so a SUCCESSFUL OLD build
@@ -45,6 +52,19 @@ var jobRegistry sync.Map
 // Pre-cached schema bytes served to the frontend editor
 var menuSchemaBytes []byte
 
+// Auto-crawl guarding. crawlActive is the single-flight lock: many
+// simultaneous failures coalesce into ONE crawl. lastAutoCrawl is the
+// cooldown: a crawl that FAILED to produce the catalog must not be
+// immediately re-triggered by every subsequent request.
+var crawlMu sync.Mutex
+var crawlActive bool
+var lastAutoCrawl time.Time
+
+// autoCrawlCooldown bounds how often a missing catalog can trigger a
+// regeneration, so a persistently broken environment cannot spawn an
+// endless sequence of crawls.
+const autoCrawlCooldown = 10 * time.Minute
+
 // Request Payloads
 type MetadataUpdateRequest struct {
 	Filename string            `json:"filename"`
@@ -55,6 +75,58 @@ type MetadataUpdateRequest struct {
 type UploadTrackRequest struct {
 	Filename string            `json:"filename"`
 	Metadata map[string]string `json:"metadata"`
+}
+
+// maybeTriggerRegeneration starts an asynchronous catalog regeneration
+// if none is running AND the cooldown has elapsed. It is the recovery
+// path for a MISSING catalog: the catalog is a derivable artefact, so
+// one regeneration restores both the hot-patch surface and the public
+// /api/catalog read path. Returns the job ID, or "" when suppressed.
+//
+// LOCK DISCIPLINE: crawlMu is acquired exactly ONCE and released by a
+// single deferred Unlock. Do NOT add an explicit Unlock anywhere in this
+// function — mixing defer with a manual Unlock causes "sync: unlock of
+// unlocked mutex", a fatal error that cannot be recovered. The spawned
+// goroutine takes its OWN lock when it clears the flag; that is a
+// separate acquisition, not a release of this one.
+func maybeTriggerRegeneration(reason string) string {
+	crawlMu.Lock()
+	defer crawlMu.Unlock()
+
+	if crawlActive {
+		log.Printf("Regeneration already in progress; not starting another (%s)", reason)
+		return ""
+	}
+	if !lastAutoCrawl.IsZero() && time.Since(lastAutoCrawl) < autoCrawlCooldown {
+		log.Printf("Regeneration cooldown active (%.0f minute window); not starting another (%s)",
+			autoCrawlCooldown.Minutes(), reason)
+		return ""
+	}
+	crawlActive = true
+
+	jobID := fmt.Sprintf("crawl-%d", time.Now().UnixNano())
+	jobRegistry.Store(jobID, &CrawlJob{
+		ID:       jobID,
+		Status:   "running",
+		Progress: 0,
+		Message:  "Automatic regeneration: " + reason,
+	})
+
+	// The goroutine re-acquires crawlMu to clear the flag when the crawl
+	// finishes — on success OR failure, because a failed crawl has still
+	// "just run" and must not be immediately retried.
+	go func() {
+		defer func() {
+			crawlMu.Lock()
+			crawlActive = false
+			lastAutoCrawl = time.Now()
+			crawlMu.Unlock()
+		}()
+		startCrawlWorker(jobID)
+	}()
+
+	log.Printf("[ADMIN] Automatic catalog regeneration triggered (%s): job %s", reason, jobID)
+	return jobID
 }
 
 // CrawlJob represents the state of an asynchronous crawl task
@@ -139,6 +211,17 @@ func main() {
 	storageClient = storage.NewClient(s3Client, bucketName)
 	catalogCache = cache.NewCatalogCache() // Initialize empty cache
 
+	// The shared catalog store. SetOnMissing installs the
+	// auto-regeneration hook. The hook is a closure rather than the
+	// function itself because maybeTriggerRegeneration returns the job
+	// ID (useful to direct callers that want to log it), while the hook
+	// contract is fire-and-report-nothing: Store.Load only needs the
+	// side effect triggered.
+	catalogStore = catalog.NewStore(storageClient, catalogCache)
+	catalogStore.SetOnMissing(func(reason string) {
+		maybeTriggerRegeneration(reason)
+	})
+
 	// Setup HTTP Routes
 	mux := http.NewServeMux()
 
@@ -146,6 +229,7 @@ func main() {
 	mux.HandleFunc("/api/catalog", corsMiddleware(catalogHandler))
 	mux.HandleFunc("/api/download", corsMiddleware(downloadHandler))
 	mux.HandleFunc("/api/schema/menu", corsMiddleware(menuSchemaHandler))
+	mux.HandleFunc("/api/schema/catalog", corsMiddleware(catalogSchemaHandler))
 
 	// --- Auth endpoints (must be reachable without a token) ---
 	mux.HandleFunc("/api/auth/login", corsMiddleware(loginHandler))
@@ -172,20 +256,39 @@ func main() {
 		// 1. Get ETag from R2
 		head, err := storageClient.GetMetadata(ctx, "catalog.json.gz")
 		if err != nil {
-			log.Printf("Cache warmup failed (metadata): %v", err)
+			// A fresh environment (or deleted catalog) should self-heal
+			// at boot rather than waiting for the first admin action —
+			// this is arguably the most valuable trigger site, because
+			// it covers "deployed to a new/empty bucket".
+			var nf *types.NotFound
+			if errors.As(err, &nf) {
+				maybeTriggerRegeneration("startup warmup: catalog missing")
+			} else {
+				log.Printf("Cache warmup failed (metadata): %v", err)
+			}
 			return
 		}
 		r2ETag := *head.ETag
 
 		// 2. Get compressed bytes from R2
-		bytes, err := storageClient.GetObjectBytes(ctx, "catalog.json.gz")
+		rawBytes, err := storageClient.GetObjectBytes(ctx, "catalog.json.gz")
 		if err != nil {
 			log.Printf("Cache warmup failed (download): %v", err)
 			return
 		}
 
-		// 3. Update RAM Cache
-		catalogCache.Update(r2ETag, bytes)
+		// 3. Validate the bytes before caching. A corrupt catalog (plain
+		//    text, truncated, or bad gzip) would otherwise be cached and
+		//    served until the first mutation detects the failure — the
+		//    warmup is the only site that can catch it at boot.
+		if err := validateCatalogBytes(rawBytes); err != nil {
+			log.Printf("Catalog cache warmup failed (validation): %v", err)
+			maybeTriggerRegeneration("startup warmup: catalog corrupt")
+			return
+		}
+
+		// 4. Update RAM Cache
+		catalogCache.Update(r2ETag, rawBytes)
 		log.Println("✅ Catalog cache warmed up successfully!")
 	}()
 
@@ -564,11 +667,23 @@ func catalogHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 1. Ask R2 for the current ETag (The Source of Truth)
 	head, err := storageClient.GetMetadata(ctx, "catalog.json.gz")
+	var nf *types.NotFound
 	if err != nil {
-		http.Error(w, "Failed to check storage metadata", http.StatusInternalServerError)
+		if errors.As(err, &nf) {
+			// The catalog is missing: a regeneration is already triggered
+			// (or running). This is a rebuild-in-progress state, not a
+			// server fault — the editor should retry, not treat it as a
+			// crash. 503 + Retry-After tells the editor the difference.
+			maybeTriggerRegeneration("public catalog request: catalog missing")
+			w.Header().Set("Retry-After", "30")
+			http.Error(w, "Catalog is being regenerated; try again shortly", http.StatusServiceUnavailable)
+			return
+		}
 		log.Printf("Error heading catalog: %v", err)
+		http.Error(w, "Failed to read catalog", http.StatusInternalServerError)
 		return
 	}
+
 	r2ETag := *head.ETag
 	//fmt.Printf("catalogHandler - r2ETag: %s\n", r2ETag)
 	// 2. If client version matches R2 ETag, they are up to date!
@@ -605,6 +720,29 @@ func catalogHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("ETag", cachedETag) // Send the ETag so the client can save it
 	w.Write(cachedBytes)
 
+}
+
+// catalogSchemaHandler serves the authoritative catalog schema: the full
+// field list, its writable/derived classification, and a checksum over a
+// canonical (sorted, deduplicated, newline-joined) form.
+//
+// It is the single source of truth for the CLI tools: they fetch this at
+// startup rather than compiling a copy of schema.go, so a stale binary
+// can never silently disagree with the server about which fields exist.
+// The checksum is compared (not a version number): "same or different;
+// rectify if different" is all the contract requires.
+//
+// Public by design: the field list is not sensitive, and an
+// unauthenticated dry-run (diffing a CSV against the catalog) must be
+// possible without admin credentials.
+func catalogSchemaHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"fields":   schema.CatalogSchema,
+		"writable": schema.WritableFields(),
+		"derived":  schema.DerivedFields,
+		"checksum": schema.Checksum(),
+	})
 }
 
 // --- TRANSPORT LAYER (HTTP Handlers) ---
@@ -676,6 +814,9 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 // the custom metadata for a specific track in R2.
 // Because R2 does not allow patching metadata directly, this triggers a
 // server-side "Copy-Over-Self" operation via the storage client.
+// The catalog is then hot-patched through the shared store, in the same
+// request: step 1 (R2 metadata) and step 2 (catalog) are both durable
+// before the response is sent.
 
 func updateMetadataHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -694,142 +835,74 @@ func updateMetadataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Schema filtering boundary
-	// ─── INSERT 1: SCHEMA ENFORCEMENT (the boundary of truth) ───
-	// Filter the incoming metadata against CatalogSchema BEFORE it reaches
-	// either write path below. This single filter covers both consumers of
-	// req.Metadata: the R2 Copy-Over-Self update (step 1) AND the
-	// catalog.json.gz hot-patch (step F). Any field not defined in
-	// schema.go — runtime fields like position/isActive/url sent by older
-	// editor versions, or anything a crafted request injects — is
-	// silently dropped here and can never reach R2 or the catalog.
-	// (This was the primary pollution vector: step F previously wrote
-	// every incoming key straight into catalog.json.gz, which every
-	// visitor downloads.)
-	//
-	// NOTE: the storage layer additionally filters the MERGED metadata
-	// (purging historical pollution already stored in R2); this filter
-	// stops NEW pollution early, before any R2 I/O is spent on it.
+	// Schema filtering boundary — unchanged behaviour (permissive drop).
+	// This single filter covers both consumers of req.Metadata: the R2
+	// metadata write AND the catalog hot-patch. The deletion set is
+	// captured HERE, before the write: UpdateMetadata consumes the merged
+	// map (where empty means delete), but the catalog needs the
+	// operator's intent, so every empty-valued field is recorded as an
+	// explicit deletion for PatchTrack.
 	filtered := make(map[string]string, len(req.Metadata))
+	var deletes []string
 	for _, field := range schema.CatalogSchema {
 		if v, ok := req.Metadata[field]; ok {
 			filtered[field] = v
+			if v == "" {
+				deletes = append(deletes, field)
+			}
 		}
 	}
 	req.Metadata = filtered
 
 	ctx := r.Context()
 
-	// 1. Update the MP3's metadata in R2
-	err := storageClient.UpdateMetadata(ctx, req.Filename, req.Metadata)
-	if err != nil {
+	// 1. Update the MP3's metadata in R2 (copy-based: the body never
+	//    leaves R2). If this fails, NOTHING has changed — the caller
+	//    should retry, so this is a hard 500, not a partial.
+	if err := storageClient.UpdateMetadata(ctx, req.Filename, req.Metadata); err != nil {
 		log.Printf("Failed to update metadata for %s: %v", req.Filename, err)
-		http.Error(w, "Failed to update R2 metadata", http.StatusInternalServerError)
+		http.Error(w, "Failed to update metadata", http.StatusInternalServerError)
 		return
 	}
 
-	// 2. HOT PATCH: Ensure catalog.json stays in sync
-
-	// A. Check the current R2 ETag vs our RAM Cache ETag
-	r2Head, err := storageClient.GetMetadata(ctx, "catalog.json.gz")
+	// 2. HOT PATCH — the step that was missing. R2 metadata is already
+	//    updated (step 1 succeeded); the catalog must now reflect it in
+	//    the same request, before the response is sent.
+	found, err := catalogStore.PatchTrack(ctx, req.Filename, req.Metadata, deletes)
 	if err != nil {
-		log.Printf("Warning: Could not check R2 catalog ETag: %v", err)
-		catalogCache.Clear()
+		detail := "R2 metadata updated; catalog sync failed — automatic regeneration triggered"
+		if errors.Is(err, catalog.ErrCatalogMissing) {
+			// Load already fired the onMissing hook; no explicit trigger needed.
+			detail = "R2 metadata updated; catalog missing — automatic regeneration started"
+		} else {
+			// F3: transient write failure (corrupt gzip, R2 error). The
+			// catalog is stale as of this moment; regeneration repairs it.
+			maybeTriggerRegeneration("catalog sync failed after metadata update: " + req.Filename)
+		}
+		log.Printf("Metadata updated for %s but catalog sync issue: %v", req.Filename, err)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "partial",
+			"detail": detail,
+		})
 		return
 	}
-	r2Etag := *r2Head.ETag
-
-	var catalogGzBytes []byte
-	ramEtag, ramBytes := catalogCache.Get()
-
-	if ramEtag == r2Etag && len(ramBytes) > 0 {
-		// B. HASHES MATCH: RAM is fresh! Use the RAM bytes (saves downloading the whole file)
-		catalogGzBytes = ramBytes
-	} else {
-		// C. HASHES DO NOT MATCH: RAM is stale. Fetch the absolute latest from R2.
-		log.Println("Cache stale during admin edit. Fetching fresh catalog from R2.")
-		freshBytes, err := storageClient.GetObjectBytes(ctx, "catalog.json.gz")
-		if err != nil {
-			log.Printf("Warning: Could not fetch fresh catalog: %v", err)
-			catalogCache.Clear()
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{"status": "success"})
-			return
-		}
-		catalogGzBytes = freshBytes
+	if !found {
+		// R2 metadata was updated, but the rebuilt catalog has no entry
+		// for this filename. Nothing to patch — the catalog's copy is
+		// rebuilt from R2 metadata by the next regeneration, which is
+		// triggered here so the entry appears automatically.
+		log.Printf("[ADMIN] WARNING: R2 metadata updated for %q but catalog has NO matching entry — patch skipped. Regeneration triggered.", req.Filename)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "partial",
+			"detail": "R2 metadata updated; track has no catalog entry — automatic regeneration triggered",
+		})
+		maybeTriggerRegeneration("catalog entry missing for " + req.Filename)
+		return
 	}
 
-	// D. Decompress the chosen bytes
-	gzReader, err := gzip.NewReader(bytes.NewReader(catalogGzBytes))
-	if err == nil {
-		jsonBytes, err := io.ReadAll(gzReader)
-		gzReader.Close()
-
-		if err == nil {
-			// E. Unmarshal into dynamic map
-			var catalogData map[string]interface{}
-			if json.Unmarshal(jsonBytes, &catalogData) == nil {
-
-				// F. Find the track and update its fields
-				if tracks, ok := catalogData["tracks"].([]interface{}); ok {
-					for _, t := range tracks {
-						if trackMap, ok := t.(map[string]interface{}); ok {
-							if trackMap["filename"] == req.Filename {
-								// ─── INSERT 2: SCHEMA PURGE (self-heal) ───
-								// Remove any non-schema fields from this track
-								// before applying the update. Historical pollution
-								// (runtime fields written by older editor versions)
-								// is cleaned permanently: each admin edit of a track
-								// also heals its catalog entry. Safe for the catalog:
-								// 'filename' and 'hash' ARE in CatalogSchema, so the
-								// catalog keeps its keys — anything else on this
-								// track was pollution by definition.
-								for k := range trackMap {
-									if !slices.Contains(schema.CatalogSchema, k) {
-										delete(trackMap, k)
-									}
-								}
-
-								for key, value := range req.Metadata {
-									trackMap[key] = value
-								}
-								break
-							}
-						}
-					}
-				}
-
-				// G. Re-marshal to JSON
-				newJsonBytes, err := json.Marshal(catalogData)
-				if err == nil {
-					// H. Re-compress to Gzip
-					var buf bytes.Buffer
-					gzWriter := gzip.NewWriter(&buf)
-					gzWriter.Write(newJsonBytes)
-					gzWriter.Close()
-					newGzBytes := buf.Bytes()
-
-					// I. Upload the freshly patched catalog.json.gz back to R2
-					err := storageClient.PutObjectBytes(ctx, "catalog.json.gz", newGzBytes)
-					if err != nil {
-						log.Printf("Warning: Failed to upload patched catalog to R2: %v", err)
-					}
-
-					// J. Update the RAM cache with the new bytes and fetch the NEW R2 ETag
-					newHead, _ := storageClient.GetMetadata(ctx, "catalog.json.gz")
-					newEtag := ""
-					if newHead != nil && newHead.ETag != nil {
-						newEtag = *newHead.ETag
-					}
-					catalogCache.Update(newEtag, newGzBytes)
-				}
-			}
-		}
-	}
-
-	// 3. Return Success
+	// 3. Return Success — same shape as before.
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
@@ -863,104 +936,30 @@ func deleteTrackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Hot‑patch catalog.json.gz – remove the entry
-	r2Head, err := storageClient.GetMetadata(ctx, "catalog.json.gz")
+	// 2. Hot-patch: remove the entry through the shared store.
+	found, err := catalogStore.RemoveTrack(ctx, req.Filename)
 	if err != nil {
-		log.Printf("Warning: Could not check catalog ETag after delete: %v", err)
-		catalogCache.Clear()
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
-		return
-	}
-	r2Etag := *r2Head.ETag
-
-	var catalogGzBytes []byte
-	ramEtag, ramBytes := catalogCache.Get()
-
-	if ramEtag == r2Etag && len(ramBytes) > 0 {
-		catalogGzBytes = ramBytes
-	} else {
-		log.Println("Cache stale during delete. Fetching fresh catalog from R2.")
-		freshBytes, err := storageClient.GetObjectBytes(ctx, "catalog.json.gz")
-		if err != nil {
-			log.Printf("Warning: Could not fetch fresh catalog: %v", err)
-			catalogCache.Clear()
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{"status": "success"})
-			return
+		detail := "R2 object deleted; catalog sync failed — automatic regeneration triggered"
+		if errors.Is(err, catalog.ErrCatalogMissing) {
+			detail = "R2 object deleted; catalog missing — automatic regeneration started"
+		} else {
+			// F3: R2 delete succeeded but the catalog write failed. The
+			// catalog now references a deleted object — regeneration is
+			// the repair, and it must not wait for the next scheduled crawl.
+			maybeTriggerRegeneration("catalog sync failed after delete: " + req.Filename)
 		}
-		catalogGzBytes = freshBytes
-	}
-
-	// Decompress
-	gzReader, err := gzip.NewReader(bytes.NewReader(catalogGzBytes))
-	if err != nil {
-		log.Printf("Warning: gzip error: %v", err)
-		catalogCache.Clear()
+		log.Printf("Track deleted from R2 but catalog sync issue %v: %v", req.Filename, err)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "partial",
+			"detail": detail,
+		})
 		return
 	}
-	jsonBytes, err := io.ReadAll(gzReader)
-	gzReader.Close()
-	if err != nil {
-		log.Printf("Warning: failed to read decompressed catalog: %v", err)
-		catalogCache.Clear()
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
-		return
+	if !found {
+		// Catalog already consistent — no entry, nothing to repair.
+		log.Printf("Deleted %s from R2; catalog had no matching entry", req.Filename)
 	}
-
-	var catalogData map[string]interface{}
-	if err := json.Unmarshal(jsonBytes, &catalogData); err != nil {
-		log.Printf("Warning: JSON unmarshal error: %v", err)
-		catalogCache.Clear()
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
-		return
-	}
-
-	// Remove the track with matching filename
-	if tracks, ok := catalogData["tracks"].([]interface{}); ok {
-		updatedTracks := make([]interface{}, 0, len(tracks))
-		for _, t := range tracks {
-			if trackMap, ok := t.(map[string]interface{}); ok {
-				if trackMap["filename"] == req.Filename {
-					continue // skip this one – it's being deleted
-				}
-			}
-			updatedTracks = append(updatedTracks, t)
-		}
-		catalogData["tracks"] = updatedTracks
-		catalogData["count"] = len(updatedTracks)
-	}
-
-	// Re‑marshal and re‑compress
-	newJsonBytes, err := json.Marshal(catalogData)
-	if err != nil {
-		log.Printf("Warning: marshal error after delete: %v", err)
-		catalogCache.Clear()
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
-		return
-	}
-	var buf bytes.Buffer
-	gzWriter := gzip.NewWriter(&buf)
-	gzWriter.Write(newJsonBytes)
-	gzWriter.Close()
-	newGzBytes := buf.Bytes()
-
-	// Upload updated catalog and update RAM cache
-	err = storageClient.PutObjectBytes(ctx, "catalog.json.gz", newGzBytes)
-	if err != nil {
-		log.Printf("Warning: Failed to upload patched catalog: %v", err)
-	}
-	newHead, _ := storageClient.GetMetadata(ctx, "catalog.json.gz")
-	newEtag := ""
-	if newHead != nil && newHead.ETag != nil {
-		newEtag = *newHead.ETag
-	}
-	catalogCache.Update(newEtag, newGzBytes)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
@@ -1026,75 +1025,37 @@ func uploadTrackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 5. Get the R2 ETag (MD5 Hash) of the newly uploaded file
+	// 5. Get the R2 ETag (MD5) of the newly uploaded file.
 	head, err := storageClient.GetMetadata(ctx, req.Filename)
 	if err != nil {
 		log.Printf("Warning: Failed to get ETag for new file: %v", err)
 	}
 	r2Hash := ""
-	if head != nil {
-		r2Hash = strings.Trim(*head.ETag, `"`) // R2 wraps MD5 in quotes
+	if head != nil && head.ETag != nil {
+		r2Hash = strings.Trim(*head.ETag, `"`)
 	}
 
-	// 6. HOT PATCH: Append the new track to catalog.json.gz
-	r2CatalogHead, _ := storageClient.GetMetadata(ctx, "catalog.json.gz")
-	r2CatalogEtag := ""
-	if r2CatalogHead != nil && r2CatalogHead.ETag != nil {
-		r2CatalogEtag = *r2CatalogHead.ETag
+	// 6. Append to the catalog via the shared store.
+	if err := catalogStore.AppendTrack(ctx, req.Filename, r2Hash, req.Metadata); err != nil {
+		detail := "file uploaded; catalog sync failed — automatic regeneration triggered"
+		if errors.Is(err, catalog.ErrCatalogMissing) {
+			detail = "file uploaded; catalog missing — automatic regeneration started"
+		} else {
+			// F3: the file is in R2 but the catalog doesn't know it. The
+			// regeneration will enumerate the new object and add the entry.
+			maybeTriggerRegeneration("catalog sync failed after upload: " + req.Filename)
+		}
+		log.Printf("File uploaded to R2 but catalog sync issue %v: %v", req.Filename, err)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "partial",
+			"hash":   r2Hash,
+			"detail": detail,
+		})
+		return
 	}
 
-	ramEtag, ramBytes := catalogCache.Get()
-	var catalogGzBytes []byte
-
-	if ramEtag == r2CatalogEtag && len(ramBytes) > 0 {
-		catalogGzBytes = ramBytes
-	} else {
-		catalogGzBytes, _ = storageClient.GetObjectBytes(ctx, "catalog.json.gz")
-	}
-
-	// Decompress and Unmarshal
-	gzReader, _ := gzip.NewReader(bytes.NewReader(catalogGzBytes))
-	jsonBytes, _ := io.ReadAll(gzReader)
-	gzReader.Close()
-
-	var catalogData map[string]interface{}
-	json.Unmarshal(jsonBytes, &catalogData)
-
-	// Build the new track object dynamically
-	newTrack := map[string]string{
-		"id":       req.Filename,
-		"filename": req.Filename,
-		"hash":     r2Hash,
-	}
-	// Merge in the schema-driven metadata
-	for k, v := range req.Metadata {
-		newTrack[k] = v
-	}
-
-	// Append the new track to the tracks array
-	if tracks, ok := catalogData["tracks"].([]interface{}); ok {
-		catalogData["tracks"] = append(tracks, newTrack)
-		catalogData["count"] = len(catalogData["tracks"].([]interface{}))
-	}
-
-	// Re-marshal and Re-compress
-	newJsonBytes, _ := json.Marshal(catalogData)
-	var buf bytes.Buffer
-	gzWriter := gzip.NewWriter(&buf)
-	gzWriter.Write(newJsonBytes)
-	gzWriter.Close()
-	newGzBytes := buf.Bytes()
-
-	// Upload updated catalog to R2 and update RAM cache
-	storageClient.PutObjectBytes(ctx, "catalog.json.gz", newGzBytes)
-	newCatalogHead, _ := storageClient.GetMetadata(ctx, "catalog.json.gz")
-	newCatalogEtag := ""
-	if newCatalogHead != nil && newCatalogHead.ETag != nil {
-		newCatalogEtag = *newCatalogHead.ETag
-	}
-	catalogCache.Update(newCatalogEtag, newGzBytes)
-
-	// 7. Return Success
+	// 7. Success — same shape as before.
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success", "hash": r2Hash})
 }
@@ -1237,6 +1198,31 @@ func crawlStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(job)
+}
+
+// validateCatalogBytes checks that the compressed bytes are a valid
+// gzip stream containing a JSON object with a tracks array. It mirrors
+// the decode the catalog store performs, so the warmup can detect a
+// corrupt object at boot instead of caching bytes that will fail on
+// first use.
+func validateCatalogBytes(rawBytes []byte) error {
+	gz, err := gzip.NewReader(bytes.NewReader(rawBytes))
+	if err != nil {
+		return fmt.Errorf("catalog gunzip failed: %w", err)
+	}
+	defer gz.Close()
+	jsonBytes, err := io.ReadAll(gz)
+	if err != nil {
+		return fmt.Errorf("catalog read after gunzip failed: %w", err)
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(jsonBytes, &data); err != nil {
+		return fmt.Errorf("catalog unmarshal failed: %w", err)
+	}
+	if _, ok := data["tracks"]; !ok {
+		return fmt.Errorf("catalog has no tracks array")
+	}
+	return nil
 }
 
 // =============================================================================

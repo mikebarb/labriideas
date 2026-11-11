@@ -111,11 +111,13 @@ func main() {
 			log.Fatalf("Crawl failed: %v", err)
 		}
 	} else {
-		log.Println("\n--- Skipping initial crawl (SKIP_CRAWL=true) ---")
+		log.Println("--- Skipping initial crawl (SKIP_CRAWL=true) ---")
 	}
 	// ==========================================
 	// STEP 1: Parse CSV & verify local files
 	// ==========================================
+	client.Printf("Reading csv file from %v \n", csvPath)
+	client.Printf("Directory to check mp3 file existance is %v \n", audioDirPath)
 	file, err := os.Open(csvPath)
 	if err != nil {
 		log.Fatalf("Error opening CSV: %v", err)
@@ -126,7 +128,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error parsing CSV: %v", err)
 	}
-	client.Printf("\nSuccessfully parsed %d records from CSV.\n", len(records))
+	client.Printf("Successfully parsed %d records from CSV.\n", len(records))
 
 	var readyToProcess []csvparser.ParsedRecord
 	var missingFiles []string
@@ -139,7 +141,7 @@ func main() {
 		}
 	}
 	if len(missingFiles) > 0 {
-		client.Printf("\n⚠️ WARNING: %d files missing from disk:\n", len(missingFiles))
+		client.Printf("⚠️ WARNING: %d files missing from disk:\n", len(missingFiles))
 		for _, f := range missingFiles {
 			client.Printf("  - %s\n", f)
 		}
@@ -149,7 +151,7 @@ func main() {
 	// ==========================================
 	// STEP 2: Fetch catalog
 	// ==========================================
-	log.Println("\n--- Fetching current catalog from server ---")
+	log.Println("--- Fetching current catalog from server ---")
 	r2Catalog, r2HashCatalog, err := c.FetchCatalog()
 	if err != nil {
 		log.Fatalf("Failed to fetch catalog: %v", err)
@@ -159,7 +161,7 @@ func main() {
 	// ==========================================
 	// STEP 3: Diff
 	// ==========================================
-	log.Println("\n--- Running Diffing Engine ---")
+	log.Println("--- Running Diffing Engine ---")
 	var listUpload []csvparser.ParsedRecord
 	var listUpdate []csvparser.ParsedRecord
 	var listSkip []csvparser.ParsedRecord
@@ -184,7 +186,7 @@ func main() {
 		}
 	}
 
-	log.Println("\n=== DIFFING RESULTS ===")
+	log.Println("=== DIFFING RESULTS ===")
 	client.Printf("🟢 NEW (To Upload):     %d files\n", len(listUpload))
 	client.Printf("🟡 CHANGED (To Update): %d files\n", len(listUpdate))
 	client.Printf("⚪ UNCHANGED (Skip):    %d files\n", len(listSkip))
@@ -193,7 +195,7 @@ func main() {
 	// Dry-run preview (consistent with deleter)
 	// ==========================================
 	if isDryRun {
-		log.Println("\n--- DRY RUN – no uploads or updates will be performed ---")
+		log.Println("--- DRY RUN – no uploads or updates will be performed ---")
 		if len(listUpload) > 0 {
 			client.Printf("Would upload %d file(s):\n", len(listUpload))
 			for _, rec := range listUpload {
@@ -242,7 +244,7 @@ func main() {
 
 	// 4A: Uploads
 	if len(listUpload) > 0 {
-		log.Println("\n--- Uploading New Files to R2 ---")
+		log.Println("--- Uploading New Files to R2 ---")
 		jobs.RunParallel(listUpload, concurrency,
 			func(rec csvparser.ParsedRecord) error {
 				return uploadViaPresignedURL(c, rec, audioDirPath)
@@ -263,7 +265,7 @@ func main() {
 
 	// 4B: Metadata updates
 	if len(listUpdate) > 0 {
-		log.Println("\n--- Updating Metadata on Existing Files ---")
+		log.Println("--- Updating Metadata on Existing Files ---")
 		jobs.RunParallel(listUpdate, concurrency,
 			func(rec csvparser.ParsedRecord) error {
 				return c.UpdateMetadata(rec.Filename, rec.Metadata)
@@ -284,14 +286,14 @@ func main() {
 	}
 
 	if successCount == 0 && len(failed) == 0 {
-		log.Println("\nNo changes made. Exiting.")
+		log.Println("No changes made. Exiting.")
 		return
 	}
 
 	// ==========================================
 	// STEP 5: Final crawl
 	// ==========================================
-	log.Println("\n--- Triggering Catalog Rebuild on Server ---")
+	log.Println("--- Triggering Catalog Rebuild on Server ---")
 	jobID2, err := c.TriggerCrawl()
 	if err != nil {
 		log.Fatalf("Failed to trigger crawl: %v", err)
@@ -301,7 +303,7 @@ func main() {
 		log.Fatalf("Crawl failed: %v", err)
 	}
 
-	log.Println("\n=== Bulk Upload Complete! ===")
+	log.Println("=== Bulk Upload Complete! ===")
 	if len(failed) > 0 {
 		client.Printf("❌ Failed: %d\n", len(failed))
 		for _, f := range failed {
