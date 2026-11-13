@@ -739,8 +739,8 @@ func catalogSchemaHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"fields":   schema.CatalogSchema,
-		"writable": schema.WritableFields(),
-		"derived":  schema.DerivedFields,
+		"writable": schema.CatalogSchemaWritable,
+		"derived":  schema.CatalogSchemaDerived,
 		"checksum": schema.Checksum(),
 	})
 }

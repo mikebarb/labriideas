@@ -332,6 +332,16 @@ func (c *Client) PollCrawlStatus(jobID string) error {
 // ==========================================
 // TRACK OPERATIONS
 // ==========================================
+// PartialDeleteError reports that the R2 object was deleted but the
+// catalog hot-patch failed. The deletion is DURABLE — the catalog is
+// stale and self-heals at the next regeneration. Callers that batch
+// deletions should count these separately rather than as failures, so
+// the tally reflects that the objects are gone.
+type PartialDeleteError struct{ Detail string }
+
+func (e *PartialDeleteError) Error() string {
+	return "deleted from R2 but catalog sync incomplete: " + e.Detail
+}
 
 // DeleteTrack calls POST /api/delete-track on the server.
 func (c *Client) DeleteTrack(filename string) error {
@@ -348,6 +358,17 @@ func (c *Client) DeleteTrack(filename string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		return statusError(resp)
+	}
+
+	// A 200 carries either {"status":"success"} or {"status":"partial"}.
+	// Decode so a partial sync gap is visible rather than reported as a
+	// clean success.
+	var body struct {
+		Status string `json:"status"`
+		Detail string `json:"detail"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err == nil && body.Status == "partial" {
+		return &PartialDeleteError{Detail: body.Detail}
 	}
 	return nil
 }

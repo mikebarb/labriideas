@@ -21,10 +21,11 @@ func (c *Client) UploadFile(ctx context.Context, key string, fileSize int64, fil
 
 	// 2. Perform the Upload
 	_, err := c.s3.PutObject(ctx, &s3.PutObjectInput{
-		Bucket:   aws.String(c.bucket),
-		Key:      aws.String(key),
-		Body:     fileData,
-		Metadata: sanitizedMeta,
+		Bucket:      aws.String(c.bucket),
+		Key:         aws.String(key),
+		Body:        fileData,
+		ContentType: aws.String("audio/mpeg"),
+		Metadata:    sanitizedMeta,
 		// ContentLength is highly recommended in Go to prevent memory issues on large files
 		ContentLength: aws.Int64(fileSize),
 	})

@@ -42,6 +42,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"sort"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -64,6 +65,157 @@ type Store struct {
 	// the update, delete and upload handlers AND any future consumer —
 	// without each call site repeating the errors.Is dance.
 	onMissing func(reason string)
+}
+
+// TrackPatch is one existing track's pending changes.
+type TrackPatch struct {
+	Values  map[string]string
+	Deletes []string
+}
+
+// NewTrack is one track to insert.
+//
+// audio-hash arrives in Values because it is computed by the caller from
+// the source MP3 — creation is the one legitimate supply point for a
+// derived field, exactly as with AppendTrack.
+type NewTrack struct {
+	Filename string
+	Hash     string // object ETag, read back after upload
+	Values   map[string]string
+}
+
+// ApplyReport summarises a batch.
+type ApplyReport struct {
+	Updated  int
+	Inserted int
+	NotFound []string // patched filenames with no catalog entry
+	Existing []string // insert filenames already present (skipped)
+}
+
+// ApplyChanges applies many track changes in ONE load/save cycle.
+//
+// Per-record PatchTrack would be correct but wasteful: every call loads
+// and saves the whole catalog, so a 2,064-record run would perform 2,064
+// full read-modify-write cycles against R2. This performs one.
+//
+// PATCHES are guarded against derived fields (authoring them through an
+// update is always a bug). INSERTS are not guarded — creation is where
+// derived values are first observed.
+//
+// If nothing changes, nothing is written: no HTTP call, no new ETag.
+func (s *Store) ApplyChanges(ctx context.Context, patches map[string]TrackPatch, inserts []NewTrack) (*ApplyReport, error) {
+	report := &ApplyReport{}
+
+	// Guard patches against derived-field authoring.
+	for filename, p := range patches {
+		for k := range p.Values {
+			if schema.IsDerived(k) {
+				return nil, fmt.Errorf("refusing to write derived field %q (track %q)", k, filename)
+			}
+		}
+		for _, k := range p.Deletes {
+			if schema.IsDerived(k) {
+				return nil, fmt.Errorf("refusing to delete derived field %q (track %q)", k, filename)
+			}
+		}
+	}
+
+	if len(patches) == 0 && len(inserts) == 0 {
+		return report, nil
+	}
+
+	data, _, err := s.Load(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tracks, ok := data["tracks"].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("catalog has no tracks array")
+	}
+
+	existing := make(map[string]bool, len(tracks))
+	for _, t := range tracks {
+		if trackMap, ok := t.(map[string]interface{}); ok {
+			if name, ok := trackMap["filename"].(string); ok {
+				existing[name] = true
+			}
+		}
+	}
+
+	// --- patches ---
+	matched := make(map[string]bool, len(patches))
+	for _, t := range tracks {
+		trackMap, ok := t.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		name, _ := trackMap["filename"].(string)
+		p, ok := patches[name]
+		if !ok {
+			continue
+		}
+		// Dense invariant: purge non-schema pollution, then apply.
+		for k := range trackMap {
+			if !schema.IsSchemaField(k) {
+				delete(trackMap, k)
+			}
+		}
+		for k, v := range p.Values {
+			trackMap[k] = v
+		}
+		for _, k := range p.Deletes {
+			if schema.IsSchemaField(k) && !schema.IsDerived(k) {
+				trackMap[k] = ""
+			}
+		}
+		matched[name] = true
+		report.Updated++
+	}
+	for filename := range patches {
+		if !matched[filename] {
+			report.NotFound = append(report.NotFound, filename)
+		}
+	}
+	sort.Strings(report.NotFound)
+
+	// --- inserts ---
+	for _, ins := range inserts {
+		if existing[ins.Filename] {
+			report.Existing = append(report.Existing, ins.Filename)
+			continue
+		}
+		entry := make(map[string]interface{}, len(schema.CatalogSchema))
+		for _, f := range schema.CatalogSchema {
+			switch f {
+			case "filename":
+				entry[f] = ins.Filename
+			case "hash":
+				entry[f] = ins.Hash
+			default:
+				if v, ok := ins.Values[f]; ok {
+					entry[f] = v
+				} else {
+					entry[f] = "" // dense invariant
+				}
+			}
+		}
+		tracks = append(tracks, entry)
+		existing[ins.Filename] = true
+		report.Inserted++
+	}
+	sort.Strings(report.Existing)
+
+	if report.Updated == 0 && report.Inserted == 0 {
+		return report, nil // nothing changed → no write
+	}
+
+	data["tracks"] = tracks
+	data["count"] = len(tracks)
+	if err := s.Save(ctx, data); err != nil {
+		return report, err
+	}
+	return report, nil
 }
 
 // ErrCatalogMissing reports that catalog.json.gz does not exist in R2.
@@ -186,8 +338,8 @@ func (s *Store) Save(ctx context.Context, data map[string]interface{}) error {
 
 // PatchTrack applies metadata changes to one track, INCLUDING deletions.
 //
-//   - values:  schema-filtered, non-empty values — set/overwrite as-is.
-//   - deletes: schema field names to blank out. Per the dense-catalog
+//   - values:  non-empty values — set/overwrite as-is.
+//   - deletes: field names to blank out. Per the dense-catalog
 //     invariant they are written as "" rather than removed, so the
 //     catalog stays dense.
 //
@@ -196,9 +348,28 @@ func (s *Store) Save(ctx context.Context, data map[string]interface{}) error {
 // means DELETE — while the catalog needs the OPERATOR'S INTENT: a
 // deletion must become "" here, not vanish.
 //
+// Derived-field guard (B): any attempt to author a derived field is a
+// hard error, not a silent drop. The handler's schema filter should
+// have removed them already, so reaching this error means something
+// bypassed the filter — always a bug worth reporting. AppendTrack is
+// NOT guarded: creation is the one legitimate supply point, because
+// creation is where derived values are first observed.
+//
 // Returns found=false when no track carries this filename; the caller
 // decides whether that is an error or a no-op.
 func (s *Store) PatchTrack(ctx context.Context, filename string, values map[string]string, deletes []string) (bool, error) {
+	// --- Derived-field guard ---
+	for k := range values {
+		if schema.IsDerived(k) {
+			return false, fmt.Errorf("refusing to write derived field %q", k)
+		}
+	}
+	for _, k := range deletes {
+		if schema.IsDerived(k) {
+			return false, fmt.Errorf("refusing to delete derived field %q", k)
+		}
+	}
+
 	data, _, err := s.Load(ctx)
 	if err != nil {
 		return false, err
@@ -219,9 +390,10 @@ func (s *Store) PatchTrack(ctx context.Context, filename string, values map[stri
 			found = true
 			// Schema purge (preserved from the handler): any key not
 			// in CatalogSchema is historical pollution, healed on
-			// contact. filename/hash ARE schema fields and survive.
+			// contact. Schema fields survive, including the derived
+			// ones — the purge removes pollution, not classification.
 			for k := range trackMap {
-				if !isSchemaField(k) {
+				if !schema.IsSchemaField(k) {
 					delete(trackMap, k)
 				}
 			}
@@ -229,7 +401,13 @@ func (s *Store) PatchTrack(ctx context.Context, filename string, values map[stri
 				trackMap[k] = v
 			}
 			for _, k := range deletes {
-				if isSchemaField(k) && k != "filename" && k != "hash" {
+				// IsDerived replaces the old hardcoded exclusions
+				// (filename, hash): it means the same thing and stays
+				// correct if the derived set ever changes. Values and
+				// deletes never contain a derived field at this point
+				// — the guard above rejected them — so this check is
+				// depth, not the primary defence.
+				if schema.IsSchemaField(k) && !schema.IsDerived(k) {
 					trackMap[k] = ""
 				}
 			}
@@ -318,18 +496,6 @@ func (s *Store) AppendTrack(ctx context.Context, filename, hash string, values m
 // ─── internals ───
 
 const catalogKey = "catalog.json.gz"
-
-// isSchemaField reports whether k is in CatalogSchema. Kept as a helper
-// (rather than schema.IsSchemaField) because the purge also runs against
-// dynamic map keys that arrived from JSON, not just the schema list.
-func isSchemaField(k string) bool {
-	for _, f := range schema.CatalogSchema {
-		if f == k {
-			return true
-		}
-	}
-	return false
-}
 
 // decodeCatalog gunzips and unmarshals catalog bytes, normalising JSON
 // nulls to "" so every consumer sees one representation.
