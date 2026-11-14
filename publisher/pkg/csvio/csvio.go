@@ -54,90 +54,7 @@ import (
 //
 // If the file has no header (first row is data), the function will fail
 // with an error because no schema column names are found in the header.
-/*
-func ReadCatalogCSV(path string) (map[string]map[string]string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("could not open %s: %w", path, err)
-	}
-	defer f.Close()
 
-	reader := csv.NewReader(f)
-	reader.TrimLeadingSpace = true
-	reader.FieldsPerRecord = -1 // tolerate variable column counts
-
-	// Read the first row — this MUST be the header
-	headers, err := reader.Read()
-	if err != nil {
-		return nil, fmt.Errorf("failed to read CSV header (first row): %w", err)
-	}
-
-	// Normalize headers and build a map of column-name -> index
-	headerMap := make(map[string]int)
-	for i, h := range headers {
-		normalized := strings.TrimSpace(strings.ToLower(h))
-		headerMap[normalized] = i
-	}
-
-	// Ensure the mandatory 'filename' column exists
-	if _, ok := headerMap["filename"]; !ok {
-		return nil, fmt.Errorf("mandatory 'filename' column missing in CSV header. " +
-			"The first row of the file must contain column names, including 'filename'.")
-	}
-
-	// Validate at least one schema column is found in the header
-	// (otherwise the user might have a headerless CSV)
-	schemaColFound := false
-	for _, col := range schema.CatalogSchema {
-		if _, ok := headerMap[col]; ok {
-			schemaColFound = true
-			break
-		}
-	}
-	if !schemaColFound {
-		return nil, fmt.Errorf("no schema columns found in CSV header. " +
-			"The first row appears to be data, not column names. " +
-			"Please add a header row (filename, title, artist, ...) to the file.")
-	}
-
-	// Read the remaining rows
-	catalog := make(map[string]map[string]string)
-	for {
-		row, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("error reading CSV data row: %w", err)
-		}
-
-		// Extract the filename
-		filename := ""
-		if idx, ok := headerMap["filename"]; ok && idx < len(row) {
-			filename = strings.TrimSpace(row[idx])
-		}
-		if filename == "" {
-			continue // silently skip rows without a filename
-		}
-
-		// Check for duplicate filename — warn and keep the last one
-		if _, exists := catalog[filename]; exists {
-			fmt.Printf("⚠️  Duplicate filename found: %s — keeping the last occurrence.\n", filename)
-		}
-
-		// Build metadata using the schema column order
-		meta := make(map[string]string)
-		for _, col := range schema.CatalogSchema {
-			if idx, ok := headerMap[col]; ok && idx < len(row) {
-				meta[col] = strings.TrimSpace(row[idx])
-			}
-		}
-		catalog[filename] = meta
-	}
-
-	return catalog, nil
-}
-*/
 // WriteCatalogCSV writes the catalog to a CSV file using the column order
 // from schema.CatalogSchema. Rows are sorted by filename for a stable,
 // diff-friendly output.
@@ -149,7 +66,6 @@ func ReadCatalogCSV(path string) (map[string]map[string]string, error) {
 //   - Catalogs where filename is in the metadata (e.g., read from a CSV)
 //
 // Returns the number of data rows written (excluding the header).
-
 func WriteCatalogCSV(path string, catalogMap map[string]map[string]string) (int, error) {
 	f, err := os.Create(path)
 	if err != nil {
@@ -250,6 +166,7 @@ const (
 	IssueLong          = "long"           // more cells than columns; row skipped
 	IssueEmptyFilename = "empty-filename" // no filename value; row skipped
 	IssueDuplicateFile = "duplicate-file" // filename appears twice; last kept
+	IssueZeroAsBlank   = "zero-as-blank"  // "0" treated as blank (Excel artefact)
 )
 
 // RowIssue is one repair or rejection the parser had to make. Reported,
@@ -261,7 +178,7 @@ type RowIssue struct {
 }
 
 func (i RowIssue) String() string {
-	return fmt.Sprintf("line %d: %s — %s", i.Line, i.Kind, i.Detail)
+	return fmt.Sprintf("Row %d: %s — %s", i.Line, i.Kind, i.Detail)
 }
 
 // ParsedCSV is the parser's output.
@@ -461,6 +378,28 @@ func Parse(data []byte) (*ParsedCSV, error) {
 			continue
 		}
 
+		// Zero-as-blank: a literal "0" in a writable cell is a
+		// spreadsheet artefact, not a value — Excel writes 0 into a
+		// blank cell formatted as a number. The diff engine treats
+		// blank-in-a-present-column as a DELETE, so normalizing "0" to
+		// "" makes the row mean "no value", which is what a blank cell
+		// means. Writable fields only: filename is derived (it is the
+		// R2 key, and a blank key is an error, not an absence), and
+		// hash/audio-hash are ignored columns whose values are never
+		// imported. Each occurrence is reported, never silently applied.
+		for name, v := range row {
+			if !schema.IsWritable(name) {
+				continue // filename is derived; hash/audio-hash are ignored
+			}
+			if v == "0" {
+				row[name] = ""
+				issues = append(issues, RowIssue{
+					Line: line, Kind: IssueZeroAsBlank,
+					Detail: fmt.Sprintf("%s: 0 treated as blank (Excel artefact) — field will be deleted", name),
+				})
+			}
+		}
+
 		// Duplicate filename: keep the LAST occurrence (matching the
 		// historical behaviour) but say so. Silently keeping either one
 		// makes a two-row edit to the same track look like one edit.
@@ -555,6 +494,17 @@ func (p *ParsedCSV) DuplicateCount() int {
 	return n
 }
 
+// ZeroAsBlankCount returns how many "0" values were normalized to blank.
+func (p *ParsedCSV) ZeroAsBlankCount() int {
+	n := 0
+	for _, i := range p.Issues {
+		if i.Kind == IssueZeroAsBlank {
+			n++
+		}
+	}
+	return n
+}
+
 // SuspectedTruncation reports the case the padding rule cannot
 // distinguish from normal trailing omission: every data row short. A
 // file whose rows are ALL short is far more likely to be truncated than
@@ -571,8 +521,8 @@ func (p *ParsedCSV) IssueSummary(maxLines int) string {
 	}
 	var b strings.Builder
 	if len(p.Issues) > 0 {
-		fmt.Fprintf(&b, "CSV issues: %d short row(s), %d skipped row(s), %d duplicate filename(s), %d of %d row(s) read\n",
-			p.ShortRowCount(), p.SkippedRowCount(), p.DuplicateCount(), len(p.Rows), p.SourceRows)
+		fmt.Fprintf(&b, "CSV issues: %d short row(s), %d skipped row(s), %d duplicate filename(s), %d zero-as-blank, %d of %d row(s) read\n",
+			p.ShortRowCount(), p.SkippedRowCount(), p.DuplicateCount(), p.ZeroAsBlankCount(), len(p.Rows), p.SourceRows)
 	}
 	if p.SuspectedTruncation() {
 		b.WriteString("  WARNING: every row is short — this file looks TRUNCATED.\n")

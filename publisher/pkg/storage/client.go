@@ -209,9 +209,10 @@ func (c *Client) PutObjectBytes(ctx context.Context, key string, data []byte) er
 	reader := bytes.NewReader(data)
 
 	_, err := c.s3.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(c.bucket),
-		Key:    aws.String(key),
-		Body:   reader,
+		Bucket:      aws.String(c.bucket),
+		Key:         aws.String(key),
+		ContentType: aws.String("application/gzip"),
+		Body:        reader,
 	})
 
 	return err
@@ -222,10 +223,11 @@ func (c *Client) PutObjectWithMetadata(ctx context.Context, key string, data []b
 	reader := bytes.NewReader(data)
 
 	_, err := c.s3.PutObject(ctx, &s3.PutObjectInput{
-		Bucket:   aws.String(c.bucket),
-		Key:      aws.String(key),
-		Body:     reader,
-		Metadata: metadata, // AWS SDK v2 expects standard map[string]string
+		Bucket:      aws.String(c.bucket),
+		Key:         aws.String(key),
+		Body:        reader,
+		ContentType: aws.String("audio/mpeg"),
+		Metadata:    metadata, // AWS SDK v2 expects standard map[string]string
 	})
 
 	return err

@@ -34,6 +34,7 @@ import (
 	"github.com/mikebarb/labriideas-publisher/pkg/csvio"
 	"github.com/mikebarb/labriideas-publisher/pkg/diff"
 	"github.com/mikebarb/labriideas-publisher/pkg/media"
+	"github.com/mikebarb/labriideas-publisher/pkg/params"
 	"github.com/mikebarb/labriideas-publisher/pkg/schema"
 	"github.com/mikebarb/labriideas-publisher/pkg/storage"
 )
@@ -82,6 +83,42 @@ func main() {
 	)
 	flag.Parse()
 
+	// ── Three-way parameter resolution ─────────────────────────────
+	// 1. explicit flag  2. env (already in the flag defaults)  3. dialog
+	// flag.Visit() lists only the flags the operator set on the command
+	// line, so changed["csv"] distinguishes "flag won" from "env value
+	// arrived via the default".
+	changed := map[string]bool{}
+	flag.Visit(func(f *flag.Flag) { changed[f.Name] = true })
+
+	// log-dir has an existing contract: an explicit '' disables logging.
+	// Resolve treats an explicit empty as a usage error, so intercept
+	// that case instead of handing it to Resolve.
+	logDirDisabled := changed["log-dir"] && *logDir == ""
+
+	if !logDirDisabled {
+		// log-dir is optional: a cancelled dialog or a missing dialog
+		// falls back to console-only, never exits.
+		v, err := params.Resolve(params.Spec{
+			Flag: "log-dir", Env: "BULK_LOG_DIR", What: "log directory", Dir: true,
+		}, *logDir, changed["log-dir"])
+		if err != nil {
+			log.Printf("log dir unavailable (%v) — logging to console only", err)
+			*logDir = ""
+		} else {
+			*logDir = v
+		}
+	}
+
+	// csv and root are required: no value from flag, env, or dialog is
+	// a usage error (exit 2).
+	*csvPath = resolveOrDie(params.Spec{
+		Flag: "csv", Env: "BULK_CSV_FILE", What: "CSV file", Filter: "*.csv",
+	}, *csvPath, changed["csv"])
+	*root = resolveOrDie(params.Spec{
+		Flag: "root", Env: "BULK_MP3_DIR", What: "MP3 directory", Dir: true,
+	}, *root, changed["root"])
+
 	setupLogging(*logDir)
 	if logFile != nil {
 		defer logFile.Close()
@@ -92,9 +129,6 @@ func main() {
 	log.Printf("Log dir:  %s", *logDir)
 	log.Printf("Mode:     %s", map[bool]string{true: "APPLY", false: "DRY RUN"}[*apply])
 
-	if *csvPath == "" {
-		log.Fatal("-csv is required")
-	}
 	if *apply && *root == "" {
 		log.Fatal("-apply requires -root (source files for New records)")
 	}
@@ -149,29 +183,7 @@ func main() {
 		results = results[:*limit]
 	}
 
-	// ── 4. Show the plan ─────────────────────────────────────
-	for _, r := range results {
-		switch r.Outcome {
-		case diff.OutcomeNew:
-			say("  Row %-5d%-9s%s\n", parsed.RowNumber(r.Filename), "NEW", r.Filename)
-			renderNew(findRow(parsed, r.Filename), parsed)
-		case diff.OutcomeUpdate:
-			say("  Row %-5d%-9s%s\n", parsed.RowNumber(r.Filename), "UPDATE", r.Filename)
-			say("%s", renderChanges(index[r.Filename], r.Diff))
-		}
-	}
-	if len(orphans) > 0 {
-		fmt.Printf("\n  ORPHANS (in catalog, not in CSV — reported, never deleted): %d\n", len(orphans))
-		for i, o := range orphans {
-			if i >= 10 {
-				fmt.Printf("    … and %d more\n", len(orphans)-10)
-				break
-			}
-			fmt.Printf("    %s\n", o)
-		}
-	}
-
-	// ── 4b. PRE-FLIGHT: decide everything before any write ──
+	// ── 4a. PRE-FLIGHT: decide everything before any write ──
 	//
 	// Every record that cannot be processed is identified HERE, before
 	// the operator confirms and before a single byte is written. The
@@ -184,6 +196,14 @@ func main() {
 	// audio-hash blocks a new upload of identical audio.
 	hashIndex := buildAudioHashIndex(index)
 
+	// the source-file index — the disk's actual names, read once.
+	// Every file decision below compares against these exact strings.
+	sourceFiles, err := buildSourceFileIndex(*root)
+	if err != nil {
+		log.Fatalf("cannot read MP3 dir %s: %v", *root, err)
+	}
+	log.Printf("MP3 dir contains %d file(s)", len(sourceFiles))
+
 	for _, r := range results {
 		if r.Outcome != diff.OutcomeNew {
 			// Updates and skips need no local file.
@@ -192,23 +212,33 @@ func main() {
 		}
 
 		row := parsed.RowNumber(r.Filename)
-		srcPath := filepath.Join(*root, r.Filename)
 
-		info, err := os.Stat(srcPath)
-		if err != nil {
+		// File lookup is a case-sensitive string comparison against the
+		// directory listing — steps 1–4 of the agreed rule: find the
+		// file, read its actual name, compare exactly, accept only on
+		// a true match. NTFS would resolve any case; this check never
+		// asks it to.
+		if _, ok := sourceFiles[r.Filename]; !ok {
+			// Distinguish "absent" from "case mismatch" so the report
+			// names the disk's version of the name and the fix is
+			// obvious (correct the CSV, or rename the file).
+			reason := "no source file in " + *root
+			for disk := range sourceFiles {
+				if strings.EqualFold(disk, r.Filename) {
+					reason = fmt.Sprintf("case mismatch: disk has %q", disk)
+					break
+				}
+			}
 			pf.Excluded = append(pf.Excluded, exclusion{
 				Filename: r.Filename, Row: row,
-				Reason: "no source file in " + *root,
+				Reason: reason,
 			})
 			continue
 		}
-		if info.IsDir() {
-			pf.Excluded = append(pf.Excluded, exclusion{
-				Filename: r.Filename, Row: row,
-				Reason: "source path is a directory",
-			})
-			continue
-		}
+
+		// Exact match confirmed: the disk name IS the CSV name, so this
+		// path is correct by construction.
+		srcPath := filepath.Join(*root, r.Filename)
 
 		hash, _, err := hashCache.Hash(srcPath)
 		if err != nil {
@@ -231,6 +261,24 @@ func main() {
 		hashIndex[hash] = r.Filename
 		pf.Hashes[r.Filename] = hash
 		pf.Workable = append(pf.Workable, r)
+	}
+
+	// ── 4b. Show the plan — workable rows only ────────────────
+	//
+	// Excluded rows are not rendered here. They were never going to
+	// be processed, and a plan that lists them as NEW and then
+	// retracts them in the exclusion block makes the reader reconcile
+	// the two lists by hand. The plan is the workable set; the
+	// exclusion report is its complement.
+	for _, r := range pf.Workable {
+		switch r.Outcome {
+		case diff.OutcomeNew:
+			say("  Row %-5d%-9s%s\n", parsed.RowNumber(r.Filename), "NEW", r.Filename)
+			renderNew(findRow(parsed, r.Filename), parsed)
+		case diff.OutcomeUpdate:
+			say("  Row %-5d%-9s%s\n", parsed.RowNumber(r.Filename), "UPDATE", r.Filename)
+			say("%s", renderChanges(index[r.Filename], r.Diff))
+		}
 	}
 
 	// ── 4c. Report the exclusions ────────────────────────────
@@ -277,7 +325,7 @@ func main() {
 		return
 	}
 
-	// ── 4c. Confirmation gate ────────────────────────────────
+	// ── 4e. Confirmation gate ────────────────────────────────
 	// The old bulk tool prompted before writing, and that guard is
 	// worth keeping: a dry run is cheap to re-read, a partial apply is
 	// not. -yes skips it for scripted runs.
@@ -446,6 +494,17 @@ func main() {
 
 // ─────────────────────────────────────────────────────────────
 
+// resolveOrDie resolves a required parameter; a missing value is a
+// usage error (exit 2, per the agreed exit-code scheme).
+func resolveOrDie(spec params.Spec, val string, changed bool) string {
+	v, err := params.Resolve(spec, val, changed)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+	return v
+}
+
 func buildAudioHashIndex(index map[string]map[string]string) map[string]string {
 	byHash := make(map[string]string, len(index))
 	for filename, row := range index {
@@ -454,6 +513,29 @@ func buildAudioHashIndex(index map[string]map[string]string) map[string]string {
 		}
 	}
 	return byHash
+}
+
+// buildSourceFileIndex scans the MP3 directory once and returns the
+// filenames exactly as stored on disk — the case is the disk's case,
+// not the CSV's case. Used by pre-flight so that file lookup is a
+// case-sensitive string comparison against names read from the
+// directory, never a filesystem resolve (NTFS would resolve "test1"
+// to "Test1" and hide the mismatch).
+func buildSourceFileIndex(dir string) (map[string]struct{}, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	idx := make(map[string]struct{}, len(entries))
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		if strings.EqualFold(filepath.Ext(e.Name()), ".mp3") {
+			idx[e.Name()] = struct{}{}
+		}
+	}
+	return idx, nil
 }
 
 func buildClient() (*storage.Client, *catalog.Store) {

@@ -41,6 +41,7 @@ import (
 	"github.com/mikebarb/labriideas-publisher/pkg/client"
 	"github.com/mikebarb/labriideas-publisher/pkg/csvio"
 	"github.com/mikebarb/labriideas-publisher/pkg/jobs"
+	"github.com/mikebarb/labriideas-publisher/pkg/params"
 	"github.com/mikebarb/labriideas-publisher/pkg/storage"
 )
 
@@ -56,12 +57,21 @@ func main() {
 	)
 	flag.Parse()
 
+	// ── Three-way parameter resolution ─────────────────────────────
+	// 1. explicit flag  2. env (already in the flag default)  3. dialog
+	// flag.Visit() lists only the flags the operator set on the command
+	// line, so changed["csv"] distinguishes "flag won" from "env value
+	// arrived via the default".
+	changed := map[string]bool{}
+	flag.Visit(func(f *flag.Flag) { changed[f.Name] = true })
+
+	*csvPath = resolveOrDie(params.Spec{
+		Flag: "csv", Env: "BULK_CSV_FILE", What: "CSV file", Filter: "*.csv",
+	}, *csvPath, changed["csv"])
+
 	log.Printf("BULK_CSV_FILE:      %s", *csvPath)
 	log.Printf("Mode:     %s", map[bool]string{true: "APPLY", false: "DRY RUN"}[*apply])
 
-	if *csvPath == "" {
-		log.Fatal("-csv is required (or set BULK_CSV_FILE)")
-	}
 	if *conc < 1 {
 		log.Fatal("-concurrency must be at least 1")
 	}
@@ -333,6 +343,17 @@ func main() {
 }
 
 // ─────────────────────────────────────────────────────────────
+
+// resolveOrDie resolves a required parameter; a missing value is a
+// usage error (exit 2, per the agreed exit-code scheme).
+func resolveOrDie(spec params.Spec, val string, changed bool) string {
+	v, err := params.Resolve(spec, val, changed)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+	return v
+}
 
 // rowFor returns the spreadsheet row for a filename, or 0 when the name
 // did not come from the CSV (which would be a bug, but printing "Row 0"

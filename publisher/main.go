@@ -835,17 +835,44 @@ func updateMetadataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Schema filtering boundary — unchanged behaviour (permissive drop).
-	// This single filter covers both consumers of req.Metadata: the R2
-	// metadata write AND the catalog hot-patch. The deletion set is
-	// captured HERE, before the write: UpdateMetadata consumes the merged
-	// map (where empty means delete), but the catalog needs the
-	// operator's intent, so every empty-valued field is recorded as an
-	// explicit deletion for PatchTrack.
+	// ─── Schema filtering boundary ───
+	// This filter covers both consumers of req.Metadata: the R2
+	// metadata write AND the catalog hot-patch. It enforces the same
+	// rules as the creation path's filter (uploadTrackHandler), so both
+	// paths produce the same R2 shape — the only difference is the
+	// treatment of an empty value, which on this EDIT path is an
+	// explicit deletion instruction (on creation it means merely
+	// "not provided" and is dropped).
+	//
+	// 1. SCHEMA: only fields in CatalogSchema survive (permissive drop
+	//    of non-schema pollution).
+	// 2. NOT CUSTOM METADATA: filename and hash are excluded. filename
+	//    IS the object key — storing it as metadata duplicates the key.
+	//    hash IS the ETag — storing it would contradict the value the
+	//    crawler observes.
+	// 3. DERIVED, NEVER AUTHORED: audio-hash is rejected here. The
+	//    server's merge (inside UpdateMetadata) preserves the object's
+	//    existing fingerprint; a client-supplied value could overwrite
+	//    it BEFORE the store's PatchTrack guard ever runs, because the
+	//    R2 write happens first. Creation is the one legitimate supply
+	//    point, and that path's filter does NOT reject it.
+	// 4. DELETION CONTRACT: an empty writable value is an explicit
+	//    instruction to REMOVE the field from R2. It is captured in
+	//    `deletes` for the catalog (which writes "" per the dense
+	//    invariant) while the merged map conveys the same intent to
+	//    UpdateMetadata (where empty means remove).
+	// 5. TRIM: values are trimmed — header transport strips edge
+	//    whitespace anyway, so trimming here keeps the verification
+	//    step's sent-vs-stored comparison in agreement with what R2
+	//    can hold.
 	filtered := make(map[string]string, len(req.Metadata))
 	var deletes []string
 	for _, field := range schema.CatalogSchema {
+		if field == "filename" || field == "hash" || schema.IsDerived(field) {
+			continue
+		}
 		if v, ok := req.Metadata[field]; ok {
+			v = strings.TrimSpace(v)
 			filtered[field] = v
 			if v == "" {
 				deletes = append(deletes, field)
@@ -1008,9 +1035,25 @@ func uploadTrackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// ─── INSERT: SCHEMA ENFORCEMENT ───
+	// Schema filter + sparse rule. This is the CREATION path: an empty
+	// value means "not provided", not "delete" (deletion is the edit
+	// path's contract, in updateMetadataHandler). R2 metadata is sparse
+	// — absent is the only representation of "no value" — so empty
+	// values must never reach the PUT. The browser sends ALL schema
+	// fields blank-filled; the catalog's dense representation is
+	// AppendTrack's job, not R2's.
+	//
+	// filename and hash are also excluded: filename IS the object key
+	// (storing it as metadata duplicates the key), and hash IS the
+	// ETag (storing it would contradict the value the crawler observes).
+	// audio-hash passes: at creation it is legitimately supplied —
+	// the one supply point for a derived field, matching the CLI.
 	filtered := make(map[string]string, len(req.Metadata))
 	for _, field := range schema.CatalogSchema {
-		if v, ok := req.Metadata[field]; ok {
+		if field == "filename" || field == "hash" {
+			continue
+		}
+		if v, ok := req.Metadata[field]; ok && strings.TrimSpace(v) != "" {
 			filtered[field] = v
 		}
 	}

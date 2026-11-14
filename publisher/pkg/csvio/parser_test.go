@@ -338,3 +338,103 @@ func TestParseRowNumbersSkipNothing(t *testing.T) {
 		t.Errorf("RowNumber(c.mp3) = %d, want 4", got)
 	}
 }
+
+// A literal "0" in a writable cell is a spreadsheet artefact, not a
+// value: it must normalize to blank, producing rows identical to the
+// same CSV with blanks, plus one IssueZeroAsBlank per occurrence with
+// the correct line number. filename (the R2 key) and hash (an ignored
+// column) are never normalized — a "0" in either is not a delete.
+func TestParseZeroNormalizedToBlank(t *testing.T) {
+	withZeros := []byte("filename,title,year,topten,hash,genre\n" +
+		"a.mp3,T,0,0,0,G\n" +
+		"b.mp3,T2,0,0,0,G\n")
+	// The same file with the blanks the zeros were pretending to be.
+	// hash is ignored by the parser, so its "0" appears in both files.
+	withBlanks := []byte("filename,title,year,topten,hash,genre\n" +
+		"a.mp3,T,,,0,G\n" +
+		"b.mp3,T2,,,0,G\n")
+
+	pz, err := Parse(withZeros)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	pb, err := Parse(withBlanks)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(pz.Rows) != len(pb.Rows) {
+		t.Fatalf("rows = %d, want %d", len(pz.Rows), len(pb.Rows))
+	}
+
+	// 1. Normalization: the zeroed rows are identical to the blank rows.
+	for i, zr := range pz.Rows {
+		br := pb.Rows[i]
+		if len(zr) != len(br) {
+			t.Fatalf("row %d: key sets differ (%d vs %d)", i, len(zr), len(br))
+		}
+		for col := range zr {
+			if zr[col] != br[col] {
+				t.Errorf("row %d (%s): column %s = %q, want %q (must match the blank CSV)",
+					i, zr["filename"], col, zr[col], br[col])
+			}
+		}
+	}
+
+	// 2. Every occurrence is reported, with the right line number.
+	if got := pz.ZeroAsBlankCount(); got != 4 {
+		t.Errorf("ZeroAsBlankCount = %d, want 4", got)
+	}
+	if len(pz.Issues) != 4 {
+		t.Errorf("issues = %d, want 4 (no other kinds): %v", len(pz.Issues), pz.Issues)
+	}
+	if line := pz.RowNumber("a.mp3"); line != 2 {
+		t.Errorf("RowNumber(a.mp3) = %d, want 2", line)
+	}
+	if line := pz.RowNumber("b.mp3"); line != 3 {
+		t.Errorf("RowNumber(b.mp3) = %d, want 3", line)
+	}
+	for _, iss := range pz.Issues {
+		if iss.Kind != IssueZeroAsBlank {
+			t.Errorf("unexpected issue kind %q: %s", iss.Kind, iss)
+			continue
+		}
+		if iss.Line != 2 && iss.Line != 3 {
+			t.Errorf("issue line %d, want 2 or 3", iss.Line)
+		}
+		if !strings.Contains(iss.Detail, "year") && !strings.Contains(iss.Detail, "topten") {
+			t.Errorf("issue must name the field it blanked: %s", iss)
+		}
+	}
+
+	// 3. Derived and ignored columns are never flagged: a "0" in hash
+	//    produces no issue, and the blank CSV has no issues at all.
+	for _, iss := range pz.Issues {
+		if strings.Contains(iss.Detail, "hash:") || strings.Contains(iss.Detail, "filename:") {
+			t.Errorf("derived/ignored column must not be flagged: %s", iss)
+		}
+	}
+	if len(pb.Issues) != 0 {
+		t.Errorf("blank CSV should have no issues: %v", pb.Issues)
+	}
+}
+
+// A "0" filename is a legal (if odd) key: it is derived, so it is
+// excluded from normalization — only writable fields are touched.
+func TestParseZeroFilenameNotNormalized(t *testing.T) {
+	data := []byte("filename,title,year\n" +
+		"0,T,0\n")
+	p, err := Parse(data)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if p.Rows[0]["filename"] != "0" {
+		t.Errorf("a '0' filename must not be blanked: %q", p.Rows[0]["filename"])
+	}
+	if p.ZeroAsBlankCount() != 1 {
+		t.Errorf("ZeroAsBlankCount = %d, want 1 (year only; filename excluded)", p.ZeroAsBlankCount())
+	}
+	if len(p.Issues) != 1 {
+		t.Errorf("issues = %d, want 1: %v", len(p.Issues), p.Issues)
+	}
+}
