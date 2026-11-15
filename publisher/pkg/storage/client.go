@@ -232,3 +232,89 @@ func (c *Client) PutObjectWithMetadata(ctx context.Context, key string, data []b
 
 	return err
 }
+
+// FixContentType rewrites an object's Content-Type to audio/mpeg using a
+// server-side copy-over-self, preserving all custom metadata.
+//
+// This is the one-off repair for the 2,027 library objects that lost
+// audio/mpeg (they were written before UploadFile/PutObjectWithMetadata
+// set it explicitly). It follows UpdateMetadata's contract exactly —
+// decode on read, send raw, verify before trusting — because the
+// encoded-word corruption class applies to any REPLACE copy.
+//
+// Returns (changed, err): changed=false means the object already had the
+// right Content-Type and nothing was written.
+func (c *Client) FixContentType(ctx context.Context, key string, want string) (bool, error) {
+	head, err := c.s3.HeadObject(ctx, &s3.HeadObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return false, fmt.Errorf("HEAD %s: %w", key, err)
+	}
+	got := ""
+	if head.ContentType != nil {
+		got = *head.ContentType
+	}
+	if got == want {
+		return false, nil // already correct — idempotent
+	}
+
+	// Decode into Unicode space before re-sending (never copy encoded
+	// transit forms back — see UpdateMetadata's write contract).
+	existing := make(map[string]string, len(head.Metadata))
+	for k, v := range head.Metadata {
+		existing[k] = metadata.Decode(v)
+	}
+
+	in := &s3.CopyObjectInput{
+		Bucket:            aws.String(c.bucket),
+		Key:               aws.String(key),
+		CopySource:        aws.String("/" + c.bucket + "/" + url.PathEscape(key)),
+		MetadataDirective: types.MetadataDirectiveReplace,
+		Metadata:          existing,
+		ContentType:       aws.String(want),
+	}
+	// Preserve the other response headers if present: a copy that drops
+	// them silently changes HTTP behaviour for the player.
+	if head.CacheControl != nil {
+		in.CacheControl = head.CacheControl
+	}
+	if head.ContentDisposition != nil {
+		in.ContentDisposition = head.ContentDisposition
+	}
+	if _, err := c.s3.CopyObject(ctx, in); err != nil {
+		return false, fmt.Errorf("copy %s over itself: %w", key, err)
+	}
+
+	// VERIFY: decoded stored values must equal what we sent, and the
+	// Content-Type must be the value we asked for.
+	after, err := c.s3.HeadObject(ctx, &s3.HeadObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return false, fmt.Errorf("%s copied but verification HEAD failed: %w", key, err)
+	}
+	if after.ContentType == nil || *after.ContentType != want {
+		return false, fmt.Errorf("%s verification failed: Content-Type = %q, want %q",
+			key, aws.ToString(after.ContentType), want)
+	}
+	decoded := make(map[string]string, len(after.Metadata))
+	for k, v := range after.Metadata {
+		decoded[k] = metadata.Decode(v)
+	}
+	if len(decoded) != len(existing) {
+		return false, fmt.Errorf("%s verification failed: %d field(s) before, %d after",
+			key, len(existing), len(decoded))
+	}
+	for k, wantV := range existing {
+		if gotV, ok := decoded[k]; !ok {
+			return false, fmt.Errorf("%s verification failed: field %q lost", key, k)
+		} else if gotV != wantV {
+			return false, fmt.Errorf("%s verification failed: field %q: sent %q, stored %q",
+				key, k, wantV, gotV)
+		}
+	}
+	return true, nil
+}
