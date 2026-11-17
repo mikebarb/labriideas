@@ -12,12 +12,12 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^13.6.1",
-    "@astrojs/svelte": "^8.1.2",
+    "@astrojs/cloudflare": "^14.4.8",
+    "@astrojs/svelte": "^9.1.6",
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/lint": "^6.9.7",
     "@tailwindcss/vite": "^4.3.0",
-    "astro": "^6.4.0",
+    "astro": "^7.4.12",
     "codemirror": "^6.0.2",
     "codemirror-json-schema": "^0.8.1",
     "fuse.js": "^7.4.2",
