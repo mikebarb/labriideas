@@ -10,9 +10,10 @@
     topic?: string;
     speaker?: string;
     categories?: string[];
+    genres?: string[]
   }
 
-  let { apiBase, tracks: trackRefs = [], topic = '', speaker = '', categories = [] }: Props = $props();
+  let { apiBase, tracks: trackRefs = [], topic = '', speaker = '', categories = [], genres = [] }: Props = $props();
   let playableTracks: any[] = $state([]);
   // NEW: playlist entries whose filename missed the catalog. We keep the
   // menu.json displayTitle so the page can show a disabled "Lecture not
@@ -57,6 +58,20 @@
             return t.category.some((c: string) => searchTags.includes(c.toLowerCase()));
           }
           return searchTags.includes(t.category.toLowerCase());
+        });
+      } else if (genres.length > 0) {
+        // GENRE MODE (Genres page)
+        // Identical union semantics to the categories mode above, but
+        // matching the catalogue's `genre` field instead of `category`.
+        // GenreTree passes a leaf's rawGenres here — every collapsed
+        // spelling variant, so one leaf can be fed by several strings.
+        const genreTags = genres.map(g => g.toLowerCase());
+        playableTracks = catalog.filter((t: any) => {
+          if (!t.genre) return false;
+          if (Array.isArray(t.genre)) {
+            return t.genre.some((g: string) => genreTags.includes(g.toLowerCase()));
+          }
+          return genreTags.includes(t.genre.toLowerCase());
         });
       } else if (topic) {
         // TOPICS MODE

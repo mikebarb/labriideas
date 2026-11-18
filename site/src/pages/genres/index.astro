@@ -1,0 +1,22 @@
+---
+import LabriLayout from '../../layouts/LabriLayout.astro';
+import GenreTree from '../../components/GenreTree.svelte';
+import Hero from '../../components/Hero.svelte';
+---
+
+<LabriLayout title="Genres">
+  <Hero
+    title="Browse <strong>Genres</strong>"
+    subtitle="Explore the lecture library by genre"
+    backgroundImage={import.meta.env.BASE_URL + "images/topics.avif"}
+    height="h-[350px]"
+    showBrushStroke={false}
+    color="white"
+  />
+  <div class="max-w-2xl mx-auto px-4 py-8">
+    <GenreTree
+      client:load
+      apiBase={import.meta.env.PUBLIC_API_BASE_URL}
+    />
+  </div>
+</LabriLayout>
