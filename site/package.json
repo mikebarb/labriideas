@@ -26,7 +26,6 @@
     "svelte": "^5.55.7",
     "svelte-dnd-action": "^0.9.70",
     "tailwindcss": "^4.3.0",
-    "typescript": "^6.0.3",
     "workbox-window": "^7.4.1"
   },
   "allowScripts": {
@@ -36,5 +35,9 @@
   },
   "overrides": {
     "esbuild": "^0.28.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "typescript": "^6.0.3"
   }
 }
